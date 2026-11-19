@@ -1,0 +1,80 @@
+# 每日更新測速照相與移動式常出沒路段（台灣時間 03:00）
+# 等價本機指令：python -I scripts/dryrun.py daily（加 --fetch 會真的連網下載）
+name: 每日測速資料
+on:
+  schedule:
+    - cron: '0 19 * * *'   # UTC 19:00＝台灣時間 03:00
+  workflow_dispatch:
+permissions:
+  contents: write
+  issues: write
+  pages: write
+  id-token: write
+concurrency:
+  group: touror-data-publish
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 單元測試
+        run: python -I -m unittest discover -s scripts/tests -t scripts
+      - name: 下載最新原始資料（資料集 API 取最新下載網址；每個請求間隔 40 秒以上，失敗重試 3 次）
+        run: python -I scripts/fetch.py speedcams
+      - name: 建置、驗證、合併人工建檔、決定版本
+        id: publish
+        run: |
+          set +e
+          python -I scripts/publish.py speedcams --max-drop 0.05
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+      - name: 驗證失敗或筆數驟減 → 開 issue（不發布）
+        if: steps.publish.outputs.code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let detail = '（沒有報告）';
+            try { detail = JSON.parse(fs.readFileSync('build/publish-report.json', 'utf8')).error || detail; } catch (e) {}
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: '每日測速資料未發布（結束碼 ${{ steps.publish.outputs.code }}）',
+              body: '執行：' + run + '\n\n原因：\n\n' + detail + '\n\n上一版資料維持不變。確認來源資料正常後可手動重跑（Actions → 每日測速資料 → Run workflow）。',
+            });
+      - name: 未發布就停止
+        if: steps.publish.outputs.code != '0'
+        run: exit 1
+      - name: 有變更才 commit
+        id: commit
+        run: |
+          if git diff --quiet -- data manifest.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"; echo "內容沒有變更"; exit 0
+          fi
+          git config user.name "touror-data-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data manifest.json CHANGELOG.md raw/speedcams
+          git commit -m "測速資料更新 $(TZ=Asia/Taipei date +%F)"
+          git pull --rebase
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.commit.outputs.changed == 'true'
+        with:
+          path: site
+  deploy:
+    needs: build
+    if: needs.build.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

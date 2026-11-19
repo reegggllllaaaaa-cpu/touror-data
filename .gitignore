@@ -1,0 +1,8 @@
+build/
+site/
+raw/osm/
+raw/signals/
+raw/timing/
+__pycache__/
+*.pyc
+*.part

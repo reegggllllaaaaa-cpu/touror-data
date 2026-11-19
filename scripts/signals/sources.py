@@ -1,0 +1,31 @@
+# -*- coding: utf-8 -*-
+"""紅綠燈相關政府資料來源（都在 data.gov.tw，不需要金鑰）。下載網址每次由資料集 API 取得，不寫死。"""
+
+# 號誌位置補點：併進 taiwan-signals.bin（與 OSM 去重後才加）
+GOV_SIGNAL_SOURCES = [
+    dict(key='taipei', dataset='121890', file='taipei_signals_121890.csv', fmt='CSV', city='臺北市',
+         title='臺北市號誌位置', lat=('WGS緯度座標',), lon=('WGS經度座標',), name=('地點',)),
+    dict(key='changhua', dataset='37695', file='changhua_signals_37695.csv', fmt='CSV', city='彰化縣',
+         title='彰化縣路口號誌經緯度資料', lat=('緯度',), lon=('經度',), name=('路口名稱',)),
+    dict(key='penghu', dataset='113153', file='penghu_signals_113153.csv', fmt='CSV', city='澎湖縣',
+         title='澎湖縣紅綠燈號誌位置一覽表', gps=('GPS',), name=('位置路口名稱',)),
+    dict(key='tainan', dataset='79978', file='tainan_signals_79978.csv', fmt='CSV', city='臺南市',
+         title='臺南市交通號誌(路口紅綠燈)4G_WiFi點位資料', lat=('熱點緯度',), lon=('熱點經度',), name=('熱點名稱', '地址')),
+]
+
+# 時制（秒數）：臺北市 145720 三個資源＋澎湖 113153（同一份號誌表內含綠／黃燈秒數）
+TIMING_SOURCES = [
+    dict(key='taipei_plan_table', dataset='145720', file='taipei_timing_plan_table.json', fmt='JSON', match='左半邊',
+         title='臺北市路口號誌時制計畫（三合一報表左半邊：時段）'),
+    dict(key='taipei_plan', dataset='145720', file='taipei_timing_plan.json', fmt='JSON', match='右半邊',
+         title='臺北市路口號誌時制計畫（三合一報表右半邊：時相與週期）'),
+    dict(key='taipei_ic', dataset='145720', file='taipei_timing_ic.csv', fmt='CSV',
+         title='臺北市政府交通局路口時制號誌資料（路口座標）'),
+    dict(key='penghu', dataset='113153', file='penghu_signals_113153.csv', fmt='CSV',
+         title='澎湖縣紅綠燈號誌位置一覽表（含綠燈、黃燈秒數）'),
+]
+
+# 國道速限（40476）
+SPEED_LIMIT_SOURCES = [
+    dict(key='freeway', dataset='40476', file='freeway_limits_40476.csv', fmt='CSV', title='國道各主要路段速限表'),
+]

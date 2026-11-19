@@ -1,0 +1,433 @@
+{
+ "schema": 1,
+ "generated": "2026-11-19T15:07:07Z",
+ "files": [
+  {
+   "name": "mobile-hotspots",
+   "path": "data/speedcams/mobile-hotspots.json",
+   "version": "20261119.1",
+   "date": "2026-11-19",
+   "count": 305,
+   "sha256": "d60eec47a567f09ef2ace1cb3b211f403ec94677f339461447fa1e48dcbf5b59",
+   "bytes": 35924,
+   "minAppVersion": "0.0.1",
+   "license": "政府資料開放授權條款－第1版",
+   "attribution": "資料來源：政府資料開放平臺（高雄市政府警察局、臺中市政府警察局）；參考點 © OpenStreetMap contributors",
+   "sources": [
+    {
+     "title": "高雄市113年移動式測速照相地點",
+     "url": "https://data.gov.tw/dataset/169075",
+     "dataset": "169075"
+    },
+    {
+     "title": "臺中市科學儀器執法設備取締地點(移動式)",
+     "url": "https://data.gov.tw/dataset/170672",
+     "dataset": "170672"
+    }
+   ]
+  },
+  {
+   "name": "signal-timing-penghu",
+   "path": "data/signals/signal-timing-penghu.json",
+   "version": "20261119.1",
+   "date": "2026-11-19",
+   "count": 139,
+   "sha256": "6435d62d001599153def8008f563ddbfdd57a0dff562564832fc3ead08829486",
+   "bytes": 18929,
+   "minAppVersion": "0.0.1",
+   "license": "政府資料開放授權條款－第1版",
+   "attribution": "資料來源：澎湖縣政府（紅綠燈號誌位置一覽表）",
+   "sources": [
+    {
+     "title": "紅綠燈號誌位置一覽表",
+     "url": "https://data.gov.tw/dataset/113153",
+     "dataset": "113153"
+    }
+   ]
+  },
+  {
+   "name": "signal-timing-taipei",
+   "path": "data/signals/signal-timing-taipei.json",
+   "version": "20261119.1",
+   "date": "2026-11-19",
+   "count": 2804,
+   "sha256": "df5c8c9a88b815a89fd0585294f5187501362abd2c6d519d925c102626282062",
+   "bytes": 1983787,
+   "minAppVersion": "0.0.1",
+   "license": "政府資料開放授權條款－第1版",
+   "attribution": "資料來源：臺北市政府交通局（臺北市路口號誌時制計畫）",
+   "sources": [
+    {
+     "title": "臺北市路口號誌時制計畫",
+     "url": "https://data.gov.tw/dataset/145720",
+     "dataset": "145720"
+    }
+   ]
+  },
+  {
+   "name": "speed-limits-national",
+   "path": "data/speedlimits/speed-limits-national.json",
+   "version": "20261119.1",
+   "date": "2026-11-19",
+   "count": 20,
+   "sha256": "75162a35555695f40d846b93f3885034209cac47cdc2a81236ec9662c2d31788",
+   "bytes": 1880,
+   "minAppVersion": "0.0.1",
+   "license": "政府資料開放授權條款－第1版",
+   "attribution": "資料來源：交通部高速公路局（國道各主要路段速限表）",
+   "sources": [
+    {
+     "title": "國道各主要路段速限表",
+     "url": "https://data.gov.tw/dataset/40476",
+     "dataset": "40476"
+    }
+   ]
+  },
+  {
+   "name": "speedcams",
+   "path": "data/speedcams/speedcams.json",
+   "version": "20261119.5",
+   "date": "2026-11-19",
+   "count": 2345,
+   "sha256": "61f062a2a5722f910d7199f33bdc1d2ba166ad143a8766b4d7c005f7f92d28f4",
+   "bytes": 263050,
+   "minAppVersion": "0.0.1",
+   "license": "政府資料開放授權條款－第1版",
+   "attribution": "資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）",
+   "sources": [
+    {
+     "title": "測速執法設置點（內政部警政署）",
+     "url": "https://data.gov.tw/dataset/7320",
+     "dataset": "7320"
+    },
+    {
+     "title": "國道公路固定式測速照相地點（內政部警政署，ZIP 內 CSV）",
+     "url": "https://data.gov.tw/dataset/13940",
+     "dataset": "13940"
+    },
+    {
+     "title": "南投縣政府警察局固定式自動測速照相桿",
+     "url": "https://data.gov.tw/dataset/38357",
+     "dataset": "38357"
+    },
+    {
+     "title": "臺北市固定測速照相地點表",
+     "url": "https://data.gov.tw/dataset/130111",
+     "dataset": "130111"
+    },
+    {
+     "title": "新北市固定式測速照相",
+     "url": "https://data.gov.tw/dataset/123740",
+     "dataset": "123740"
+    },
+    {
+     "title": "桃園市測速照相設備地點",
+     "url": "https://data.gov.tw/dataset/25935",
+     "dataset": "25935"
+    },
+    {
+     "title": "桃園市科技執法設備地點",
+     "url": "https://data.gov.tw/dataset/178168",
+     "dataset": "178168"
+    },
+    {
+     "title": "新竹縣政府警察局固定測速設置地點",
+     "url": "https://data.gov.tw/dataset/173211",
+     "dataset": "173211"
+    },
+    {
+     "title": "新竹市違規自動照相固定桿設置地點",
+     "url": "https://data.gov.tw/dataset/67491",
+     "dataset": "67491"
+    },
+    {
+     "title": "彰化縣警察局固定式取締違規照相設備設置地點一覽表",
+     "url": "https://data.gov.tw/dataset/27969",
+     "dataset": "27969"
+    },
+    {
+     "title": "彰化縣區間測速設備設置地點",
+     "url": "https://data.gov.tw/dataset/178161",
+     "dataset": "178161"
+    },
+    {
+     "title": "臺中市科技執法設備(區間平均速率執法)",
+     "url": "https://data.gov.tw/dataset/172725",
+     "dataset": "172725"
+    },
+    {
+     "title": "1150817雲林縣警察局固定式測速照相設備設置地點一覽表",
+     "url": "https://data.gov.tw/dataset/178358",
+     "dataset": "178358"
+    },
+    {
+     "title": "嘉義縣警察局固定式測速照相設置地點",
+     "url": "https://data.gov.tw/dataset/178143",
+     "dataset": "178143"
+    },
+    {
+     "title": "嘉義市固定式測速照相及闖紅燈照相設置地點",
+     "url": "https://data.gov.tw/dataset/52544",
+     "dataset": "52544"
+    },
+    {
+     "title": "屏東縣轄內固定測速照相系統設置地點一覽表",
+     "url": "https://data.gov.tw/dataset/146681",
+     "dataset": "146681"
+    },
+    {
+     "title": "澎湖縣固定測速照相設置地點表",
+     "url": "https://data.gov.tw/dataset/156415",
+     "dataset": "156415"
+    },
+    {
+     "title": "澎湖縣科技執法地點",
+     "url": "https://data.gov.tw/dataset/172940",
+     "dataset": "172940"
+    },
+    {
+     "title": "金門縣固定式科學儀器執法設備設置地點-區間測速",
+     "url": "https://data.gov.tw/dataset/178120",
+     "dataset": "178120"
+    },
+    {
+     "title": "基隆市科技執法取締地點(區間平均速率執法)",
+     "url": "https://data.gov.tw/dataset/178159",
+     "dataset": "178159"
+    },
+    {
+     "title": "高雄市政府警察局115年固定式違規照相科技執法設備設置地點一覽表",
+     "url": "https://orgws.kcg.gov.tw/001/KcgOrgUploadFiles/432/RelFile/76272/528695/81aa7f2a-d271-4bbe-840d-5008b41ad409.pdf",
+     "dataset": "81aa7f2a-d271-4bbe-840d-5008b41ad409.pdf"
+    },
+    {
+     "title": "臺北市智慧管理科技執法設備資料表",
+     "url": "https://data.gov.tw/dataset/135957",
+     "dataset": "135957"
+    },
+    {
+     "title": "新竹市科技執法點位資訊",
+     "url": "https://data.gov.tw/dataset/178144",
+     "dataset": "178144"
+    },
+    {
+     "title": "苗栗縣科技執法設備取締地點",
+     "url": "https://data.gov.tw/dataset/172178",
+     "dataset": "172178"
+    },
+    {
+     "title": "基隆市科技執法取締地點（TechArea）",
+     "url": "https://data.gov.tw/dataset/178159",
+     "dataset": "178159"
+    },
+    {
+     "title": "國道公路警察局闖紅燈照相地點",
+     "url": "https://data.gov.tw/dataset/100856",
+     "dataset": "100856"
+    }
+   ]
+  },
+  {
+   "name": "speedcams-full",
+   "path": "data/speedcams/speedcams-full.csv",
+   "version": "20261119.5",
+   "date": "2026-11-19",
+   "count": 2351,
+   "sha256": "10ce29f7e76886fd16fd2789ec796b760ccd10c9040008b7296eeef7c7707272",
+   "bytes": 497380,
+   "minAppVersion": "0.0.1",
+   "license": "政府資料開放授權條款－第1版",
+   "attribution": "資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）",
+   "sources": [
+    {
+     "title": "測速執法設置點（內政部警政署）",
+     "url": "https://data.gov.tw/dataset/7320",
+     "dataset": "7320"
+    },
+    {
+     "title": "國道公路固定式測速照相地點（內政部警政署，ZIP 內 CSV）",
+     "url": "https://data.gov.tw/dataset/13940",
+     "dataset": "13940"
+    },
+    {
+     "title": "南投縣政府警察局固定式自動測速照相桿",
+     "url": "https://data.gov.tw/dataset/38357",
+     "dataset": "38357"
+    },
+    {
+     "title": "臺北市固定測速照相地點表",
+     "url": "https://data.gov.tw/dataset/130111",
+     "dataset": "130111"
+    },
+    {
+     "title": "新北市固定式測速照相",
+     "url": "https://data.gov.tw/dataset/123740",
+     "dataset": "123740"
+    },
+    {
+     "title": "桃園市測速照相設備地點",
+     "url": "https://data.gov.tw/dataset/25935",
+     "dataset": "25935"
+    },
+    {
+     "title": "桃園市科技執法設備地點",
+     "url": "https://data.gov.tw/dataset/178168",
+     "dataset": "178168"
+    },
+    {
+     "title": "新竹縣政府警察局固定測速設置地點",
+     "url": "https://data.gov.tw/dataset/173211",
+     "dataset": "173211"
+    },
+    {
+     "title": "新竹市違規自動照相固定桿設置地點",
+     "url": "https://data.gov.tw/dataset/67491",
+     "dataset": "67491"
+    },
+    {
+     "title": "彰化縣警察局固定式取締違規照相設備設置地點一覽表",
+     "url": "https://data.gov.tw/dataset/27969",
+     "dataset": "27969"
+    },
+    {
+     "title": "彰化縣區間測速設備設置地點",
+     "url": "https://data.gov.tw/dataset/178161",
+     "dataset": "178161"
+    },
+    {
+     "title": "臺中市科技執法設備(區間平均速率執法)",
+     "url": "https://data.gov.tw/dataset/172725",
+     "dataset": "172725"
+    },
+    {
+     "title": "1150817雲林縣警察局固定式測速照相設備設置地點一覽表",
+     "url": "https://data.gov.tw/dataset/178358",
+     "dataset": "178358"
+    },
+    {
+     "title": "嘉義縣警察局固定式測速照相設置地點",
+     "url": "https://data.gov.tw/dataset/178143",
+     "dataset": "178143"
+    },
+    {
+     "title": "嘉義市固定式測速照相及闖紅燈照相設置地點",
+     "url": "https://data.gov.tw/dataset/52544",
+     "dataset": "52544"
+    },
+    {
+     "title": "屏東縣轄內固定測速照相系統設置地點一覽表",
+     "url": "https://data.gov.tw/dataset/146681",
+     "dataset": "146681"
+    },
+    {
+     "title": "澎湖縣固定測速照相設置地點表",
+     "url": "https://data.gov.tw/dataset/156415",
+     "dataset": "156415"
+    },
+    {
+     "title": "澎湖縣科技執法地點",
+     "url": "https://data.gov.tw/dataset/172940",
+     "dataset": "172940"
+    },
+    {
+     "title": "金門縣固定式科學儀器執法設備設置地點-區間測速",
+     "url": "https://data.gov.tw/dataset/178120",
+     "dataset": "178120"
+    },
+    {
+     "title": "基隆市科技執法取締地點(區間平均速率執法)",
+     "url": "https://data.gov.tw/dataset/178159",
+     "dataset": "178159"
+    },
+    {
+     "title": "高雄市政府警察局115年固定式違規照相科技執法設備設置地點一覽表",
+     "url": "https://orgws.kcg.gov.tw/001/KcgOrgUploadFiles/432/RelFile/76272/528695/81aa7f2a-d271-4bbe-840d-5008b41ad409.pdf",
+     "dataset": "81aa7f2a-d271-4bbe-840d-5008b41ad409.pdf"
+    },
+    {
+     "title": "臺北市智慧管理科技執法設備資料表",
+     "url": "https://data.gov.tw/dataset/135957",
+     "dataset": "135957"
+    },
+    {
+     "title": "新竹市科技執法點位資訊",
+     "url": "https://data.gov.tw/dataset/178144",
+     "dataset": "178144"
+    },
+    {
+     "title": "苗栗縣科技執法設備取締地點",
+     "url": "https://data.gov.tw/dataset/172178",
+     "dataset": "172178"
+    },
+    {
+     "title": "基隆市科技執法取締地點（TechArea）",
+     "url": "https://data.gov.tw/dataset/178159",
+     "dataset": "178159"
+    },
+    {
+     "title": "國道公路警察局闖紅燈照相地點",
+     "url": "https://data.gov.tw/dataset/100856",
+     "dataset": "100856"
+    }
+   ]
+  },
+  {
+   "name": "taiwan-reststops",
+   "path": "data/reststops/taiwan-reststops.bin",
+   "version": "20261119.1",
+   "date": "2026-11-19",
+   "count": 27887,
+   "sha256": "5a89167e81ec203a97fc63b6d83649e9c1afcc0fb03caa553393c92c104c0c40",
+   "bytes": 745693,
+   "minAppVersion": "0.0.1",
+   "license": "Open Database License（ODbL）1.0",
+   "attribution": "© OpenStreetMap contributors",
+   "sources": [
+    {
+     "title": "OpenStreetMap（Geofabrik taiwan-latest.osm.pbf）",
+     "url": "https://download.geofabrik.de/asia/taiwan.html",
+     "dataset": ""
+    }
+   ]
+  },
+  {
+   "name": "taiwan-signals",
+   "path": "data/signals/taiwan-signals.bin",
+   "version": "20261119.1",
+   "date": "2026-11-19",
+   "count": 77985,
+   "sha256": "75fcf74522eaede8b1410002f0bd7e37f82bb50480908469657444b5ee519b95",
+   "bytes": 701897,
+   "minAppVersion": "0.0.1",
+   "license": "Open Database License（ODbL）1.0",
+   "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市政府（政府資料開放授權條款第1版）",
+   "sources": [
+    {
+     "title": "OpenStreetMap（Geofabrik taiwan-latest.osm.pbf）",
+     "url": "https://download.geofabrik.de/asia/taiwan.html",
+     "dataset": ""
+    },
+    {
+     "title": "臺北市號誌位置",
+     "url": "https://data.gov.tw/dataset/121890",
+     "dataset": "121890"
+    },
+    {
+     "title": "彰化縣路口號誌經緯度資料",
+     "url": "https://data.gov.tw/dataset/37695",
+     "dataset": "37695"
+    },
+    {
+     "title": "澎湖縣紅綠燈號誌位置一覽表",
+     "url": "https://data.gov.tw/dataset/113153",
+     "dataset": "113153"
+    },
+    {
+     "title": "臺南市交通號誌(路口紅綠燈)4G_WiFi點位資料",
+     "url": "https://data.gov.tw/dataset/79978",
+     "dataset": "79978"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+# PR 與推送時驗證：單元測試、人工建檔表、manifest 與每個資料檔（雜湊、大小、讀取器）、測速乾跑建置
+# 等價本機指令：python -I scripts/dryrun.py validate
+name: 驗證
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 單元測試
+        run: python -I -m unittest discover -s scripts/tests -t scripts
+      - name: 驗證 manifest、資料檔、人工建檔表
+        run: python -I scripts/validate.py
+      - name: 測速乾跑建置（用倉庫內 raw/speedcams，不連網、不寫 data/）
+        run: python -I scripts/publish.py speedcams --dry-run

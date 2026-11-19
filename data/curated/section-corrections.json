@@ -1,0 +1,77 @@
+{
+ "說明": "區間測速人工修正（NAV-CAM-DATA-2，2026-11-19；依 完整性研究.md 逐筆查證）。建置.py 在自動建置完成後依序套用。action：update＝改既有點欄位；add＝複製 from 那一筆再改欄位、給新 id（同一區間另一方向或第二段）；merge＝重複點併入 into（狀態 merged，留在正本追蹤、不進 App）；retire＝官方已汰除（狀態 retired，不進 App）；pending＝沒有起點座標，只記在 meta.pending 與報告待補清單。set 內可用欄位：lat lon bearing direction direct_raw limit_kmh address len_m len_src len_ref len_date len_rule status status_note coord_src。len_src：text＝文字里程推得、official＝官方文件明寫長度、est＝估計、unverified＝只有民間數字。",
+ "refs": {
+  "KH": "高雄市政府警察局115年「固定式違規照相科技執法設備」設置地點一覽表（115/6/22 更新）https://orgws.kcg.gov.tw/001/KcgOrgUploadFiles/432/RelFile/76272/528695/81aa7f2a-d271-4bbe-840d-5008b41ad409.pdf",
+  "NTPC": "新北市政府警察局區間平均速率執法設備設置地點一覽表（1140919修訂）https://www.traffic.police.ntpc.gov.tw/dl-38672-661293d4-63e9-40f8-8da3-12ec50c57b75.html",
+  "HL": "花蓮縣警察局114年測速照相、闖紅燈照相固定桿及科技執法設置地點一覽表（政府資料開放平臺 177297）https://data.gov.tw/dataset/177297",
+  "ML": "苗栗縣區間測速設備取締件數 113年下半年（政府資料開放平臺 172952）https://data.gov.tw/dataset/172952",
+  "TPTA": "臺北高等行政法院113年度交字第3279號判決（2025-05-06）https://judgment.judicial.gov.tw/FILES/TPTA/113%2c%e4%ba%a4%2c3279%2c20250506%2c2.pdf",
+  "KIKI": "民間整理（非官方）https://kikinote.net/158295",
+  "KL": "基隆市科技執法取締地點(區間平均速率執法)（政府資料開放平臺 178159）https://www.klg.gov.tw/cht/upload/TechAreaAvgRate.csv",
+  "TY": "桃園市區間測速地點及舉發數量每半年統計 2024上半年／下半年（政府資料開放平臺 171463）https://data.gov.tw/dataset/171463",
+  "HCC": "新竹縣政府警察局固定測速設置地點（政府資料開放平臺 173211）https://data.gov.tw/dataset/173211",
+  "OSM": "OpenStreetMap 隧道幾何（Geofabrik taiwan-latest，2026-11-17）：沿隧道依官方起訖里程差推估起點座標"
+ },
+ "items": [
+  {"action": "update", "id": "tw-e3e3d5a62d", "set": {"direction": "one", "bearing": 180, "direct_raw": "北往南（往圓山路方向）", "len_m": 1307.7, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 1,307.7 公尺，起點 22.669723,120.343016"}},
+  {"action": "add", "from": "tw-e3e3d5a62d", "id": "tw-e3e3d5a62d-n", "set": {"lat": 22.659094, "lon": 120.340722, "direction": "one", "bearing": 0, "direct_raw": "南往北（往八德南路方向）", "address": "松藝路段（南往北，往八德南路）", "source": "kaohsiung_tech", "sources": ["kaohsiung_tech"], "len_m": 1298.9, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 1,298.9 公尺，起點 22.659094,120.340722"}},
+  {"action": "update", "id": "tw-76720b3df3", "set": {"direction": "one", "bearing": 90, "direct_raw": "往東（內門市區方向）", "address": "內門區市道182號28.9K至31.8K(往東-內門市區方向)", "len_m": 2884.7, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,884.7 公尺（文字里程 2,900）"}},
+  {"action": "add", "from": "tw-76720b3df3", "id": "tw-76720b3df3-w", "set": {"lat": 22.920963, "lon": 120.43893, "direction": "one", "bearing": 270, "direct_raw": "往西（台南市龍崎區方向）", "address": "內門區市道182號28.9K至31.8K(往西-台南市龍崎區方向)", "source": "kaohsiung_tech", "sources": ["kaohsiung_tech"], "len_m": 2877.2, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,877.2 公尺，起點 22.920963,120.43893"}},
+  {"action": "update", "id": "tw-7f90819e96", "set": {"direction": "one", "bearing": 180, "direct_raw": "往南", "address": "內門區台3線389.5K至392.5K(往南)", "len_m": 2831.1, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,831.1 公尺（文字里程 3,000）"}},
+  {"action": "add", "from": "tw-7f90819e96", "id": "tw-7f90819e96-n", "set": {"lat": 23.000528, "lon": 120.468194, "direction": "one", "bearing": 0, "direct_raw": "往北", "address": "內門區台3線389.5K至392.5K(往北)", "source": "kaohsiung_tech", "sources": ["kaohsiung_tech"], "len_m": 2858.8, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,858.8 公尺，起點 23.000528,120.468194"}},
+
+  {"action": "update", "id": "tw-2fdb9e4147", "set": {"len_m": 1293.1, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往碧潭方向 1,293.1 公尺、往臺北方向 1,138.6 公尺；只有一個座標，取較長者（區間結束判斷偏保守）"}},
+  {"action": "update", "id": "tw-b265a4b105", "set": {"len_m": 3946.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往新店 3,946.7／往宜蘭 3,938.1 公尺，取較長者"}},
+  {"action": "update", "id": "tw-89e63a1c9b", "set": {"len_m": 5835.3, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往新店 5,830.5／往宜蘭 5,835.3 公尺，取較長者（文字里程 6,000）"}},
+  {"action": "update", "id": "tw-011117802b", "set": {"len_m": 3876.8, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往新店 3,862.5／往宜蘭 3,876.8 公尺，取較長者"}},
+  {"action": "update", "id": "tw-102be199ac", "set": {"len_m": 2955.4, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：東向 25.2k 主線至 28.2k 2,955.4、錦和路匝道至 28.2k 2,859.3、西向 26.6k 至 28.2k 1,563.3 公尺；只有一個座標，取最長者"}},
+  {"action": "update", "id": "tw-01ac56f7d5", "set": {"len_m": 1755.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：1,755.7 公尺"}},
+  {"action": "update", "id": "tw-4c84badcea", "set": {"len_m": 3280.9, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：3,280.9 公尺"}},
+  {"action": "update", "id": "tw-8355d4a423", "set": {"len_m": 3788.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：3,788.7 公尺"}},
+  {"action": "update", "id": "tw-b8d18b37db", "set": {"len_m": 1171.6, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：1,171.6 公尺"}},
+  {"action": "update", "id": "tw-1702267075", "set": {"len_m": 5991.1, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 5,961.8／往北 5,991.1 公尺，取較長者"}},
+  {"action": "update", "id": "tw-b73b152dc0", "set": {"len_m": 4182.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 4,182.7／往北 4,178.4 公尺，取較長者"}},
+  {"action": "update", "id": "tw-b85c469c65", "set": {"len_m": 1558.0, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 1,551.8／往北 1,558.0 公尺，取較長者"}},
+  {"action": "update", "id": "tw-bfad385d99", "set": {"len_m": 7569.3, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 7,569.3／往北 7,568.8 公尺，取較長者"}},
+  {"action": "update", "id": "tw-0e3a8195a6", "set": {"len_m": 2757.4, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往桃園 2,757.4／往新北 2,752.2 公尺，取較長者"}},
+
+  {"action": "update", "id": "tw-e812b54965", "set": {"len_m": 2454.2, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：臺11線 26K+581.92→24K+127.73 2,454.2、24K+176.14→26K+623.9 2,447.8 公尺，取較長者"}},
+  {"action": "update", "id": "tw-d985ea5a1e", "set": {"len_m": 4488.8, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：臺9丁線 64K+13→59K+524.2 4,488.8、59K+572.7→64K+45.1 4,472.4 公尺，取較長者"}},
+  {"action": "update", "id": "tw-b0c3836652", "set": {"direction": "one", "bearing": 35, "direct_raw": "北上（151K+434→149K+066）", "address": "蘇花改中仁隧道 北上第2段 臺9線151K+434→149K+066", "len_m": 2368, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：每方向兩段連續區間；本筆＝北上第2段 2,368 公尺。原座標（隧道中段）與 OSM 推估的 151K+434 相距約 40 公尺，沿用原座標", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
+  {"action": "add", "from": "tw-b0c3836652", "id": "tw-b0c3836652-n1", "set": {"lat": 24.248723, "lon": 121.715379, "direction": "one", "bearing": 22, "direct_raw": "北上（153K+718→151K+434）", "address": "蘇花改中仁隧道 北上第1段 臺9線153K+718→151K+434", "coord_src": "OSM", "len_m": 2284, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：北上第1段 2,284 公尺；起點座標由 OSM 北上隧道（4,726.8 m）依官方總長 4,652 m 置中推估", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
+  {"action": "add", "from": "tw-b0c3836652", "id": "tw-b0c3836652-s1", "set": {"lat": 24.278314, "lon": 121.744031, "direction": "one", "bearing": 240, "direct_raw": "南下（149K+257→151K+756）", "address": "蘇花改中仁隧道 南下第1段 臺9線149K+257→151K+756", "coord_src": "OSM", "len_m": 2499, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：南下第1段 2,499 公尺；起點座標由 OSM 南下隧道（4,831.1 m）依官方總長 4,730 m 置中推估", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
+  {"action": "add", "from": "tw-b0c3836652", "id": "tw-b0c3836652-s2", "set": {"lat": 24.266661, "lon": 121.723246, "direction": "one", "bearing": 224, "direct_raw": "南下（151K+756→153K+987）", "address": "蘇花改中仁隧道 南下第2段 臺9線151K+756→153K+987", "coord_src": "OSM", "len_m": 2231, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：南下第2段 2,231 公尺；起點＝南下第1段起點沿 OSM 隧道 2,499 公尺", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
+  {"action": "update", "id": "tw-f5e2455bfc", "set": {"lat": 24.22119, "lon": 121.689672, "direction": "one", "bearing": 25, "direct_raw": "北上（157K+888→155K+122）", "address": "蘇花改仁水隧道 北上 臺9線157K+888→155K+122", "coord_src": "OSM", "limit_kmh": 60, "len_m": 2766, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：北上 2,766 公尺、速限 60（2022 新聞寫 50）；原座標在隧道中段（24.227335,121.69864），改用 OSM 隧道（2,963.5 m）南口內推估起點"}},
+  {"action": "add", "from": "tw-f5e2455bfc", "id": "tw-f5e2455bfc-s", "set": {"lat": 24.238039, "lon": 121.709269, "direction": "one", "bearing": 228, "direct_raw": "南下（155K+207→157K+976）", "address": "蘇花改仁水隧道 南下 臺9線155K+207→157K+976", "coord_src": "OSM", "limit_kmh": 60, "len_m": 2769, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：南下 2,769 公尺、速限 60；起點由 OSM 隧道北口內推估"}},
+
+  {"action": "update", "id": "tw-227efc50b2", "set": {"lat": 25.086978, "lon": 121.549595, "direction": "one", "bearing": 355, "direct_raw": "南往北", "address": "自強隧道區間測速（南往北）", "coord_src": "OSM", "len_m": 917, "len_src": "official", "len_ref": "TPTA", "len_date": "2025-05-06", "len_rule": "判決書引舉發機關查復：「自強隧道（南往北）距離為917公尺」「監控自強隧道全程」；原座標在隧道中段（25.090601,121.549255），改用 OSM 北上隧道南口"}},
+  {"action": "add", "from": "tw-227efc50b2", "id": "tw-227efc50b2-s", "set": {"lat": 25.094419, "lon": 121.548506, "direction": "one", "bearing": 176, "direct_raw": "北往南", "address": "自強隧道區間測速（北往南）", "coord_src": "OSM", "len_m": 917, "len_src": "est", "len_ref": "TPTA", "len_date": "2025-05-06", "len_rule": "北往南沒有官方長度，先用南往北的 917 公尺估計（App 只當估計，不提早結束區間）；起點用 OSM 南下隧道北口"}},
+  {"action": "update", "id": "tw-82f7b2b6a3", "set": {"len_m": 600, "len_src": "unverified", "len_ref": "KIKI", "len_date": "2025-01-23", "len_rule": "官方沒查到；民間整理「約 600 m、速限 50」；OSM 隧道本體約 488 公尺", "status_note": "需人工現地確認（或寫信問臺北市交通管制工程處）"}},
+  {"action": "merge", "id": "tw-5b33ecfa61", "into": "tw-82f7b2b6a3", "note": "與 tw-82f7b2b6a3 相距約 60 公尺，同一個辛亥隧道區間（臺北市 130111 與全國 7320 各一筆）"},
+  {"action": "update", "id": "tw-3938cc66a9", "set": {"limit_kmh": 50, "len_ref": "KL", "len_date": "2026-07-23", "len_rule": "速限 50（20 噸以上大貨車 40）依基隆 178159；長度官方沒查到（規劃報導 1.75 km，未採用），維持估計", "status_note": "基隆檔另一筆 tw-42d743a0be 同一段但相距約 1.4 公里，兩筆都留（無法判斷哪一筆是起點）"}},
+  {"action": "update", "id": "tw-42d743a0be", "set": {"limit_kmh": 50, "len_ref": "KL", "len_date": "2026-07-23", "len_rule": "速限 50（20 噸以上大貨車 40）依基隆 178159；長度官方沒查到，維持估計"}},
+  {"action": "merge", "id": "tw-69ec99da91", "into": "tw-c943d47961", "note": "台15線鳳鼻隧道（全國 7320，無長度）與 223 公尺外新竹縣 173211「鳳鼻尾隧道 66.3K至69.5K」是同一區間"},
+  {"action": "update", "id": "tw-c943d47961", "set": {"len_ref": "HCC", "len_rule": "新竹縣 173211 文字「66.3K至69.5K」＝3,200 公尺；已併入全國檔重複點 tw-69ec99da91"}},
+
+  {"action": "update", "id": "tw-257d22ac88", "set": {"address": "台3線103.2公里至108公里（苗栗，第1段）", "len_m": 4800, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：台3線南向 103.2→108 公里、北向 108→103.2 公里（第1段 4.8 km）；座標在 103.2K（同檔 103.1K、103.5K 固定桿印證）。第2段 114.3→123.6 公里沒有起點座標，列待補"}},
+  {"action": "pending", "id": "tw-257d22ac88-2", "from": "tw-257d22ac88", "set": {"address": "台3線114.3公里至123.6公里（苗栗，第2段）", "len_m": 9300, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 114.3→123.6、北向 123.6→114.3 公里"}, "note": "缺 114.3K／123.6K 座標（參考：全國檔「台3線113.1公里處（獅潭國中旁）」24.5422,120.921745 往南約 1.2 km；省道里程坐標 7040 需瀏覽器下載）"},
+  {"action": "update", "id": "tw-df3f9b024d", "set": {"address": "縣道140線16.2公里至16.9公里（苗栗，第1段）", "len_m": 700, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：東向 16.2→16.9、西向 16.9→16.2 公里（第1段 0.7 km）；座標位於同檔 8.6K 與 19.9K 固定桿之間、近 16.2K。第2段 23.1→25.1 公里列待補"}},
+  {"action": "pending", "id": "tw-df3f9b024d-2", "from": "tw-df3f9b024d", "set": {"address": "縣道140線23.1公里至25.1公里（苗栗，第2段）", "len_m": 2000, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：東向 23.1→25.1、西向 25.1→23.1 公里"}, "note": "缺 23.1K／25.1K 座標"},
+  {"action": "update", "id": "tw-7fd3668202", "set": {"address": "台13甲線8.3公里至9.5公里（苗栗，第1段）", "len_m": 1200, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 8.3→9.5、北向 9.5→8.3 公里（第1段 1.2 km）", "status": "suspended", "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"}},
+  {"action": "pending", "id": "tw-7fd3668202-2", "from": "tw-7fd3668202", "set": {"address": "台13甲線9.8公里至11公里（苗栗，第2段）", "len_m": 1200, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 9.8→11、北向 11→9.8 公里", "status": "suspended", "status_note": "設備系統維護中"}, "note": "缺 9.8K／11K 座標；113 下半年設備維護中"},
+  {"action": "update", "id": "tw-a9717abd77", "set": {"direction": "one", "bearing": 0, "direct_raw": "北向（122.6→115.6 公里）", "address": "台61線北向122.6公里至115.6公里（苗栗）", "len_m": 7000, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：北向 122.6→115.6 公里＝7.0 km（速限 90，大車 80）；南向另一筆", "status": "suspended", "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"}},
+  {"action": "add", "from": "tw-a9717abd77", "id": "tw-a9717abd77-s", "set": {"direction": "one", "bearing": 180, "direct_raw": "南向（122.2→130.2 公里）", "address": "台61線南向122.2公里至130.2公里（苗栗）", "len_m": 8000, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 122.2→130.2 公里＝8.0 km；起點與北向起點相距約 400 公尺，沿用同一座標", "status": "suspended", "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"}},
+
+  {"action": "retire", "id": "tw-8c77a1e289", "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無青山路二段"},
+  {"action": "retire", "id": "tw-aac231abae", "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無萬壽路一段"},
+  {"action": "retire", "id": "tw-56de94dc12", "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無萬壽路一段"}
+ ],
+ "missing": [
+  {"name": "台61桃園段 41.5K→46.8K 北向", "limit_kmh": 90, "len_m": 5300, "ref": "TY", "reason": "官方只有里程沒有座標；省道里程坐標 7040 號用 curl 下載被擋，需瀏覽器手動下載後換算"},
+  {"name": "台61桃園段 41.6K→46.9K 南向", "limit_kmh": 90, "len_m": 5300, "ref": "TY", "reason": "同上"},
+  {"name": "台七乙線 12.1K→8.2K 北向", "limit_kmh": 40, "len_m": 3900, "ref": "TY", "reason": "同上"},
+  {"name": "台七乙線 8.2K→12.1K 南向", "limit_kmh": 40, "len_m": 3900, "ref": "TY", "reason": "同上"},
+  {"name": "台66快速道路 14.8K→11.5K 西向", "limit_kmh": 90, "len_m": 3300, "ref": "TY", "reason": "同上"},
+  {"name": "台66快速道路 3K→6.9K 東向", "limit_kmh": 80, "len_m": 3900, "ref": "TY", "reason": "同上"}
+ ]
+}
