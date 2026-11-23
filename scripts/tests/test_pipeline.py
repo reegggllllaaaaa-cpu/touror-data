@@ -16,7 +16,9 @@ sys.path.insert(0, SCRIPTS)
 
 from common import curated, datagov, formats, manifest, paths  # noqa: E402
 from signals import build_timing, gov_signals  # noqa: E402
+from signals.sources import GOV_SIGNAL_SOURCES  # noqa: E402
 from speedlimits import build_speed_limits  # noqa: E402
+import fetch  # noqa: E402
 
 datagov.MIN_INTERVAL = 0
 datagov.RETRY_WAITS = ()
@@ -295,6 +297,51 @@ class GovSignalTests(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
             shutil.rmtree(static)
+
+
+class FetchTests(unittest.TestCase):
+    def test_signals_targets_include_taichung(self):
+        keys = [t['key'] for t in fetch.targets('signals')]
+        self.assertIn('taichung', keys)
+        taichung = next(t for t in fetch.targets('signals') if t['key'] == 'taichung')
+        self.assertEqual(taichung['fmt'], 'TAICHUNG_CSV')
+        self.assertEqual(taichung['static_path'], 'data/gov-signals')
+
+    def test_taichung_copied_from_static(self):
+        """fetch.py signals 對臺中來源不連網，直接從 static_path 複製到 raw/signals/"""
+        tmp = tempfile.mkdtemp()
+        raw_signals = os.path.join(tmp, 'raw', 'signals')
+        build_dir = os.path.join(tmp, 'build')
+        static = os.path.join(tmp, 'data', 'gov-signals')
+        os.makedirs(static)
+        write_csv(os.path.join(static, 'taichung_signals.csv'),
+                  ['lat', 'lon', 'layer', 'kind', 'comboroad', 'num', 'control', 'light'],
+                  [['24.2411757', '120.7154192', '8010504', '三色號誌', 'A路口', 'GT1', '', '三色號誌']])
+        try:
+            old_root, old_raw, old_build = paths.ROOT, paths.RAW_SIGNALS, paths.BUILD
+            paths.ROOT = tmp
+            paths.RAW_SIGNALS = raw_signals
+            paths.BUILD = build_dir
+            # 只保留臺中來源，避免測試真的連網下載其他資料集
+            old_sources = list(GOV_SIGNAL_SOURCES)
+            GOV_SIGNAL_SOURCES[:] = [t for t in old_sources if t['key'] == 'taichung']
+
+            def fake_fetch(*a, **kw):
+                raise AssertionError('不應連網下載臺中')
+
+            old_fetch_dataset = datagov.fetch_dataset
+            datagov.fetch_dataset = fake_fetch
+            try:
+                self.assertEqual(fetch.main(['signals']), 0)
+                copied = os.path.join(raw_signals, 'taichung_signals.csv')
+                self.assertTrue(os.path.exists(copied), '臺中 CSV 應複製到 raw/signals/')
+                self.assertIn('三色號誌', open(copied, encoding='utf-8-sig').read())
+            finally:
+                datagov.fetch_dataset = old_fetch_dataset
+                GOV_SIGNAL_SOURCES[:] = old_sources
+                paths.ROOT, paths.RAW_SIGNALS, paths.BUILD = old_root, old_raw, old_build
+        finally:
+            shutil.rmtree(tmp)
 
 
 class TimingTests(unittest.TestCase):

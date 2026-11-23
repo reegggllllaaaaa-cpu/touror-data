@@ -1,4 +1,4 @@
-# 每週重建紅綠燈位置與休息點（OSM 台灣 extract）＋政府號誌位置補點（臺北 121890、彰化 37695、澎湖 113153、臺南 79978）
+# 每週重建紅綠燈位置與休息點（OSM 台灣 extract）＋政府號誌位置補點（臺北 121890、彰化 37695、澎湖 113153、臺南 79978、臺中 103743）
 # 等價本機指令：python -I scripts/dryrun.py weekly --pbf <taiwan-latest.osm.pbf>
 # 每週下載一次完整 extract（約 330 MB）比每日 diff 簡單可靠；資料只用節點與少量 way，每週更新已足夠。
 name: 每週 OSM 資料

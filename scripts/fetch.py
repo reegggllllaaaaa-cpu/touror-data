@@ -12,6 +12,7 @@
 import argparse
 import json
 import os
+import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -51,6 +52,20 @@ def main(argv=None):
             if a.dry_run:
                 print('[乾跑] %s 資料集 %s → %s' % (g, t['dataset'], os.path.relpath(dest, paths.ROOT)))
                 results.append(dict(group=g, dataset=t['dataset'], file=t['file'], status='dry-run'))
+                continue
+            if t.get('fmt') == 'TAICHUNG_CSV':
+                # 臺中 103743 圖資下載網址為 Google Drive，不經 data.gov.tw API；從版控 static 複製到 raw
+                src = os.path.join(paths.ROOT, t['static_path'], t['file']) if t.get('static_path') else None
+                if src and os.path.exists(src):
+                    os.makedirs(t['dir'], exist_ok=True)
+                    shutil.copyfile(src, dest)
+                    rec = dict(status='copied', dataset=t['dataset'], file=t['file'], url=src)
+                else:
+                    rec = dict(status='missing', dataset=t['dataset'], file=t['file'],
+                               reason='static file not found: %s' % src)
+                rec['group'] = g
+                results.append(rec)
+                print('%s %s %s %s' % (rec['status'], t['dataset'], t['file'], rec.get('reason') or ''))
                 continue
             rec = datagov.fetch_dataset(t['dataset'], dest, known_url=t.get('url'), fmt=t.get('fmt', 'CSV'),
                                         match=t.get('match'))
