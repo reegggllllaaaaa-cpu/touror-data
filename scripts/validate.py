@@ -35,6 +35,45 @@ def check_speedcams(doc):
     return p
 
 
+OFFLINE_KINDS = ('tiles', 'basemap', 'places', 'places_overture', 'addr')
+
+
+def offline_manifest_problems(doc):
+    """App 離線大檔下載清單（offline-manifest.json）的格式檢查；規則對齊 App\\OfflineDownload.swift 的 problem(of:)。
+    注意：App 新版對不認得的 kind 會略過，但舊版會整份拒絕，所以新增 kind 前要先確認 App 已上線支援。"""
+    out = []
+    if doc.get('schema') != 1:
+        out.append('offline-manifest schema 必須是 1')
+    ver = str(doc.get('version', ''))
+    if not (len(ver) == 8 and ver.isdigit()):
+        out.append('offline-manifest version 須為 yyyymmdd：%r' % ver)
+    files = doc.get('files')
+    if not isinstance(files, list) or not files:
+        return out + ['offline-manifest 沒有 files']
+    seen = set()
+    for f in files:
+        name = str(f.get('name', ''))
+        kind = f.get('kind')
+        if kind not in OFFLINE_KINDS:
+            out.append('%s：未知的 kind %r' % (name, kind))
+        if kind in seen:
+            out.append('kind 重複：%s' % kind)
+        seen.add(kind)
+        if not name or '/' in name or '\\' in name:
+            out.append('檔名不正確：%r' % name)
+        if not str(f.get('url', '')).startswith('https://'):
+            out.append('%s：網址必須是 https' % name)
+        if not (isinstance(f.get('bytes'), int) and f['bytes'] > 0):
+            out.append('%s：bytes 不正確' % name)
+        sha = str(f.get('sha256', ''))
+        if not (len(sha) == 64 and all(c in '0123456789abcdef' for c in sha)):
+            out.append('%s：sha256 格式不正確' % name)
+        v = str(f.get('version', ''))
+        if not (len(v) == 8 and v.isdigit()):
+            out.append('%s：version 須為 yyyymmdd' % name)
+    return out
+
+
 def main():
     problems = []
     doc = manifest.load(paths.MANIFEST)
@@ -42,6 +81,9 @@ def main():
         print('沒有 manifest.json')
         return 1
     problems += manifest.validate(doc, paths.ROOT)
+    if os.path.exists(paths.OFFLINE_MANIFEST):
+        with open(paths.OFFLINE_MANIFEST, encoding='utf-8') as fh:
+            problems += offline_manifest_problems(json.load(fh))
     for e in doc['files']:
         full = os.path.join(paths.ROOT, e['path'])
         if not os.path.exists(full):

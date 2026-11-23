@@ -1,0 +1,63 @@
+{
+ "schema": 1,
+ "version": "20261123",
+ "generated": "2026-11-23T13:36:35Z",
+ "files": [
+  {
+   "name": "valhalla_tiles.tar",
+   "kind": "tiles",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261119/valhalla_tiles.tar",
+   "bytes": 335431680,
+   "sha256": "8f0dd7b5ceec7754cb6fc46ef30025d1e70efd04abf9fb2fcc64c23697de891e",
+   "version": "20261119",
+   "minAppVersion": "0.0.1",
+   "description": "路網：全台離線算路（由 OpenStreetMap 資料產生的 Valhalla 路網）"
+  },
+  {
+   "name": "taiwan-z14.pmtiles",
+   "kind": "basemap",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261119/taiwan-z14.pmtiles",
+   "bytes": 96236343,
+   "sha256": "d6930f692af5e4e60afe62e046f5c395ffc9d23925fe3ab14864edf9ad213edf",
+   "version": "20261119",
+   "minAppVersion": "0.0.1",
+   "description": "底圖：全台離線地圖（Protomaps 圖層、OpenStreetMap 資料，縮放到 14 級）"
+  },
+  {
+   "name": "touror_places.sqlite",
+   "kind": "places",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261119/touror_places.sqlite",
+   "bytes": 52654080,
+   "sha256": "f7b5bc954ff70cfcbe63f47cc8966ff8faa7d83eac660544322737b662bd98f0",
+   "version": "20261119",
+   "minAppVersion": "0.0.1",
+   "description": "地名：目的地搜尋（由 OpenStreetMap 地名整理的資料庫）"
+  },
+  {
+   "name": "touror_addr.bin",
+   "kind": "addr",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261119/touror_addr.bin",
+   "bytes": 16739871,
+   "sha256": "0e691f4759831f0734cb33e294354971b298c2c298fa67e20fca4b9a2b567b54",
+   "version": "20261119",
+   "minAppVersion": "0.0.1",
+   "description": "門牌（選用）：門牌地址搜尋（由 OpenStreetMap 門牌資料整理）"
+  },
+  {
+   "name": "touror_places_overture.sqlite",
+   "kind": "places_overture",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261119/touror_places_overture.sqlite",
+   "bytes": 99205120,
+   "sha256": "3a542a95bf4c080117085dd288a511dab2584debea8994ac31a1f9073a7a8fb1",
+   "version": "20261123",
+   "minAppVersion": "0.0.1",
+   "description": "補充店家資料（選用）：補上 OpenStreetMap 沒有的店家，不下載也能搜尋（Overture Maps 資料）"
+  }
+ ],
+ "attribution": [
+  "路網、底圖、地名、門牌：© OpenStreetMap contributors，依開放資料庫授權條款 ODbL 1.0 授權（衍生資料庫）。",
+  "店家資料：Overture Maps Foundation, overturemaps.org；部分資料來自 Foursquare Labs, Inc.（Apache 2.0）與 AllThePlaces（CC0），依 CDLA Permissive 2.0 授權。",
+  "測速照相等小型資料另由「資料更新」取得：資料來源政府資料開放平臺，依政府資料開放授權條款－第 1 版。",
+  "下載只取得公開的靜態檔，不傳送位置、識別碼或任何個人資料。完整授權清單見 設定 → 關於。"
+ ]
+}

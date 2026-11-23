@@ -304,6 +304,9 @@ def write_site(doc):
         shutil.rmtree(paths.SITE)
     os.makedirs(paths.SITE)
     shutil.copyfile(paths.MANIFEST, os.path.join(paths.SITE, 'manifest.json'))
+    if os.path.exists(paths.OFFLINE_MANIFEST):
+        # App 的遠端下載清單（OfflineManifestLogic.remoteFileName）；沒有這份時 App 一律用內建清單
+        shutil.copyfile(paths.OFFLINE_MANIFEST, os.path.join(paths.SITE, 'offline-manifest.json'))
     for e in doc['files']:
         dst = os.path.join(paths.SITE, e['path'])
         os.makedirs(os.path.dirname(dst), exist_ok=True)

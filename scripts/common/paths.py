@@ -15,4 +15,5 @@ RAW_OSM = os.path.join(RAW, 'osm')
 BUILD = os.path.join(ROOT, 'build')
 SITE = os.path.join(ROOT, 'site')
 MANIFEST = os.path.join(ROOT, 'manifest.json')
+OFFLINE_MANIFEST = os.path.join(ROOT, 'offline-manifest.json')   # App 的離線大檔下載清單（遠端版，網站根目錄）
 CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
