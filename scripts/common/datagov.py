@@ -4,9 +4,12 @@
 不寫死下載網址：每次先讀資料集 API（/api/v2/rest/dataset/<id>）拿最新的 resourceDownloadUrl，
 再依「已知網址 → 格式＋關鍵字 → 唯一一個該格式」的順序挑資源。挑不到就保留快取並回報，不亂猜。
 
-禮貌規則：
-- 每個對外請求之間至少間隔 MIN_INTERVAL 秒（預設 40 秒，可用環境變數 TOUROR_FETCH_INTERVAL 調整；測試用 0）。
-- 失敗重試 3 次（間隔 60、120、240 秒），全部失敗就保留舊檔。
+禮貌與容錯規則：
+- 對 data.gov.tw 資料集 API 的請求間隔至少 MIN_INTERVAL 秒（預設 40 秒，可用環境變數
+  TOUROR_FETCH_INTERVAL 調整；測試用 0）。下載實際檔案（不同主機）不套用此間隔。
+- 每個來源重試 1 次（間隔 30 秒）；單一來源的整個 GET 過程（含 API 與下載、含重試）
+  總時間上限 MAX_GET_SECONDS 秒，防慢速滴流占滿排程。
+- 任一來源失敗或逾時，只要本地已有舊檔就保留並標「沿用舊檔」，整體不失敗。
 - User-Agent 用通用名稱，不帶任何個人資訊；不需要金鑰的來源才用。
 """
 import hashlib
@@ -21,32 +24,65 @@ import urllib.request
 API = 'https://data.gov.tw/api/v2/rest/dataset/%s'
 USER_AGENT = 'touror-data-builder/1.0 (+open data pipeline)'
 MIN_INTERVAL = float(os.environ.get('TOUROR_FETCH_INTERVAL', '40'))
-RETRY_WAITS = (60, 120, 240)
-_last_request = [0.0]
+RETRY_WAITS = (30,)
+MAX_GET_SECONDS = 120
+_last_api_request = [0.0]
 
 
 def _polite_wait():
-    gap = time.time() - _last_request[0]
-    if _last_request[0] and gap < MIN_INTERVAL:
+    """對 data.gov.tw API 請求前的間隔（下載實際檔案不套用）。"""
+    gap = time.time() - _last_api_request[0]
+    if _last_api_request[0] and gap < MIN_INTERVAL:
         time.sleep(MIN_INTERVAL - gap)
-    _last_request[0] = time.time()
+    _last_api_request[0] = time.time()
 
 
-def http_get(url, timeout=120, retries=RETRY_WAITS, opener=None):
-    """GET 一個網址，回傳 bytes。opener 可替換（測試用）。"""
+class _Deadline:
+    def __init__(self, seconds):
+        self.deadline = time.time() + seconds if seconds else None
+
+    def remaining(self):
+        if self.deadline is None:
+            return None
+        r = self.deadline - time.time()
+        return r if r > 0 else 0.0
+
+    def check(self):
+        if self.deadline and time.time() >= self.deadline:
+            raise TimeoutError('單一來源總時間逾時（約 %d 秒）' % int(MAX_GET_SECONDS))
+
+
+def http_get(url, timeout=120, retries=RETRY_WAITS, opener=None, api_call=False, max_seconds=MAX_GET_SECONDS):
+    """GET 一個網址，回傳 bytes。opener 可替換（測試用）。
+
+    api_call=True 時套用對 data.gov.tw API 的禮貌間隔；下載檔案設 False。
+    max_seconds 限制整個 GET（含重試）的總耗時，防慢速滴流。
+    """
     opener = opener or urllib.request.urlopen
+    deadline = _Deadline(max_seconds)
     last = None
     for attempt in range(len(retries) + 1):
-        _polite_wait()
+        if api_call:
+            _polite_wait()
+        else:
+            # 下載檔案與 API 不同主機，不重啟 API 間隔計時
+            pass
+        deadline.check()
         try:
             req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
-            with opener(req, timeout=timeout) as resp:
+            socket_timeout = min(timeout, deadline.remaining()) if deadline.remaining() is not None else timeout
+            with opener(req, timeout=socket_timeout) as resp:
                 return resp.read()
-        except (urllib.error.URLError, OSError, ValueError) as e:  # noqa: PERF203
+        except Exception as e:  # noqa: BLE001
             last = e
             if attempt < len(retries):
-                print('  重試 %d：%s（%s）' % (attempt + 1, url, e), file=sys.stderr)
-                time.sleep(retries[attempt] if MIN_INTERVAL > 0 else 0)
+                wait = retries[attempt] if MIN_INTERVAL > 0 else 0
+                remain = deadline.remaining()
+                if remain is not None:
+                    wait = min(wait, remain)
+                if wait > 0:
+                    print('  重試 %d：%s（%s）' % (attempt + 1, url, e), file=sys.stderr)
+                    time.sleep(wait)
     raise RuntimeError('下載失敗：%s（%s）' % (url, last))
 
 
@@ -58,7 +94,7 @@ def dataset_info(dataset_id, getter=http_get, use_cache=True):
     key = (str(dataset_id), id(getter))
     if use_cache and key in _info_cache:
         return _info_cache[key]
-    raw = getter(API % dataset_id)
+    raw = getter(API % dataset_id, api_call=True)
     doc = json.loads(raw.decode('utf-8-sig'))
     if not doc.get('success'):
         raise RuntimeError('資料集 %s API 回傳失敗' % dataset_id)
@@ -105,22 +141,34 @@ def fetch_dataset(dataset_id, dest, known_url=None, fmt='CSV', match=None, gette
     try:
         info = dataset_info(dataset_id, getter)
     except Exception as e:  # noqa: BLE001
-        rec.update(status='kept', reason='讀 API 失敗：%s' % e)
+        if os.path.exists(dest):
+            rec.update(status='kept', reason='讀 API 失敗，沿用舊檔：%s' % e)
+        else:
+            rec.update(status='failed', reason='讀 API 失敗且無舊檔：%s' % e)
         return rec
     rec['modified'] = info.get('modifiedDate', '')
     res, why = choose_resource(info.get('distribution'), known_url, fmt, match)
     if res is None:
-        rec.update(status='kept', reason=why)
+        if os.path.exists(dest):
+            rec.update(status='kept', reason=why + '，沿用舊檔')
+        else:
+            rec.update(status='failed', reason=why + '且無舊檔')
         return rec
     url = res['resourceDownloadUrl']
     rec.update(url=url, choose=why)
     try:
-        body = getter(url)
+        body = getter(url, api_call=False)
     except Exception as e:  # noqa: BLE001
-        rec.update(status='kept', reason='下載失敗：%s' % e)
+        if os.path.exists(dest):
+            rec.update(status='kept', reason='下載失敗，沿用舊檔：%s' % e)
+        else:
+            rec.update(status='failed', reason='下載失敗且無舊檔：%s' % e)
         return rec
     if len(body) < min_bytes:
-        rec.update(status='kept', reason='檔案太小（%d bytes）' % len(body))
+        if os.path.exists(dest):
+            rec.update(status='kept', reason='檔案太小（%d bytes），沿用舊檔' % len(body))
+        else:
+            rec.update(status='failed', reason='檔案太小（%d bytes）且無舊檔' % len(body))
         return rec
     new_hash = sha256_bytes(body)
     old_hash = sha256_bytes(open(dest, 'rb').read()) if os.path.exists(dest) else ''

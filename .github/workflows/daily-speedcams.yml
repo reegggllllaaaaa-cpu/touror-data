@@ -1,4 +1,4 @@
-# 每日更新測速照相與移動式常出沒路段（台灣時間 03:00）
+# 每日更新全國測速照相核心來源（台灣時間 03:00）
 # 等價本機指令：python -I scripts/dryrun.py daily（加 --fetch 會真的連網下載）
 name: 每日測速資料
 on:
@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 40
     outputs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
@@ -25,15 +25,22 @@ jobs:
         with:
           python-version: '3.12'
       - name: 單元測試
-        run: python -I -m unittest discover -s scripts/tests -t scripts
-      - name: 下載最新原始資料（資料集 API 取最新下載網址；每個請求間隔 40 秒以上，失敗重試 3 次）
-        run: python -I scripts/fetch.py speedcams
+        run: python -u -I -m unittest discover -s scripts/tests -t scripts
+        env:
+          PYTHONUNBUFFERED: "1"
+      - name: 下載最新原始資料（每日核心：全國固定測速 7320、全國闖紅燈 100856）
+        run: python -u -I scripts/fetch.py speedcams-core
+        timeout-minutes: 20
+        env:
+          PYTHONUNBUFFERED: "1"
       - name: 建置、驗證、合併人工建檔、決定版本
         id: publish
         run: |
           set +e
-          python -I scripts/publish.py speedcams --max-drop 0.05
+          python -u -I scripts/publish.py speedcams --max-drop 0.05
           echo "code=$?" >> "$GITHUB_OUTPUT"
+        env:
+          PYTHONUNBUFFERED: "1"
       - name: 驗證失敗或筆數驟減 → 開 issue（不發布）
         if: steps.publish.outputs.code != '0'
         uses: actions/github-script@v7

@@ -19,6 +19,9 @@ def load_vendor_module(name, filename, folder=VENDOR_SPEEDCAM):
     return mod
 
 
+CORE_DATASETS = {'7320', '100856'}  # 全國固定測速、全國闖紅燈照相
+
+
 def fetch_targets():
     """回傳可由 data.gov.tw 資料集 API 更新的檔：dataset 是數字、檔案是 CSV。
     其他（國道 ZIP、高雄 PDF、參考文件）留在 raw/speedcams 固定版本，人工更新。"""
@@ -39,3 +42,13 @@ def fetch_targets():
     except Exception as e:  # noqa: BLE001
         print('讀 建置_移動式.py 失敗：%s' % e, file=sys.stderr)
     return out
+
+
+def fetch_core_targets():
+    """每日更新：全國固定測速與全國闖紅燈照相。"""
+    return [t for t in fetch_targets() if t['dataset'] in CORE_DATASETS]
+
+
+def fetch_county_targets():
+    """每週更新：各縣市與移動式測速來源。"""
+    return [t for t in fetch_targets() if t['dataset'] not in CORE_DATASETS]

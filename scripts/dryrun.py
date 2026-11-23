@@ -14,9 +14,9 @@ import sys
 STEPS = {
     'validate': [['-m', 'unittest', 'discover', '-s', 'scripts/tests', '-t', 'scripts'], ['scripts/validate.py'],
                  ['scripts/publish.py', 'speedcams', '--dry-run']],
-    'daily': [['-m', 'unittest', 'discover', '-s', 'scripts/tests', '-t', 'scripts'], 'FETCH speedcams',
+    'daily': [['-m', 'unittest', 'discover', '-s', 'scripts/tests', '-t', 'scripts'], 'FETCH speedcams-core',
               ['scripts/publish.py', 'speedcams', '--max-drop', '0.05', '--dry-run']],
-    'weekly': [['-m', 'unittest', 'discover', '-s', 'scripts/tests', '-t', 'scripts'], 'FETCH signals', 'WEEKLY'],
+    'weekly': [['-m', 'unittest', 'discover', '-s', 'scripts/tests', '-t', 'scripts'], 'FETCH signals speedcams-counties', 'WEEKLY'],
     'monthly': [['-m', 'unittest', 'discover', '-s', 'scripts/tests', '-t', 'scripts'], 'FETCH timing speedlimits',
                 ['scripts/publish.py', 'timing', 'speedlimits', '--max-drop', '0.05', '--dry-run']],
 }

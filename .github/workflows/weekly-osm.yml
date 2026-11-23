@@ -28,7 +28,9 @@ jobs:
       - name: 安裝 pyosmium
         run: python -m pip install --disable-pip-version-check osmium==4.3.2
       - name: 單元測試
-        run: python -I -m unittest discover -s scripts/tests -t scripts
+        run: python -u -I -m unittest discover -s scripts/tests -t scripts
+        env:
+          PYTHONUNBUFFERED: "1"
       - name: 下載 Geofabrik 台灣 extract（核對 MD5）
         run: |
           mkdir -p raw/osm && cd raw/osm
@@ -37,14 +39,25 @@ jobs:
           curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o taiwan-latest.osm.pbf.md5 https://download.geofabrik.de/asia/taiwan-latest.osm.pbf.md5
           md5sum -c taiwan-latest.osm.pbf.md5
       - name: 下載政府號誌位置（資料集 API；請求間隔 40 秒以上）
-        run: python -I scripts/fetch.py signals
+        run: python -u -I scripts/fetch.py signals
+        env:
+          PYTHONUNBUFFERED: "1"
+      - name: 下載各縣市與移動式測速原始檔（每週一次）
+        run: python -u -I scripts/fetch.py speedcams-counties
+        timeout-minutes: 60
+        # 縣市資料變動少、境外連線常被擋：失敗只留紀錄，不能擋住後面的紅綠燈／休息點發布
+        continue-on-error: true
+        env:
+          PYTHONUNBUFFERED: "1"
       - name: 建置、併政府補點、驗證、決定版本
         id: publish
         run: |
           set +e
-          python -I scripts/publish.py signals reststops --pbf raw/osm/taiwan-latest.osm.pbf --max-drop 0.05
+          python -u -I scripts/publish.py signals reststops --pbf raw/osm/taiwan-latest.osm.pbf --max-drop 0.05
           echo "code=$?" >> "$GITHUB_OUTPUT"
-          python -I scripts/report.py
+          python -u -I scripts/report.py
+        env:
+          PYTHONUNBUFFERED: "1"
       - name: 失敗 → 開 issue（不發布）
         if: steps.publish.outputs.code != '0'
         uses: actions/github-script@v7
@@ -70,7 +83,7 @@ jobs:
           fi
           git config user.name "touror-data-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data manifest.json CHANGELOG.md
+          git add data manifest.json CHANGELOG.md raw/speedcams
           git commit -m "OSM 紅綠燈與休息點更新 $(TZ=Asia/Taipei date +%F)"
           git pull --rebase
           git push

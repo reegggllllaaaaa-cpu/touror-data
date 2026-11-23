@@ -122,8 +122,33 @@ class DataGovTests(unittest.TestCase):
             self.assertTrue(req.get_header('User-agent').startswith('touror-data-builder'))
             raise OSError('boom')
         with self.assertRaises(RuntimeError):
-            datagov.http_get('https://x/y', retries=(0, 0), opener=opener)
-        self.assertEqual(len(calls), 3)
+            datagov.http_get('https://x/y', retries=(0,), opener=opener)
+        self.assertEqual(len(calls), 2, '初始 1 次 + 重試 1 次')
+
+    def test_http_get_total_time_budget(self):
+        """驗證總時間上限會把 socket timeout 壓縮到預算內（防慢速滴流）。"""
+        timeouts = []
+
+        def opener(req, timeout):
+            timeouts.append(timeout)
+            raise OSError('boom')
+        with self.assertRaises(RuntimeError):
+            datagov.http_get('https://x/y', retries=(0,), opener=opener, max_seconds=1)
+        self.assertEqual(len(timeouts), 2, '初始 1 次 + 重試 1 次')
+        self.assertLessEqual(timeouts[0], 1, 'socket timeout 被壓在總預算內')
+
+    def test_fetch_dataset_fails_without_old_file(self):
+        tmp = tempfile.mkdtemp()
+        try:
+            dest = os.path.join(tmp, 'missing.csv')
+            g = FakeGetter({datagov.API % '1': api([dict(resourceFormat='CSV', resourceDownloadUrl='https://new/x.csv')]),
+                            'https://new/x.csv': RuntimeError('down')})
+            datagov._info_cache.clear()
+            r = datagov.fetch_dataset('1', dest, getter=g)
+            self.assertEqual(r['status'], 'failed')
+            self.assertFalse(os.path.exists(dest))
+        finally:
+            shutil.rmtree(tmp)
 
 
 def write_csv(path, header, rows, encoding='utf-8-sig', delimiter=','):
@@ -209,6 +234,29 @@ class CuratedTests(unittest.TestCase):
     def test_repo_curated_tables_valid(self):
         _, problems = curated.load_all(paths.CURATED)
         self.assertEqual(problems, [])
+
+
+class FetchGroupTests(unittest.TestCase):
+    def test_speedcam_groups_partition(self):
+        from speedcams.sources import fetch_core_targets, fetch_county_targets, fetch_targets
+        all_targets = fetch_targets()
+        core_targets = fetch_core_targets()
+        county_targets = fetch_county_targets()
+        all_ds = {t['dataset'] for t in all_targets}
+        core_ds = {t['dataset'] for t in core_targets}
+        county_ds = {t['dataset'] for t in county_targets}
+        self.assertEqual(core_ds, {'7320', '100856'}, '每日核心為全國固定測速與全國闖紅燈')
+        self.assertEqual(core_ds | county_ds, all_ds)
+        self.assertEqual(core_ds & county_ds, set())
+        self.assertEqual(len(core_targets), 2)
+        self.assertEqual(len(county_targets), 25, '縣市與移動式來源應為 25 個（含重複 dataset）')
+
+    def test_fetch_targets_command_groups(self):
+        from fetch import targets
+        core = targets('speedcams-core')
+        county = targets('speedcams-counties')
+        self.assertEqual({t['dataset'] for t in core}, {'7320', '100856'})
+        self.assertEqual(len(county), 25)
 
 
 class FormatTests(unittest.TestCase):
@@ -405,12 +453,16 @@ class WorkflowTests(unittest.TestCase):
     def test_schedules_and_commands(self):
         daily = self.read('daily-speedcams.yml')
         self.assertIn("cron: '0 19 * * *'", daily, '每日 03:00 台灣時間＝19:00 UTC')
-        self.assertIn('scripts/fetch.py speedcams', daily)
+        self.assertIn('scripts/fetch.py speedcams-core', daily)
         self.assertIn('scripts/publish.py speedcams', daily)
+        self.assertIn('timeout-minutes: 20', daily, '每日 fetch 步驟限 20 分鐘')
+        self.assertIn('timeout-minutes: 40', daily, '每日 job 限 40 分鐘')
+        self.assertIn('PYTHONUNBUFFERED', daily)
         self.assertIn('issues: write', daily)
         weekly = self.read('weekly-osm.yml')
         self.assertIn('download.geofabrik.de/asia/taiwan-latest.osm.pbf', weekly)
         self.assertIn('scripts/fetch.py signals', weekly)
+        self.assertIn('scripts/fetch.py speedcams-counties', weekly)
         monthly = self.read('monthly-timing.yml')
         self.assertIn('scripts/fetch.py timing', monthly)
         pr = self.read('validate-on-push.yml')
