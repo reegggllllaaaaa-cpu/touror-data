@@ -72,12 +72,13 @@ jobs:
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v3
-        if: steps.commit.outputs.changed == 'true'
+        # 資料有變更才部署；手動觸發（workflow_dispatch）一律部署，才能在資料沒變時發布新增的檔案（例如 offline-manifest.json）
+        if: steps.commit.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         with:
           path: site
   deploy:
     needs: build
-    if: needs.build.outputs.changed == 'true'
+    if: needs.build.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
