@@ -16,8 +16,13 @@ DOWNLOAD_DATE = '2026-11-19'
 FIRST_DOWNLOAD_DATE = '2026-11-18'
 # 修訂號（App 內版本＝version.revision）。2＝加區間長度 len_m／len_src（NAV-CAM-HUD-1）；
 # 3＝區間長度補完（官方文件、len_ref／len_date）、拆方向與分段、重複合併、汰除／維護中狀態、闖紅燈擴充與 redlight_speed（NAV-CAM-DATA-2）
-DATA_REVISION = 3
-DATA_REVISION_NOTE = ('3：區間長度依官方文件補完（len_src official／unverified、len_ref、len_date）、拆方向與分段、重複點合併、'
+# 6＝依 驗證/audit-1 稽核修正（NAV-CAM-AUDIT-FIX-1，2026-11-20）：方向不符改方位或移到正確車道、離路吸附、區間雙向拆成兩筆、
+#   補苗栗／桃園缺起點的區間、桃園「取締項目只寫超速」不再當闖紅燈兼超速、加 conf（資料可信度）欄。
+#   跳過 4、5：資料發布管線已用 20261119.4／.5 發布過 revision 3 的內容，App 內建版本要比它們新。
+DATA_REVISION = 6
+DATA_REVISION_NOTE = ('6：依 audit-1 稽核修正方位與座標、區間雙向拆成兩筆並補苗栗／桃園缺起點的區間、桃園「取締項目只寫超速」改回固定式、'
+                      '加 conf（official／official-text／unverified）與 audit_flags。'
+                      '3：區間長度依官方文件補完（len_src official／unverified、len_ref、len_date）、拆方向與分段、重複點合併、'
                       '汰除（retired）與維護中（suspended）狀態；闖紅燈擴充（高雄 115 年 PDF、臺北 135957、新竹市 178144、'
                       '苗栗 172178、基隆 178159、國道 100856）與 redlight_speed（闖紅燈兼超速）')
 CORRECTIONS = os.path.join(HERE, '區間修正.json')
@@ -203,7 +208,8 @@ def normalize_row(key, d):
     if key in ('taoyuan', 'taoyuan_tech'):
         return dict(city='桃園市', region=g(d, '行政區'), address=g(d, '設置地點_路口或路段'),
                     lon=g(d, '座標經度'), lat=g(d, '座標緯度'), direct=g(d, '拍攝方向'), limit=g(d, '速限'),
-                    items=g(d, '取締項目') + ' ' + g(d, '型式') + ' ' + g(d, '科技執法種類'), extra=g(d, '備註'))
+                    items=g(d, '取締項目') + ' ' + g(d, '型式') + ' ' + g(d, '科技執法種類'), extra=g(d, '備註'),
+                    enforce=g(d, '取締項目'))
     if key == 'hsinchu_county':
         return dict(city='新竹縣', region=g(d, '行政區'), address=g(d, '設置地點'), lon=g(d, '經度'), lat=g(d, '緯度'),
                     direct=g(d, '拍攝方向'), limit=g(d, '速限'), items=g(d, '取締項目') + ' ' + g(d, '種類'), extra='')
@@ -333,6 +339,11 @@ def classify(src_kind, n, limit):
     if src_kind == 'section':
         return 'section', [], '資料集標題為區間測速'
     red = '紅燈' in text
+    # 桃園（25935 固定式、178168 科技執法）：「型式」欄是設備名稱（「測速暨闖紅燈照相執法」），不代表這一支有拍闖紅燈；
+    # 「取締項目」欄有寫而且沒有闖紅燈（只寫「超速」）時，以取締項目為準 → 不是闖紅燈。
+    # 稽核 audit-1（2026-11-19）：桃園 86 支「闖紅燈兼超速」地址多為「XX號前」路段、附近沒有號誌；原文取締項目都是「超速」。
+    if n.get('enforce', '').strip() and '紅燈' not in n['enforce']:
+        red = False
     speed = any(w in text for w in ('超速', '測速', '雷達', '雷射'))
     items = n['items']
     if items.strip() and '紅燈' in items and not any(w in items for w in ('超速', '測速')):
@@ -766,7 +777,8 @@ def promote_redlight_speed(merged, stats):
 
 # ---------------------------------------------------------------- 區間人工修正（區間修正.json）
 SECTION_SET_KEYS = {'lat', 'lon', 'bearing', 'direction', 'direct_raw', 'limit_kmh', 'address', 'len_m', 'len_src',
-                    'len_ref', 'len_date', 'len_rule', 'status', 'status_note', 'coord_src', 'source', 'sources'}
+                    'len_ref', 'len_date', 'len_rule', 'status', 'status_note', 'coord_src', 'source', 'sources',
+                    'conf', 'audit_flags', 'conf_note'}
 
 
 def apply_corrections(out, used, stats):
@@ -830,6 +842,34 @@ def apply_corrections(out, used, stats):
     missing = [dict(m, ref=refs.get(m.get('ref'), m.get('ref'))) for m in cfg.get('missing', [])]
     stats['corrections'] = log
     return out, pending, missing
+
+
+# ---------------------------------------------------------------- 資料可信度（驗證/audit-1/資料可信度規格.md）
+# conf：official＝政府資料本身的座標與數值、稽核沒有旗標；official-text＝數值來自官方文字，座標或方位是我們換算／吸附的
+#（coord_src：OSM＝隧道幾何、odometer＝7040 里程牌內插、snap＝吸附到 OSM 路段）；unverified＝稽核失敗待查或官方註記維護中／汰除。
+# 區間修正.json 可直接指定 conf（稽核修正 by=audit-1）；沒指定的依下列規則。App 只有 unverified 會（在設定開啟時）改成淡色不念。
+CONFS = ('official', 'official-text', 'osm', 'crowd-confirmed', 'inferred', 'unverified')
+AUDIT_DATE = '2026-11-20'
+
+
+def assign_conf(out, stats):
+    pages = {s['key']: (s.get('page') or ('https://data.gov.tw/dataset/' + s['dataset'])) for s in SOURCES + EXTRA_SOURCES}
+    for o in out:
+        conf = o.get('conf')
+        if o['status'] in ('suspended', 'retired'):
+            conf = 'unverified'
+        elif not conf:
+            conf = 'official-text' if o.get('coord_src') else 'official'
+        if conf not in CONFS:
+            raise ValueError('%s conf 不認得：%s' % (o['id'], conf))
+        o['conf'] = conf
+        o['conf_src'] = pages.get(o['source'], '')
+        o.setdefault('audit_flags', [])
+        if conf != 'unverified':
+            o['checked'] = AUDIT_DATE
+        else:
+            o.pop('checked', None)
+    stats['conf_counts'] = Counter(o['conf'] for o in out if o['status'] in ('active', 'suspended'))
 
 
 def make_id(r, used):
@@ -903,6 +943,7 @@ def main():
             o['len_date'] = ''
         out.append(o)
     out, pending, missing = apply_corrections(out, used, stats)
+    assign_conf(out, stats)
     for o in out:
         if o['type'] == 'section' and o['len_src'] == 'text' and not o.get('len_ref'):
             # 文字里程解析出的長度：出處＝該點座標所屬資料集
@@ -914,7 +955,7 @@ def main():
         json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
     cols = ['id', 'lat', 'lon', 'bearing', 'limit_kmh', 'type', 'source', 'city', 'address', 'direction',
             'direct_raw', 'limit_raw', 'tags', 'sources', 'type_rule', 'len_m', 'len_src', 'len_ref', 'len_date',
-            'status', 'status_note']
+            'status', 'status_note', 'conf', 'audit_flags', 'coord_src']
     with open(os.path.join(HERE, 'speedcams.csv'), 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.writer(f)
         w.writerow(cols)
@@ -941,8 +982,12 @@ def main():
                     len_src='text＝由官方設置地點文字的里程起迄推得|official＝官方文件明寫長度|est＝估計（len_m 為 null 時 App 以 1.0 km 估計）|unverified＝只有民間數字（App 當估計）',
                     len_ref='長度出處（文件名稱與網址）', len_date='長度出處日期',
                     len_rule='區間長度的依據或無法取得的原因',
-                    coord_src='座標不是官方座標時的來源（OSM＝依 OSM 隧道幾何推估），原座標在 orig_lat／orig_lon',
-                    derived_from='由哪一筆拆出（同一區間另一方向或第二段）'),
+                    coord_src='座標不是官方座標時的來源（OSM＝依 OSM 隧道幾何推估、odometer＝7040 里程牌內插後吸附、snap＝吸附到方向相符的 OSM 路段），原座標在 orig_lat／orig_lon',
+                    derived_from='由哪一筆拆出（同一區間另一方向或第二段）',
+                    conf='資料可信度：official＝政府資料座標與數值且稽核無旗標|official-text＝數值來自官方文字、座標或方位為換算／吸附（coord_src）|unverified＝稽核失敗待查或維護中／汰除（App 可設定只淡色顯示、不念）',
+                    conf_src='來源資料集頁面', checked='最後一次稽核通過日期（unverified 不寫）',
+                    audit_flags='稽核旗標：bearing_fixed、bearing_mismatch、far_snapped、far_from_road、far_audit_artifact、section_split、section_shared_start、section_filled',
+                    conf_note='可信度判斷說明'),
         sources=[dict(key=s['key'],
                       dataset_page=s.get('page') or ('https://data.gov.tw/dataset/' + s['dataset']), title=s['title'],
                       download_url=s['url'], file=s['file'],

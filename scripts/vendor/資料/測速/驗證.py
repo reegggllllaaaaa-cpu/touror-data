@@ -127,7 +127,32 @@ csv_len = {r['id']: r.get('len_m', '') for r in csv_rows}
 bad_csv_len = [d['id'] for d in secs if str(csv_len.get(d['id'], '')) != ('' if d.get('len_m') is None else str(d['len_m']))]
 check('CSV len_m 與 JSON 一致', not bad_csv_len, '%d 筆' % len(bad_csv_len))
 
-check('meta 授權文字正確', meta.get('license') == '資料來源：政府資料開放平臺，依政府資料開放授權條款第1版')
+# 資料可信度（NAV-CAM-AUDIT-FIX-1；驗證/audit-1/資料可信度規格.md）
+CONFS = {'official', 'official-text', 'osm', 'crowd-confirmed', 'inferred', 'unverified'}
+bad_conf = [d['id'] for d in data if d.get('conf') not in CONFS]
+check('每筆都有 conf（official|official-text|osm|crowd-confirmed|inferred|unverified）', not bad_conf,
+      '%d 筆 %s' % (len(bad_conf), bad_conf[:5]))
+bad_unv = [d['id'] for d in data if d.get('conf') == 'unverified' and d.get('status') in ('active',)
+           and not (d.get('audit_flags') and d.get('status_note'))]
+check('unverified（使用中）都有 audit_flags 與 status_note 說明', not bad_unv, '%d 筆 %s' % (len(bad_unv), bad_unv[:5]))
+bad_sus = [d['id'] for d in data if d.get('status') in ('suspended', 'retired') and d.get('conf') != 'unverified']
+check('維護中／汰除的點 conf＝unverified', not bad_sus, '%d 筆 %s' % (len(bad_sus), bad_sus[:5]))
+bad_ot = [d['id'] for d in data if d.get('coord_src') and d.get('conf') == 'official']
+check('座標經換算／吸附（coord_src）的點不是 official', not bad_ot, '%d 筆 %s' % (len(bad_ot), bad_ot[:5]))
+bad_moved = [d['id'] for d in data if d.get('coord_src') and not d.get('derived_from') and 'orig_lat' not in d]
+check('改過座標的點都留原座標 orig_lat／orig_lon', not bad_moved, '%d 筆 %s' % (len(bad_moved), bad_moved[:5]))
+bad_chk = [d['id'] for d in data if (d.get('conf') == 'unverified') == bool(d.get('checked'))]
+check('checked（稽核通過日）只寫在非 unverified 的點', not bad_chk, '%d 筆' % len(bad_chk))
+split = [d for d in data if 'section_split' in (d.get('audit_flags') or [])]
+bad_split = [d['id'] for d in split if d['direction'] != 'one' or d['bearing'] is None]
+check('依里程拆方向的區間都是單向且有方位', not bad_split, '%d 筆 %s' % (len(bad_split), bad_split[:5]))
+shared = [d['id'] for d in live if d['type'] == 'section' and d['direction'] == 'both' and d.get('len_m')
+          and 'section_shared_start' not in (d.get('audit_flags') or [])]
+check('雙向共用一個起點的區間都標 section_shared_start（待現地確認）', not shared, '%d 筆 %s' % (len(shared), shared[:5]))
+n_unv = sum(1 for d in live if d.get('conf') == 'unverified')
+check('unverified 筆數合理（≤ 使用中的 5%）', n_unv * 20 <= len(live), '%d／%d' % (n_unv, len(live)))
+
+check('meta 授權文字正確',meta.get('license') == '資料來源：政府資料開放平臺，依政府資料開放授權條款第1版')
 check('meta 版本號＝下載日期', meta.get('version') == str(meta.get('download_date', '')).replace('-', ''),
       '%s / %s' % (meta.get('version'), meta.get('download_date')))
 

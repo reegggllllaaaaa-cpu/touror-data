@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-23T10:38:30Z",
+ "generated": "2026-11-23T18:45:00Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -86,11 +86,11 @@
   {
    "name": "speedcams",
    "path": "data/speedcams/speedcams.json",
-   "version": "20261119.5",
-   "date": "2026-11-19",
-   "count": 2345,
-   "sha256": "61f062a2a5722f910d7199f33bdc1d2ba166ad143a8766b4d7c005f7f92d28f4",
-   "bytes": 263050,
+   "version": "20261120.1",
+   "date": "2026-11-20",
+   "count": 2379,
+   "sha256": "7a6ae650bc6392b768698c6a737ac31343e264e1f6b5b9f8f242573ae0210019",
+   "bytes": 271916,
    "minAppVersion": "0.0.1",
    "license": "政府資料開放授權條款－第1版",
    "attribution": "資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）",
@@ -230,11 +230,11 @@
   {
    "name": "speedcams-full",
    "path": "data/speedcams/speedcams-full.csv",
-   "version": "20261119.5",
-   "date": "2026-11-19",
-   "count": 2351,
-   "sha256": "10ce29f7e76886fd16fd2789ec796b760ccd10c9040008b7296eeef7c7707272",
-   "bytes": 497380,
+   "version": "20261120.1",
+   "date": "2026-11-20",
+   "count": 2385,
+   "sha256": "c093ae8ae9b30e4f70b3d60359affcc63b231412051ced213617db03bc37397a",
+   "bytes": 543136,
    "minAppVersion": "0.0.1",
    "license": "政府資料開放授權條款－第1版",
    "attribution": "資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）",
@@ -431,6 +431,30 @@
      "title": "臺中市號誌燈圖資",
      "url": "https://data.gov.tw/dataset/103743",
      "dataset": "103743"
+    }
+   ]
+  },
+  {
+   "name": "taiwan-speedlimits",
+   "path": "data/speedlimits/taiwan-speedlimits.bin",
+   "version": "20261120.1",
+   "date": "2026-11-20",
+   "count": 11380,
+   "sha256": "4258e785862f15a139f6e03519aefe0cd5de9a928ba9c9663ed76d03f4018054",
+   "bytes": 137262,
+   "minAppVersion": "0.0.1",
+   "license": "政府資料開放授權條款－第1版",
+   "attribution": "資料來源：交通部公路局（省道速限圖資）",
+   "sources": [
+    {
+     "title": "省道速限圖資",
+     "url": "https://data.gov.tw/dataset/105021",
+     "dataset": "105021"
+    },
+    {
+     "title": "省道里程坐標（里程牌標誌）",
+     "url": "https://data.gov.tw/dataset/7040",
+     "dataset": "7040"
     }
    ]
   }

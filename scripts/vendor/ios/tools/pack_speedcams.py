@@ -9,7 +9,8 @@
                 "b": 被拍車輛行進方位角（單向才有，雙向／未知省略）, "a": 設置地點（最多 24 字）,
                 "len": 區間長度公尺（只有區間點、有長度才有；lenSrc=est／unverified 時是估計值）,
                 "lenSrc": "text|official|est|unverified"（只有區間點）,
-                "st": "sus"（官方註記維護中，App 預設不提醒；使用中省略）}, ...]}
+                "st": "sus"（官方註記維護中，App 預設不提醒；使用中省略）,
+                "cf": 資料可信度（official-text|unverified|osm|inferred|crowd-confirmed；official 省略，NAV-CAM-AUDIT-FIX-1）}, ...]}
   version：正本 version，正本 meta 有 revision ≥ 2 時接「.revision」（例 20261119.3）
   t：f＝固定測速 fixed、r＝闖紅燈 redlight、rs＝闖紅燈兼超速 redlight_speed（App 視為闖紅燈且有速限）、
      s＝區間測速起點 section、u＝類型不明 unknown
@@ -29,6 +30,8 @@ TYPE_CODE = {"fixed": "f", "redlight": "r", "redlight_speed": "rs", "section": "
 # 打包進 App 的狀態：使用中與維護中（維護中帶 "st":"sus"，App 預設不提醒）；汰除與重複點留在正本追蹤
 PACKED_STATUS = ("active", "suspended")
 LEN_SRCS = ("text", "official", "est", "unverified")
+# 資料可信度（驗證/audit-1/資料可信度規格.md）：official 最多，省略以免檔案變大；舊正本沒有 conf 欄＝official
+CONFS = ("official", "official-text", "osm", "crowd-confirmed", "inferred", "unverified")
 # 設置地點或拍攝方向原文寫了這些字＝雙向，不帶方位角（不過濾對向）。
 # 原因：建置.py 判方向時先拿掉括號註記，「南向北（雙向）」「大義路與學林路口（雙向）」會被判成單向；
 # 這些點 150 公尺內都沒有反方向的另一筆（不是「每個方向各一筆」），所以「雙向」才是可信的資訊。
@@ -36,6 +39,9 @@ BOTH_WORDS = ("雙向", "相向")
 
 
 def is_both_ways(c):
+    # 稽核拆方向的區間（audit_flags 含 section_split，NAV-CAM-AUDIT-FIX-1）：原文寫「雙向」但已依里程拆成兩筆、各帶方位
+    if "section_split" in (c.get("audit_flags") or []):
+        return False
     text = str(c.get("address") or "") + str(c.get("direct_raw") or "")
     return any(w in text for w in BOTH_WORDS)
 
@@ -86,6 +92,9 @@ def pack(cameras, meta):
             item["lenSrc"] = src
         if c.get("status") == "suspended":
             item["st"] = "sus"
+        conf = c.get("conf") or "official"
+        if conf != "official":
+            item["cf"] = conf
         out.append(item)
     version = str(meta.get("version", ""))
     if int(meta.get("revision") or 1) >= 2:
@@ -122,6 +131,8 @@ def validate(data, cameras):
             errors.append(f"{item['i']} 闖紅燈兼超速沒有速限")
         if src.get("len_src") in ("text", "official") and "len" not in item:
             errors.append(f"{item['i']} 已知長度卻沒有 len")
+        if item.get("cf", "official") not in CONFS:
+            errors.append(f"{item['i']} 可信度 {item.get('cf')} 不認得")
     return errors
 
 

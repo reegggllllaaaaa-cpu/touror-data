@@ -10,68 +10,3084 @@
   "KL": "基隆市科技執法取締地點(區間平均速率執法)（政府資料開放平臺 178159）https://www.klg.gov.tw/cht/upload/TechAreaAvgRate.csv",
   "TY": "桃園市區間測速地點及舉發數量每半年統計 2024上半年／下半年（政府資料開放平臺 171463）https://data.gov.tw/dataset/171463",
   "HCC": "新竹縣政府警察局固定測速設置地點（政府資料開放平臺 173211）https://data.gov.tw/dataset/173211",
-  "OSM": "OpenStreetMap 隧道幾何（Geofabrik taiwan-latest，2026-11-17）：沿隧道依官方起訖里程差推估起點座標"
+  "OSM": "OpenStreetMap 隧道幾何（Geofabrik taiwan-latest，2026-11-17）：沿隧道依官方起訖里程差推估起點座標",
+  "ODO": "交通部公路局 省道里程坐標（里程牌標誌）（政府資料開放平臺 7040），以前後里程牌直線內插後吸附到 OSM 路段",
+  "AUDIT1": "Touror 資料精確度稽核 audit-1（2026-11-19，驗證/audit-1/報告.md）"
  },
  "items": [
-  {"action": "update", "id": "tw-e3e3d5a62d", "set": {"direction": "one", "bearing": 180, "direct_raw": "北往南（往圓山路方向）", "len_m": 1307.7, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 1,307.7 公尺，起點 22.669723,120.343016"}},
-  {"action": "add", "from": "tw-e3e3d5a62d", "id": "tw-e3e3d5a62d-n", "set": {"lat": 22.659094, "lon": 120.340722, "direction": "one", "bearing": 0, "direct_raw": "南往北（往八德南路方向）", "address": "松藝路段（南往北，往八德南路）", "source": "kaohsiung_tech", "sources": ["kaohsiung_tech"], "len_m": 1298.9, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 1,298.9 公尺，起點 22.659094,120.340722"}},
-  {"action": "update", "id": "tw-76720b3df3", "set": {"direction": "one", "bearing": 90, "direct_raw": "往東（內門市區方向）", "address": "內門區市道182號28.9K至31.8K(往東-內門市區方向)", "len_m": 2884.7, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,884.7 公尺（文字里程 2,900）"}},
-  {"action": "add", "from": "tw-76720b3df3", "id": "tw-76720b3df3-w", "set": {"lat": 22.920963, "lon": 120.43893, "direction": "one", "bearing": 270, "direct_raw": "往西（台南市龍崎區方向）", "address": "內門區市道182號28.9K至31.8K(往西-台南市龍崎區方向)", "source": "kaohsiung_tech", "sources": ["kaohsiung_tech"], "len_m": 2877.2, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,877.2 公尺，起點 22.920963,120.43893"}},
-  {"action": "update", "id": "tw-7f90819e96", "set": {"direction": "one", "bearing": 180, "direct_raw": "往南", "address": "內門區台3線389.5K至392.5K(往南)", "len_m": 2831.1, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,831.1 公尺（文字里程 3,000）"}},
-  {"action": "add", "from": "tw-7f90819e96", "id": "tw-7f90819e96-n", "set": {"lat": 23.000528, "lon": 120.468194, "direction": "one", "bearing": 0, "direct_raw": "往北", "address": "內門區台3線389.5K至392.5K(往北)", "source": "kaohsiung_tech", "sources": ["kaohsiung_tech"], "len_m": 2858.8, "len_src": "official", "len_ref": "KH", "len_date": "2026-06-22", "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,858.8 公尺，起點 23.000528,120.468194"}},
-
-  {"action": "update", "id": "tw-2fdb9e4147", "set": {"len_m": 1293.1, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往碧潭方向 1,293.1 公尺、往臺北方向 1,138.6 公尺；只有一個座標，取較長者（區間結束判斷偏保守）"}},
-  {"action": "update", "id": "tw-b265a4b105", "set": {"len_m": 3946.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往新店 3,946.7／往宜蘭 3,938.1 公尺，取較長者"}},
-  {"action": "update", "id": "tw-89e63a1c9b", "set": {"len_m": 5835.3, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往新店 5,830.5／往宜蘭 5,835.3 公尺，取較長者（文字里程 6,000）"}},
-  {"action": "update", "id": "tw-011117802b", "set": {"len_m": 3876.8, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往新店 3,862.5／往宜蘭 3,876.8 公尺，取較長者"}},
-  {"action": "update", "id": "tw-102be199ac", "set": {"len_m": 2955.4, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：東向 25.2k 主線至 28.2k 2,955.4、錦和路匝道至 28.2k 2,859.3、西向 26.6k 至 28.2k 1,563.3 公尺；只有一個座標，取最長者"}},
-  {"action": "update", "id": "tw-01ac56f7d5", "set": {"len_m": 1755.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：1,755.7 公尺"}},
-  {"action": "update", "id": "tw-4c84badcea", "set": {"len_m": 3280.9, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：3,280.9 公尺"}},
-  {"action": "update", "id": "tw-8355d4a423", "set": {"len_m": 3788.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：3,788.7 公尺"}},
-  {"action": "update", "id": "tw-b8d18b37db", "set": {"len_m": 1171.6, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：1,171.6 公尺"}},
-  {"action": "update", "id": "tw-1702267075", "set": {"len_m": 5991.1, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 5,961.8／往北 5,991.1 公尺，取較長者"}},
-  {"action": "update", "id": "tw-b73b152dc0", "set": {"len_m": 4182.7, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 4,182.7／往北 4,178.4 公尺，取較長者"}},
-  {"action": "update", "id": "tw-b85c469c65", "set": {"len_m": 1558.0, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 1,551.8／往北 1,558.0 公尺，取較長者"}},
-  {"action": "update", "id": "tw-bfad385d99", "set": {"len_m": 7569.3, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往南 7,569.3／往北 7,568.8 公尺，取較長者"}},
-  {"action": "update", "id": "tw-0e3a8195a6", "set": {"len_m": 2757.4, "len_src": "official", "len_ref": "NTPC", "len_date": "2025-09-19", "len_rule": "新北一覽表：往桃園 2,757.4／往新北 2,752.2 公尺，取較長者"}},
-
-  {"action": "update", "id": "tw-e812b54965", "set": {"len_m": 2454.2, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：臺11線 26K+581.92→24K+127.73 2,454.2、24K+176.14→26K+623.9 2,447.8 公尺，取較長者"}},
-  {"action": "update", "id": "tw-d985ea5a1e", "set": {"len_m": 4488.8, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：臺9丁線 64K+13→59K+524.2 4,488.8、59K+572.7→64K+45.1 4,472.4 公尺，取較長者"}},
-  {"action": "update", "id": "tw-b0c3836652", "set": {"direction": "one", "bearing": 35, "direct_raw": "北上（151K+434→149K+066）", "address": "蘇花改中仁隧道 北上第2段 臺9線151K+434→149K+066", "len_m": 2368, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：每方向兩段連續區間；本筆＝北上第2段 2,368 公尺。原座標（隧道中段）與 OSM 推估的 151K+434 相距約 40 公尺，沿用原座標", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
-  {"action": "add", "from": "tw-b0c3836652", "id": "tw-b0c3836652-n1", "set": {"lat": 24.248723, "lon": 121.715379, "direction": "one", "bearing": 22, "direct_raw": "北上（153K+718→151K+434）", "address": "蘇花改中仁隧道 北上第1段 臺9線153K+718→151K+434", "coord_src": "OSM", "len_m": 2284, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：北上第1段 2,284 公尺；起點座標由 OSM 北上隧道（4,726.8 m）依官方總長 4,652 m 置中推估", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
-  {"action": "add", "from": "tw-b0c3836652", "id": "tw-b0c3836652-s1", "set": {"lat": 24.278314, "lon": 121.744031, "direction": "one", "bearing": 240, "direct_raw": "南下（149K+257→151K+756）", "address": "蘇花改中仁隧道 南下第1段 臺9線149K+257→151K+756", "coord_src": "OSM", "len_m": 2499, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：南下第1段 2,499 公尺；起點座標由 OSM 南下隧道（4,831.1 m）依官方總長 4,730 m 置中推估", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
-  {"action": "add", "from": "tw-b0c3836652", "id": "tw-b0c3836652-s2", "set": {"lat": 24.266661, "lon": 121.723246, "direction": "one", "bearing": 224, "direct_raw": "南下（151K+756→153K+987）", "address": "蘇花改中仁隧道 南下第2段 臺9線151K+756→153K+987", "coord_src": "OSM", "len_m": 2231, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：南下第2段 2,231 公尺；起點＝南下第1段起點沿 OSM 隧道 2,499 公尺", "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"}},
-  {"action": "update", "id": "tw-f5e2455bfc", "set": {"lat": 24.22119, "lon": 121.689672, "direction": "one", "bearing": 25, "direct_raw": "北上（157K+888→155K+122）", "address": "蘇花改仁水隧道 北上 臺9線157K+888→155K+122", "coord_src": "OSM", "limit_kmh": 60, "len_m": 2766, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：北上 2,766 公尺、速限 60（2022 新聞寫 50）；原座標在隧道中段（24.227335,121.69864），改用 OSM 隧道（2,963.5 m）南口內推估起點"}},
-  {"action": "add", "from": "tw-f5e2455bfc", "id": "tw-f5e2455bfc-s", "set": {"lat": 24.238039, "lon": 121.709269, "direction": "one", "bearing": 228, "direct_raw": "南下（155K+207→157K+976）", "address": "蘇花改仁水隧道 南下 臺9線155K+207→157K+976", "coord_src": "OSM", "limit_kmh": 60, "len_m": 2769, "len_src": "official", "len_ref": "HL", "len_date": "2026-03-26", "len_rule": "花蓮 114 年一覽表：南下 2,769 公尺、速限 60；起點由 OSM 隧道北口內推估"}},
-
-  {"action": "update", "id": "tw-227efc50b2", "set": {"lat": 25.086978, "lon": 121.549595, "direction": "one", "bearing": 355, "direct_raw": "南往北", "address": "自強隧道區間測速（南往北）", "coord_src": "OSM", "len_m": 917, "len_src": "official", "len_ref": "TPTA", "len_date": "2025-05-06", "len_rule": "判決書引舉發機關查復：「自強隧道（南往北）距離為917公尺」「監控自強隧道全程」；原座標在隧道中段（25.090601,121.549255），改用 OSM 北上隧道南口"}},
-  {"action": "add", "from": "tw-227efc50b2", "id": "tw-227efc50b2-s", "set": {"lat": 25.094419, "lon": 121.548506, "direction": "one", "bearing": 176, "direct_raw": "北往南", "address": "自強隧道區間測速（北往南）", "coord_src": "OSM", "len_m": 917, "len_src": "est", "len_ref": "TPTA", "len_date": "2025-05-06", "len_rule": "北往南沒有官方長度，先用南往北的 917 公尺估計（App 只當估計，不提早結束區間）；起點用 OSM 南下隧道北口"}},
-  {"action": "update", "id": "tw-82f7b2b6a3", "set": {"len_m": 600, "len_src": "unverified", "len_ref": "KIKI", "len_date": "2025-01-23", "len_rule": "官方沒查到；民間整理「約 600 m、速限 50」；OSM 隧道本體約 488 公尺", "status_note": "需人工現地確認（或寫信問臺北市交通管制工程處）"}},
-  {"action": "merge", "id": "tw-5b33ecfa61", "into": "tw-82f7b2b6a3", "note": "與 tw-82f7b2b6a3 相距約 60 公尺，同一個辛亥隧道區間（臺北市 130111 與全國 7320 各一筆）"},
-  {"action": "update", "id": "tw-3938cc66a9", "set": {"limit_kmh": 50, "len_ref": "KL", "len_date": "2026-07-23", "len_rule": "速限 50（20 噸以上大貨車 40）依基隆 178159；長度官方沒查到（規劃報導 1.75 km，未採用），維持估計", "status_note": "基隆檔另一筆 tw-42d743a0be 同一段但相距約 1.4 公里，兩筆都留（無法判斷哪一筆是起點）"}},
-  {"action": "update", "id": "tw-42d743a0be", "set": {"limit_kmh": 50, "len_ref": "KL", "len_date": "2026-07-23", "len_rule": "速限 50（20 噸以上大貨車 40）依基隆 178159；長度官方沒查到，維持估計"}},
-  {"action": "merge", "id": "tw-69ec99da91", "into": "tw-c943d47961", "note": "台15線鳳鼻隧道（全國 7320，無長度）與 223 公尺外新竹縣 173211「鳳鼻尾隧道 66.3K至69.5K」是同一區間"},
-  {"action": "update", "id": "tw-c943d47961", "set": {"len_ref": "HCC", "len_rule": "新竹縣 173211 文字「66.3K至69.5K」＝3,200 公尺；已併入全國檔重複點 tw-69ec99da91"}},
-
-  {"action": "update", "id": "tw-257d22ac88", "set": {"address": "台3線103.2公里至108公里（苗栗，第1段）", "len_m": 4800, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：台3線南向 103.2→108 公里、北向 108→103.2 公里（第1段 4.8 km）；座標在 103.2K（同檔 103.1K、103.5K 固定桿印證）。第2段 114.3→123.6 公里沒有起點座標，列待補"}},
-  {"action": "pending", "id": "tw-257d22ac88-2", "from": "tw-257d22ac88", "set": {"address": "台3線114.3公里至123.6公里（苗栗，第2段）", "len_m": 9300, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 114.3→123.6、北向 123.6→114.3 公里"}, "note": "缺 114.3K／123.6K 座標（參考：全國檔「台3線113.1公里處（獅潭國中旁）」24.5422,120.921745 往南約 1.2 km；省道里程坐標 7040 需瀏覽器下載）"},
-  {"action": "update", "id": "tw-df3f9b024d", "set": {"address": "縣道140線16.2公里至16.9公里（苗栗，第1段）", "len_m": 700, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：東向 16.2→16.9、西向 16.9→16.2 公里（第1段 0.7 km）；座標位於同檔 8.6K 與 19.9K 固定桿之間、近 16.2K。第2段 23.1→25.1 公里列待補"}},
-  {"action": "pending", "id": "tw-df3f9b024d-2", "from": "tw-df3f9b024d", "set": {"address": "縣道140線23.1公里至25.1公里（苗栗，第2段）", "len_m": 2000, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：東向 23.1→25.1、西向 25.1→23.1 公里"}, "note": "缺 23.1K／25.1K 座標"},
-  {"action": "update", "id": "tw-7fd3668202", "set": {"address": "台13甲線8.3公里至9.5公里（苗栗，第1段）", "len_m": 1200, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 8.3→9.5、北向 9.5→8.3 公里（第1段 1.2 km）", "status": "suspended", "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"}},
-  {"action": "pending", "id": "tw-7fd3668202-2", "from": "tw-7fd3668202", "set": {"address": "台13甲線9.8公里至11公里（苗栗，第2段）", "len_m": 1200, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 9.8→11、北向 11→9.8 公里", "status": "suspended", "status_note": "設備系統維護中"}, "note": "缺 9.8K／11K 座標；113 下半年設備維護中"},
-  {"action": "update", "id": "tw-a9717abd77", "set": {"direction": "one", "bearing": 0, "direct_raw": "北向（122.6→115.6 公里）", "address": "台61線北向122.6公里至115.6公里（苗栗）", "len_m": 7000, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：北向 122.6→115.6 公里＝7.0 km（速限 90，大車 80）；南向另一筆", "status": "suspended", "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"}},
-  {"action": "add", "from": "tw-a9717abd77", "id": "tw-a9717abd77-s", "set": {"direction": "one", "bearing": 180, "direct_raw": "南向（122.2→130.2 公里）", "address": "台61線南向122.2公里至130.2公里（苗栗）", "len_m": 8000, "len_src": "text", "len_ref": "ML", "len_date": "2025-02-25", "len_rule": "苗栗 172952：南向 122.2→130.2 公里＝8.0 km；起點與北向起點相距約 400 公尺，沿用同一座標", "status": "suspended", "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"}},
-
-  {"action": "retire", "id": "tw-8c77a1e289", "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無青山路二段"},
-  {"action": "retire", "id": "tw-aac231abae", "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無萬壽路一段"},
-  {"action": "retire", "id": "tw-56de94dc12", "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無萬壽路一段"}
+  {
+   "action": "update",
+   "id": "tw-e3e3d5a62d",
+   "set": {
+    "direction": "one",
+    "bearing": 180,
+    "direct_raw": "北往南（往圓山路方向）",
+    "len_m": 1307.7,
+    "len_src": "official",
+    "len_ref": "KH",
+    "len_date": "2026-06-22",
+    "len_rule": "高雄 115 年一覽表區間表：偵測長度 1,307.7 公尺，起點 22.669723,120.343016"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-e3e3d5a62d",
+   "id": "tw-e3e3d5a62d-n",
+   "set": {
+    "lat": 22.659094,
+    "lon": 120.340722,
+    "direction": "one",
+    "bearing": 0,
+    "direct_raw": "南往北（往八德南路方向）",
+    "address": "松藝路段（南往北，往八德南路）",
+    "source": "kaohsiung_tech",
+    "sources": [
+     "kaohsiung_tech"
+    ],
+    "len_m": 1298.9,
+    "len_src": "official",
+    "len_ref": "KH",
+    "len_date": "2026-06-22",
+    "len_rule": "高雄 115 年一覽表區間表：偵測長度 1,298.9 公尺，起點 22.659094,120.340722"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-76720b3df3",
+   "set": {
+    "direction": "one",
+    "bearing": 90,
+    "direct_raw": "往東（內門市區方向）",
+    "address": "內門區市道182號28.9K至31.8K(往東-內門市區方向)",
+    "len_m": 2884.7,
+    "len_src": "official",
+    "len_ref": "KH",
+    "len_date": "2026-06-22",
+    "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,884.7 公尺（文字里程 2,900）"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-76720b3df3",
+   "id": "tw-76720b3df3-w",
+   "set": {
+    "lat": 22.920963,
+    "lon": 120.43893,
+    "direction": "one",
+    "bearing": 270,
+    "direct_raw": "往西（台南市龍崎區方向）",
+    "address": "內門區市道182號28.9K至31.8K(往西-台南市龍崎區方向)",
+    "source": "kaohsiung_tech",
+    "sources": [
+     "kaohsiung_tech"
+    ],
+    "len_m": 2877.2,
+    "len_src": "official",
+    "len_ref": "KH",
+    "len_date": "2026-06-22",
+    "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,877.2 公尺，起點 22.920963,120.43893"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-7f90819e96",
+   "set": {
+    "direction": "one",
+    "bearing": 180,
+    "direct_raw": "往南",
+    "address": "內門區台3線389.5K至392.5K(往南)",
+    "len_m": 2831.1,
+    "len_src": "official",
+    "len_ref": "KH",
+    "len_date": "2026-06-22",
+    "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,831.1 公尺（文字里程 3,000）"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-7f90819e96",
+   "id": "tw-7f90819e96-n",
+   "set": {
+    "lat": 23.000528,
+    "lon": 120.468194,
+    "direction": "one",
+    "bearing": 0,
+    "direct_raw": "往北",
+    "address": "內門區台3線389.5K至392.5K(往北)",
+    "source": "kaohsiung_tech",
+    "sources": [
+     "kaohsiung_tech"
+    ],
+    "len_m": 2858.8,
+    "len_src": "official",
+    "len_ref": "KH",
+    "len_date": "2026-06-22",
+    "len_rule": "高雄 115 年一覽表區間表：偵測長度 2,858.8 公尺，起點 23.000528,120.468194"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-2fdb9e4147",
+   "set": {
+    "len_m": 1293.1,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往碧潭方向 1,293.1 公尺、往臺北方向 1,138.6 公尺；只有一個座標，取較長者（區間結束判斷偏保守）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b265a4b105",
+   "set": {
+    "len_m": 3946.7,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往新店 3,946.7／往宜蘭 3,938.1 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-89e63a1c9b",
+   "set": {
+    "len_m": 5835.3,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往新店 5,830.5／往宜蘭 5,835.3 公尺，取較長者（文字里程 6,000）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-011117802b",
+   "set": {
+    "len_m": 3876.8,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往新店 3,862.5／往宜蘭 3,876.8 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-102be199ac",
+   "set": {
+    "len_m": 2955.4,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：東向 25.2k 主線至 28.2k 2,955.4、錦和路匝道至 28.2k 2,859.3、西向 26.6k 至 28.2k 1,563.3 公尺；只有一個座標，取最長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-01ac56f7d5",
+   "set": {
+    "len_m": 1755.7,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：1,755.7 公尺"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-4c84badcea",
+   "set": {
+    "len_m": 3280.9,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：3,280.9 公尺"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-8355d4a423",
+   "set": {
+    "len_m": 3788.7,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：3,788.7 公尺"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b8d18b37db",
+   "set": {
+    "len_m": 1171.6,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：1,171.6 公尺"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-1702267075",
+   "set": {
+    "len_m": 5991.1,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往南 5,961.8／往北 5,991.1 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b73b152dc0",
+   "set": {
+    "len_m": 4182.7,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往南 4,182.7／往北 4,178.4 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b85c469c65",
+   "set": {
+    "len_m": 1558.0,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往南 1,551.8／往北 1,558.0 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-bfad385d99",
+   "set": {
+    "len_m": 7569.3,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往南 7,569.3／往北 7,568.8 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-0e3a8195a6",
+   "set": {
+    "len_m": 2757.4,
+    "len_src": "official",
+    "len_ref": "NTPC",
+    "len_date": "2025-09-19",
+    "len_rule": "新北一覽表：往桃園 2,757.4／往新北 2,752.2 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-e812b54965",
+   "set": {
+    "len_m": 2454.2,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：臺11線 26K+581.92→24K+127.73 2,454.2、24K+176.14→26K+623.9 2,447.8 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-d985ea5a1e",
+   "set": {
+    "len_m": 4488.8,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：臺9丁線 64K+13→59K+524.2 4,488.8、59K+572.7→64K+45.1 4,472.4 公尺，取較長者"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b0c3836652",
+   "set": {
+    "direction": "one",
+    "bearing": 35,
+    "direct_raw": "北上（151K+434→149K+066）",
+    "address": "蘇花改中仁隧道 北上第2段 臺9線151K+434→149K+066",
+    "len_m": 2368,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：每方向兩段連續區間；本筆＝北上第2段 2,368 公尺。原座標（隧道中段）與 OSM 推估的 151K+434 相距約 40 公尺，沿用原座標",
+    "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b0c3836652",
+   "id": "tw-b0c3836652-n1",
+   "set": {
+    "lat": 24.248723,
+    "lon": 121.715379,
+    "direction": "one",
+    "bearing": 22,
+    "direct_raw": "北上（153K+718→151K+434）",
+    "address": "蘇花改中仁隧道 北上第1段 臺9線153K+718→151K+434",
+    "coord_src": "OSM",
+    "len_m": 2284,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：北上第1段 2,284 公尺；起點座標由 OSM 北上隧道（4,726.8 m）依官方總長 4,652 m 置中推估",
+    "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b0c3836652",
+   "id": "tw-b0c3836652-s1",
+   "set": {
+    "lat": 24.278314,
+    "lon": 121.744031,
+    "direction": "one",
+    "bearing": 240,
+    "direct_raw": "南下（149K+257→151K+756）",
+    "address": "蘇花改中仁隧道 南下第1段 臺9線149K+257→151K+756",
+    "coord_src": "OSM",
+    "len_m": 2499,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：南下第1段 2,499 公尺；起點座標由 OSM 南下隧道（4,831.1 m）依官方總長 4,730 m 置中推估",
+    "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b0c3836652",
+   "id": "tw-b0c3836652-s2",
+   "set": {
+    "lat": 24.266661,
+    "lon": 121.723246,
+    "direction": "one",
+    "bearing": 224,
+    "direct_raw": "南下（151K+756→153K+987）",
+    "address": "蘇花改中仁隧道 南下第2段 臺9線151K+756→153K+987",
+    "coord_src": "OSM",
+    "len_m": 2231,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：南下第2段 2,231 公尺；起點＝南下第1段起點沿 OSM 隧道 2,499 公尺",
+    "status_note": "PDF 版面錯位，速限 70 的對應有一點不確定"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f5e2455bfc",
+   "set": {
+    "lat": 24.22119,
+    "lon": 121.689672,
+    "direction": "one",
+    "bearing": 25,
+    "direct_raw": "北上（157K+888→155K+122）",
+    "address": "蘇花改仁水隧道 北上 臺9線157K+888→155K+122",
+    "coord_src": "OSM",
+    "limit_kmh": 60,
+    "len_m": 2766,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：北上 2,766 公尺、速限 60（2022 新聞寫 50）；原座標在隧道中段（24.227335,121.69864），改用 OSM 隧道（2,963.5 m）南口內推估起點"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-f5e2455bfc",
+   "id": "tw-f5e2455bfc-s",
+   "set": {
+    "lat": 24.238039,
+    "lon": 121.709269,
+    "direction": "one",
+    "bearing": 228,
+    "direct_raw": "南下（155K+207→157K+976）",
+    "address": "蘇花改仁水隧道 南下 臺9線155K+207→157K+976",
+    "coord_src": "OSM",
+    "limit_kmh": 60,
+    "len_m": 2769,
+    "len_src": "official",
+    "len_ref": "HL",
+    "len_date": "2026-03-26",
+    "len_rule": "花蓮 114 年一覽表：南下 2,769 公尺、速限 60；起點由 OSM 隧道北口內推估"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-227efc50b2",
+   "set": {
+    "lat": 25.086978,
+    "lon": 121.549595,
+    "direction": "one",
+    "bearing": 355,
+    "direct_raw": "南往北",
+    "address": "自強隧道區間測速（南往北）",
+    "coord_src": "OSM",
+    "len_m": 917,
+    "len_src": "official",
+    "len_ref": "TPTA",
+    "len_date": "2025-05-06",
+    "len_rule": "判決書引舉發機關查復：「自強隧道（南往北）距離為917公尺」「監控自強隧道全程」；原座標在隧道中段（25.090601,121.549255），改用 OSM 北上隧道南口"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-227efc50b2",
+   "id": "tw-227efc50b2-s",
+   "set": {
+    "lat": 25.094419,
+    "lon": 121.548506,
+    "direction": "one",
+    "bearing": 176,
+    "direct_raw": "北往南",
+    "address": "自強隧道區間測速（北往南）",
+    "coord_src": "OSM",
+    "len_m": 917,
+    "len_src": "est",
+    "len_ref": "TPTA",
+    "len_date": "2025-05-06",
+    "len_rule": "北往南沒有官方長度，先用南往北的 917 公尺估計（App 只當估計，不提早結束區間）；起點用 OSM 南下隧道北口"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-82f7b2b6a3",
+   "set": {
+    "len_m": 600,
+    "len_src": "unverified",
+    "len_ref": "KIKI",
+    "len_date": "2025-01-23",
+    "len_rule": "官方沒查到；民間整理「約 600 m、速限 50」；OSM 隧道本體約 488 公尺",
+    "status_note": "需人工現地確認（或寫信問臺北市交通管制工程處）"
+   }
+  },
+  {
+   "action": "merge",
+   "id": "tw-5b33ecfa61",
+   "into": "tw-82f7b2b6a3",
+   "note": "與 tw-82f7b2b6a3 相距約 60 公尺，同一個辛亥隧道區間（臺北市 130111 與全國 7320 各一筆）"
+  },
+  {
+   "action": "update",
+   "id": "tw-3938cc66a9",
+   "set": {
+    "limit_kmh": 50,
+    "len_ref": "KL",
+    "len_date": "2026-07-23",
+    "len_rule": "速限 50（20 噸以上大貨車 40）依基隆 178159；長度官方沒查到（規劃報導 1.75 km，未採用），維持估計",
+    "status_note": "基隆檔另一筆 tw-42d743a0be 同一段但相距約 1.4 公里，兩筆都留（無法判斷哪一筆是起點）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-42d743a0be",
+   "set": {
+    "limit_kmh": 50,
+    "len_ref": "KL",
+    "len_date": "2026-07-23",
+    "len_rule": "速限 50（20 噸以上大貨車 40）依基隆 178159；長度官方沒查到，維持估計"
+   }
+  },
+  {
+   "action": "merge",
+   "id": "tw-69ec99da91",
+   "into": "tw-c943d47961",
+   "note": "台15線鳳鼻隧道（全國 7320，無長度）與 223 公尺外新竹縣 173211「鳳鼻尾隧道 66.3K至69.5K」是同一區間"
+  },
+  {
+   "action": "update",
+   "id": "tw-c943d47961",
+   "set": {
+    "len_ref": "HCC",
+    "len_rule": "新竹縣 173211 文字「66.3K至69.5K」＝3,200 公尺；已併入全國檔重複點 tw-69ec99da91"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-257d22ac88",
+   "set": {
+    "address": "台3線103.2公里至108公里（苗栗，第1段）",
+    "len_m": 4800,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952：台3線南向 103.2→108 公里、北向 108→103.2 公里（第1段 4.8 km）；座標在 103.2K（同檔 103.1K、103.5K 固定桿印證）。第2段 114.3→123.6 公里沒有起點座標，列待補"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-df3f9b024d",
+   "set": {
+    "address": "縣道140線16.2公里至16.9公里（苗栗，第1段）",
+    "len_m": 700,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952：東向 16.2→16.9、西向 16.9→16.2 公里（第1段 0.7 km）；座標位於同檔 8.6K 與 19.9K 固定桿之間、近 16.2K。第2段 23.1→25.1 公里列待補"
+   }
+  },
+  {
+   "action": "pending",
+   "id": "tw-df3f9b024d-2",
+   "from": "tw-df3f9b024d",
+   "set": {
+    "address": "縣道140線23.1公里至25.1公里（苗栗，第2段）",
+    "len_m": 2000,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952：東向 23.1→25.1、西向 25.1→23.1 公里"
+   },
+   "note": "缺 23.1K／25.1K 座標"
+  },
+  {
+   "action": "update",
+   "id": "tw-7fd3668202",
+   "set": {
+    "address": "台13甲線8.3公里至9.5公里（苗栗，第1段）",
+    "len_m": 1200,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952：南向 8.3→9.5、北向 9.5→8.3 公里（第1段 1.2 km）",
+    "status": "suspended",
+    "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a9717abd77",
+   "set": {
+    "direction": "one",
+    "bearing": 0,
+    "direct_raw": "北向（122.6→115.6 公里）",
+    "address": "台61線北向122.6公里至115.6公里（苗栗）",
+    "len_m": 7000,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952：北向 122.6→115.6 公里＝7.0 km（速限 90，大車 80）；南向另一筆",
+    "status": "suspended",
+    "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-a9717abd77",
+   "id": "tw-a9717abd77-s",
+   "set": {
+    "direction": "one",
+    "bearing": 180,
+    "direct_raw": "南向（122.2→130.2 公里）",
+    "address": "台61線南向122.2公里至130.2公里（苗栗）",
+    "len_m": 8000,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952：南向 122.2→130.2 公里＝8.0 km；起點與北向起點相距約 400 公尺，沿用同一座標",
+    "status": "suspended",
+    "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"
+   }
+  },
+  {
+   "action": "retire",
+   "id": "tw-8c77a1e289",
+   "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無青山路二段"
+  },
+  {
+   "action": "retire",
+   "id": "tw-aac231abae",
+   "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無萬壽路一段"
+  },
+  {
+   "action": "retire",
+   "id": "tw-56de94dc12",
+   "note": "桃園 171463：2024 上半年「設備老舊汰除，辦理重新採購、檢測事宜」，2024 下半年清單已無萬壽路一段"
+  },
+  {
+   "action": "update",
+   "id": "tw-011117802b",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 297,
+    "direct_raw": "37.2K→33.3K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線33.3K至37.2K（37.2K→33.3K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-011117802b",
+   "id": "tw-011117802b-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.938778,
+    "lon": 121.676797,
+    "direction": "one",
+    "bearing": 143,
+    "direct_raw": "33.3K→37.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線33.3K至37.2K（33.3K→37.2K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往新店 3,862.5／往宜蘭 3,876.8 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-0e3a8195a6",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 233,
+    "direct_raw": "5.3K→8.1K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台7乙線5.3K至8.1K（5.3K→8.1K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-0e3a8195a6",
+   "id": "tw-0e3a8195a6-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.854858,
+    "lon": 121.357197,
+    "direction": "one",
+    "bearing": 8,
+    "direct_raw": "8.1K→5.3K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台7乙線5.3K至8.1K（8.1K→5.3K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往桃園 2,757.4／往新北 2,752.2 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-102be199ac",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 95,
+    "direct_raw": "25.2K→28.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台64線快速公路25.2k至28.2k（25.2K→28.2K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-102be199ac",
+   "id": "tw-102be199ac-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.991285,
+    "lon": 121.520326,
+    "direction": "one",
+    "bearing": 291,
+    "direct_raw": "28.2K→25.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台64線快速公路25.2k至28.2k（28.2K→25.2K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：東向 25.2k 主線至 28.2k 2,955.4、錦和路匝道至 28.2k 2,859.3、西向 26.6k 至 28.2k 1,563.3 公尺；只有一個座標，取最長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-133a39eed5",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 169,
+    "direct_raw": "129.4K→136.9K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線129k+404m至136k+883m(觀音隧道)（129.4K→136.9K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-133a39eed5",
+   "id": "tw-133a39eed5-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.369399,
+    "lon": 121.780588,
+    "direction": "one",
+    "bearing": 22,
+    "direct_raw": "136.9K→129.4K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線129k+404m至136k+883m(觀音隧道)（136.9K→129.4K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「129k+404m至136k+883m」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-1702267075",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 92,
+    "direct_raw": "73.7K→79.6K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線73.7K至79.6K（73.7K→79.6K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-1702267075",
+   "id": "tw-1702267075-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 25.123263,
+    "lon": 121.875627,
+    "direction": "one",
+    "bearing": 306,
+    "direct_raw": "79.6K→73.7K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線73.7K至79.6K（79.6K→73.7K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往南 5,961.8／往北 5,991.1 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-257d22ac88",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 137,
+    "direct_raw": "103.2K→108.0K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台3線103.2公里至108公里（苗栗，第1段）（103.2K→108.0K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-257d22ac88",
+   "id": "tw-257d22ac88-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.584243,
+    "lon": 120.943454,
+    "direction": "one",
+    "bearing": 20,
+    "direct_raw": "108.0K→103.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台3線103.2公里至108公里（苗栗，第1段）（108.0K→103.2K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "苗栗 172952：台3線南向 103.2→108 公里、北向 108→103.2 公里（第1段 4.8 km）；座標在 103.2K（同檔 103.1K、103.5K 固定桿印證）。第2段 114.3→123.6 公里沒有起點座標，列待補；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-2f09a86096",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 144,
+    "direct_raw": "8.5K→13.7K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台26線尖山段8.5-13.7K（8.5K→13.7K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-2f09a86096",
+   "id": "tw-2f09a86096-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 22.096963,
+    "lon": 120.717143,
+    "direction": "one",
+    "bearing": 342,
+    "direct_raw": "13.7K→8.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台26線尖山段8.5-13.7K（13.7K→8.5K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「8.5-13.7K 」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-2fdb9e4147",
+   "by": "audit-1",
+   "set": {
+    "status_note": "雙向共用一個起點，另一方向起點待現地確認（非省道或文字沒有里程起迄，無法用里程牌推另一端）",
+    "audit_flags": [
+     "section_shared_start"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-396a05f985",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 186,
+    "direct_raw": "126.1K→129.6K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺11線126.13K至129.61(小馬)（126.1K→129.6K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-514695b7fd",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 163,
+    "direct_raw": "50.5K→51.7K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台三線50.5k至51.7k（50.5K→51.7K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-595c51efc4",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 201,
+    "direct_raw": "148.1K→156.4K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台61線快速道路157.8K至151.6K(南向北)/148.1K至156.4K(北向南)（148.1K→156.4K）",
+    "len_m": 8300,
+    "len_src": "text",
+    "lat": 24.256405,
+    "lon": 120.538956,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-595c51efc4",
+   "id": "tw-595c51efc4-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.184023,
+    "lon": 120.491331,
+    "direction": "one",
+    "bearing": 56,
+    "direct_raw": "157.8K→151.6K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台61線快速道路157.8K至151.6K(南向北)/148.1K至156.4K(北向南)（157.8K→151.6K）",
+    "len_m": 6200,
+    "len_src": "text",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "50 公尺內 taichung_section：明寫距離「偵測長度6,169.1公尺」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-708a39b11b",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 29,
+    "direct_raw": "68.6K→56.6K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線68k+600m至56k+600m（68.6K→56.6K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-708a39b11b",
+   "id": "tw-708a39b11b-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.866243,
+    "lon": 121.774073,
+    "direction": "one",
+    "bearing": 145,
+    "direct_raw": "56.6K→68.6K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線68k+600m至56k+600m（56.6K→68.6K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「68k+600m至56k+600m」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-7fd3668202",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 233,
+    "direct_raw": "8.3K→9.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台13甲線8.3公里至9.5公里（苗栗，第1段）（8.3K→9.5K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-7fd3668202",
+   "id": "tw-7fd3668202-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.624551,
+    "lon": 120.849507,
+    "direction": "one",
+    "bearing": 60,
+    "direct_raw": "9.5K→8.3K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台13甲線8.3公里至9.5公里（苗栗，第1段）（9.5K→8.3K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "苗栗 172952：南向 8.3→9.5、北向 9.5→8.3 公里（第1段 1.2 km）；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-82f7b2b6a3",
+   "by": "audit-1",
+   "set": {
+    "status_note": "需人工現地確認（或寫信問臺北市交通管制工程處）；雙向共用一個起點，另一方向起點待現地確認（非省道或文字沒有里程起迄，無法用里程牌推另一端）",
+    "audit_flags": [
+     "section_shared_start"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-89e63a1c9b",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 17,
+    "direct_raw": "32.2K→26.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線26.2K至32.2K（32.2K→26.2K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-89e63a1c9b",
+   "id": "tw-89e63a1c9b-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.950906,
+    "lon": 121.64721,
+    "direction": "one",
+    "bearing": 136,
+    "direct_raw": "26.2K→32.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線26.2K至32.2K（26.2K→32.2K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往新店 5,830.5／往宜蘭 5,835.3 公尺，取較長者（文字里程 6,000）；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9ba21cdbaa",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 30,
+    "direct_raw": "129.6K→126.1K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺11線129.61至126.13K(小馬)（129.6K→126.1K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b265a4b105",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 343,
+    "direct_raw": "23.1K→19.0K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線19K至23.1K（23.1K→19.0K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b265a4b105",
+   "id": "tw-b265a4b105-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.952841,
+    "lon": 121.597666,
+    "direction": "one",
+    "bearing": 63,
+    "direct_raw": "19.0K→23.1K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線19K至23.1K（19.0K→23.1K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往新店 3,946.7／往宜蘭 3,938.1 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b47b3db0b0",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 207,
+    "direct_raw": "137.3K→141.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線137K+295m至141K+458m(谷風隧道)（137.3K→141.5K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "far_snapped"
+    ],
+    "lat": 24.366128,
+    "lon": 121.778642,
+    "coord_src": "odometer"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b47b3db0b0",
+   "id": "tw-b47b3db0b0-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.332344,
+    "lon": 121.764886,
+    "direction": "one",
+    "bearing": 349,
+    "direct_raw": "141.5K→137.3K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線137K+295m至141K+458m(谷風隧道)（141.5K→137.3K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「137K+295m至141K+458m」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b73b152dc0",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 126,
+    "direct_raw": "79.7K→84.0K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線79.7K至84K（79.7K→84.0K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b73b152dc0",
+   "id": "tw-b73b152dc0-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 25.124072,
+    "lon": 121.913985,
+    "direction": "one",
+    "bearing": 264,
+    "direct_raw": "84.0K→79.7K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線79.7K至84K（84.0K→79.7K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往南 4,182.7／往北 4,178.4 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b7ed858117",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 14,
+    "direct_raw": "111.0K→108.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "南澳鄉台9線110k+960m至蘇澳鎮台9線108k+224m(東澳隧道)（111.0K→108.2K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b7ed858117",
+   "id": "tw-b7ed858117-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.560778,
+    "lon": 121.842112,
+    "direction": "one",
+    "bearing": 196,
+    "direct_raw": "108.2K→111.0K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "南澳鄉台9線110k+960m至蘇澳鎮台9線108k+224m(東澳隧道)（108.2K→111.0K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「110k+960m至蘇澳鎮108k+224m」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b85c469c65",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 160,
+    "direct_raw": "85.8K→87.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線85.8K至87.5K（85.8K→87.5K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-b85c469c65",
+   "id": "tw-b85c469c65-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 25.106407,
+    "lon": 121.91974,
+    "direction": "one",
+    "bearing": 352,
+    "direct_raw": "87.5K→85.8K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線85.8K至87.5K（87.5K→85.8K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往南 1,551.8／往北 1,558.0 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-bfad385d99",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 187,
+    "direct_raw": "105.8K→113.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線105.8K至113.2K（105.8K→113.2K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-bfad385d99",
+   "id": "tw-bfad385d99-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.986813,
+    "lon": 121.970326,
+    "direction": "one",
+    "bearing": 76,
+    "direct_raw": "113.2K→105.8K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "省道台2線105.8K至113.2K（113.2K→105.8K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新北一覽表：往南 7,569.3／往北 7,568.8 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-c943d47961",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 14,
+    "direct_raw": "69.5K→66.3K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "新豐鄉台15線鳳鼻尾隧道66.3K至69.5K（69.5K→66.3K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-c943d47961",
+   "id": "tw-c943d47961-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.901512,
+    "lon": 120.971177,
+    "direction": "one",
+    "bearing": 215,
+    "direct_raw": "66.3K→69.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "新豐鄉台15線鳳鼻尾隧道66.3K至69.5K（66.3K→69.5K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "新竹縣 173211 文字「66.3K至69.5K」＝3,200 公尺；已併入全國檔重複點 tw-69ec99da91；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-d651bb5667",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 225,
+    "direct_raw": "51.1K→53.9K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺21線53.8K至51.1K(北向)/臺21線51.1K至53.9K(南向)（51.1K→53.9K）",
+    "len_m": 2800,
+    "len_src": "text",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-d651bb5667",
+   "id": "tw-d651bb5667-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 23.920857,
+    "lon": 120.922867,
+    "direction": "one",
+    "bearing": 353,
+    "direct_raw": "53.8K→51.1K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺21線53.8K至51.1K(北向)/臺21線51.1K至53.9K(南向)（53.8K→51.1K）",
+    "len_m": 2700,
+    "len_src": "text",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「53.8K至51.1K／51.1K至53.9K」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-d985ea5a1e",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 62,
+    "direct_raw": "64.0K→59.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺9丁線59.5K-64K（64.0K→59.5K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-d985ea5a1e",
+   "id": "tw-d985ea5a1e-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.271034,
+    "lon": 121.74151,
+    "direction": "one",
+    "bearing": 198,
+    "direct_raw": "59.5K→64.0K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺9丁線59.5K-64K（59.5K→64.0K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "花蓮 114 年一覽表：臺9丁線 64K+13→59K+524.2 4,488.8、59K+572.7→64K+45.1 4,472.4 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-df3f9b024d",
+   "by": "audit-1",
+   "set": {
+    "status_note": "雙向共用一個起點，另一方向起點待現地確認（非省道或文字沒有里程起迄，無法用里程牌推另一端）",
+    "audit_flags": [
+     "section_shared_start"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-e812b54965",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 192,
+    "direct_raw": "24.1K→26.6K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺11線24.1K-26.6K（24.1K→26.6K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-e812b54965",
+   "id": "tw-e812b54965-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 23.767822,
+    "lon": 121.560839,
+    "direction": "one",
+    "bearing": 5,
+    "direct_raw": "26.6K→24.1K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "臺11線24.1K-26.6K（26.6K→24.1K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "花蓮 114 年一覽表：臺11線 26K+581.92→24K+127.73 2,454.2、24K+176.14→26K+623.9 2,447.8 公尺，取較長者；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-eceb06aed1",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 242,
+    "direct_raw": "82.2K→84.3K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台3線82.2公里至84.3公里（82.2K→84.3K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-eceb06aed1",
+   "id": "tw-eceb06aed1-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.692736,
+    "lon": 121.031971,
+    "direction": "one",
+    "bearing": 2,
+    "direct_raw": "84.3K→82.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台3線82.2公里至84.3公里（84.3K→82.2K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「82.2公里至84.3公里」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-ed568a379d",
+   "by": "audit-1",
+   "set": {
+    "status_note": "雙向共用一個起點，另一方向起點待現地確認（非省道或文字沒有里程起迄，無法用里程牌推另一端）",
+    "audit_flags": [
+     "section_shared_start"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f3c44007f9",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 48,
+    "direct_raw": "437.2K→434.4K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線草埔隧道434.4-437.2K（437.2K→434.4K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-f3c44007f9",
+   "id": "tw-f3c44007f9-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 22.253816,
+    "lon": 120.829103,
+    "direction": "one",
+    "bearing": 216,
+    "direct_raw": "434.4K→437.2K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台9線草埔隧道434.4-437.2K（434.4K→437.2K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「434.4-437.2K 」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f7dcad9936",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 136,
+    "direct_raw": "429.5K→433.0K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台1線戰備道429.5-433K（429.5K→433.0K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-f7dcad9936",
+   "id": "tw-f7dcad9936-r",
+   "by": "audit-1",
+   "set": {
+    "lat": 22.417099,
+    "lon": 120.584274,
+    "direction": "one",
+    "bearing": 343,
+    "direct_raw": "433.0K→429.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台1線戰備道429.5-433K（433.0K→429.5K）",
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "section_split"
+    ],
+    "len_rule": "里程「429.5-433K 」；反方向起點由 7040 里程牌內插後吸附到 OSM 路段（2026-11-20 稽核）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f8608914b9",
+   "by": "audit-1",
+   "set": {
+    "direction": "one",
+    "bearing": 135,
+    "direct_raw": "31.8K→30.5K（原文兩方向共用一個起點，依里程拆方向）",
+    "address": "台三線31.8k至30.5k（31.8K→30.5K）",
+    "conf": "official-text",
+    "audit_flags": [
+     "section_split"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-ce53f5224e",
+   "by": "audit-1",
+   "set": {
+    "bearing": 193,
+    "lat": 24.552051,
+    "lon": 121.839816,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-bc13f309a5",
+   "by": "audit-1",
+   "set": {
+    "bearing": 75,
+    "lat": 24.182744,
+    "lon": 120.602775,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-0afb51564d",
+   "by": "audit-1",
+   "set": {
+    "bearing": 106,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-bdc60fff7a",
+   "by": "audit-1",
+   "set": {
+    "bearing": 118,
+    "lat": 24.180896,
+    "lon": 120.619747,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-5edeeb122d",
+   "by": "audit-1",
+   "set": {
+    "bearing": 42,
+    "lat": 24.490018,
+    "lon": 121.830491,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-ddc68ec7be",
+   "by": "audit-1",
+   "set": {
+    "bearing": 230,
+    "lat": 25.04758,
+    "lon": 121.251348,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-2d8c2fb2e5",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北向南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-dbd69272af",
+   "by": "audit-1",
+   "set": {
+    "bearing": 66,
+    "lat": 23.69965,
+    "lon": 120.546545,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9141bc58f4",
+   "by": "audit-1",
+   "set": {
+    "bearing": 192,
+    "lat": 24.108752,
+    "lon": 120.607185,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-41d114b11d",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「西向東」→ 90°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b40ac6a881",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「往南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-53d1e9eb0f",
+   "by": "audit-1",
+   "set": {
+    "bearing": 192,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-34ba9d07bf",
+   "by": "audit-1",
+   "set": {
+    "bearing": 99,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-22dd49c68a",
+   "by": "audit-1",
+   "set": {
+    "bearing": 83,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f2a15b53c0",
+   "by": "audit-1",
+   "set": {
+    "bearing": 97,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-11adba4e46",
+   "by": "audit-1",
+   "set": {
+    "bearing": 83,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-2ac5e16289",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「南往北」→ 0°；方向相符的車道 科雅西路 在 112 m 外（> 60 m 不自動移））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-c4f7ea5387",
+   "by": "audit-1",
+   "set": {
+    "bearing": 94,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-d873ef5f7c",
+   "by": "audit-1",
+   "set": {
+    "bearing": 273,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-652907d917",
+   "by": "audit-1",
+   "set": {
+    "bearing": 272,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9b41bf72c5",
+   "by": "audit-1",
+   "set": {
+    "bearing": 271,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-10e8d3e961",
+   "by": "audit-1",
+   "set": {
+    "bearing": 90,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-4de68e9f67",
+   "by": "audit-1",
+   "set": {
+    "bearing": 271,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-ebaa1abdb3",
+   "by": "audit-1",
+   "set": {
+    "bearing": 89,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-236e3bed78",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北向南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-504a0ef300",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北向南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-abecbedba8",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「南向北」→ 0°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-145aca4cc7",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「東往西」→ 270°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-323152deef",
+   "by": "audit-1",
+   "set": {
+    "bearing": 266,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-0750ba601f",
+   "by": "audit-1",
+   "set": {
+    "bearing": 266,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-ab62339db1",
+   "by": "audit-1",
+   "set": {
+    "bearing": 274,
+    "lat": 24.876571,
+    "lon": 121.048629,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-d79174aecc",
+   "by": "audit-1",
+   "set": {
+    "bearing": 265,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-e0f24a8909",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「東向西」→ 270°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a00f778bf1",
+   "by": "audit-1",
+   "set": {
+    "bearing": 172,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-5b666c168f",
+   "by": "audit-1",
+   "set": {
+    "bearing": 262,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-6782752ac7",
+   "by": "audit-1",
+   "set": {
+    "bearing": 82,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9c90b9f3ab",
+   "by": "audit-1",
+   "set": {
+    "bearing": 262,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b1ed777438",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「東往西(區間測速)」→ 270°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f8315a4e4d",
+   "by": "audit-1",
+   "set": {
+    "bearing": 280,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-c93b5bb5ee",
+   "by": "audit-1",
+   "set": {
+    "bearing": 215,
+    "lat": 24.767732,
+    "lon": 120.997339,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-47397917f4",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「南往北」→ 0°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-27c59e2c8e",
+   "by": "audit-1",
+   "set": {
+    "bearing": 192,
+    "lat": 24.817375,
+    "lon": 120.990045,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a10200f128",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北向南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-8a73750b94",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（台9 北向＝里程減少方向 64°（7040 里程牌）；方向相符的車道 中美路/9 在 70 m 外（> 60 m 不自動移））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-5af3a64c71",
+   "by": "audit-1",
+   "set": {
+    "bearing": 257,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-3ac31c1c7a",
+   "by": "audit-1",
+   "set": {
+    "bearing": 285,
+    "lat": 25.043347,
+    "lon": 121.518798,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-cc28803a68",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「南向北」→ 0°；方向相符的車道 南隘路一段 在 85 m 外（> 60 m 不自動移））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a52e7e425b",
+   "by": "audit-1",
+   "set": {
+    "bearing": 81,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-54ca5de3d4",
+   "by": "audit-1",
+   "set": {
+    "bearing": 218,
+    "lat": 24.529835,
+    "lon": 120.916916,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-35f7036fcb",
+   "by": "audit-1",
+   "set": {
+    "bearing": 197,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-af7eb96270",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「往南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f80585e0c1",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（台17 北向＝里程減少方向 2°（7040 里程牌）；方向原文「北向」→ 0°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-3cbd794aa9",
+   "by": "audit-1",
+   "set": {
+    "bearing": 71,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-cf10b50609",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「南往北」→ 0°；方向相符的車道 寶山路一段/竹83 在 80 m 外（> 60 m 不自動移））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-7235304460",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北向南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-63b38adb22",
+   "by": "audit-1",
+   "set": {
+    "bearing": 320,
+    "lat": 25.08356,
+    "lon": 121.748316,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-5559082eb9",
+   "by": "audit-1",
+   "set": {
+    "bearing": 343,
+    "lat": 24.990492,
+    "lon": 121.313044,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-cadfb33759",
+   "by": "audit-1",
+   "set": {
+    "bearing": 69,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-ab3ec17f5b",
+   "by": "audit-1",
+   "set": {
+    "bearing": 338,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-4458a1a5a3",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北往南」→ 180°；方向相符的車道 八堵路/5 在 133 m 外（> 60 m 不自動移））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f391191bec",
+   "by": "audit-1",
+   "set": {
+    "bearing": 157,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b1bfb9691b",
+   "by": "audit-1",
+   "set": {
+    "bearing": 108,
+    "lat": 23.491855,
+    "lon": 120.397995,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-0dfc79b77f",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（國道3 北向＝里程減少方向 35°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-2675b721dc",
+   "by": "audit-1",
+   "set": {
+    "bearing": 114,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-960204cb00",
+   "by": "audit-1",
+   "set": {
+    "bearing": 320,
+    "lat": 24.81455,
+    "lon": 120.98571,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ],
+    "coord_src": "snap"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f57f32af7c",
+   "by": "audit-1",
+   "set": {
+    "bearing": 295,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-1edce2a459",
+   "by": "audit-1",
+   "set": {
+    "bearing": 115,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-cb071d9898",
+   "by": "audit-1",
+   "set": {
+    "bearing": 285,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f9c790fdca",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北向南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f9e1dc7213",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「往北」→ 0°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-bb42141037",
+   "by": "audit-1",
+   "set": {
+    "bearing": 62,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-2d7fd96f99",
+   "by": "audit-1",
+   "set": {
+    "bearing": 242,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-849c609076",
+   "by": "audit-1",
+   "set": {
+    "bearing": 62,
+    "conf": "official-text",
+    "audit_flags": [
+     "bearing_fixed"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9bf8e238a1",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「北往南」→ 180°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-d44cbb287f",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「東往西」→ 270°；同一條路沒有方位差夠小的車道（路與方向文字近乎垂直或車道不在搜尋範圍））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-09c1333187",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "bearing_mismatch"
+    ],
+    "status_note": "方向待確認：30 m 內沒有方向相符的道路（方向原文「東往西」→ 270°；方向相符的車道 東北街 在 64 m 外（> 60 m 不自動移））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9761d157f9",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（路口地址兩條路在 800 m 內沒有交會的吸附點）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a7222ab475",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（800 m 內沒有同名道路）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b0c3836652",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.267789,
+    "lon": 121.725182,
+    "bearing": 47,
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "far_snapped"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-0520fa4af3",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.35549,
+    "lon": 121.771492,
+    "bearing": 215,
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "far_snapped"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-06d447115b",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.347865,
+    "lon": 121.766551,
+    "bearing": 26,
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "far_snapped"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-b0c3836652-s2",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.266058,
+    "lon": 121.722605,
+    "bearing": 224,
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "far_snapped"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-43dee6fa64",
+   "by": "audit-1",
+   "set": {
+    "lat": 25.100937,
+    "lon": 121.751043,
+    "bearing": 244,
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "far_snapped"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-95b319c347",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（路口地址兩條路在 800 m 內沒有交會的吸附點）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-e64040f10f",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（國道3 400 m 內找不到方向相符的主線（最近道路 1/中山高速公路 223 m））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a94044f4eb",
+   "by": "audit-1",
+   "set": {
+    "conf": "official",
+    "audit_flags": [
+     "far_audit_artifact"
+    ],
+    "conf_note": "國道6 主線 0 m 內（稽核用機車路網量不到國道，距離是假警報）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-768cb495d2",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（路口地址兩條路在 800 m 內沒有交會的吸附點）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-3e2d5b8773",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（國道1 400 m 內找不到方向相符的主線（最近道路 (無名) 163 m））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9dd80e4d52",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（800 m 內沒有同名道路）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-f5d1e0a382",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（國道1 400 m 內找不到方向相符的主線（最近道路 大鹿林道本線/竹專2 77 m））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-67aa8f3fcc",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（800 m 內沒有同名道路）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a1fdd16380",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（國道3 400 m 內找不到方向相符的主線（最近道路 (無名) 63 m））"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-9e28fe1d31",
+   "by": "audit-1",
+   "set": {
+    "conf": "unverified",
+    "audit_flags": [
+     "far_from_road"
+    ],
+    "status_note": "座標離最近道路 > 60 m，待現地確認（路口地址兩條路在 800 m 內沒有交會的吸附點）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a29e6a88d7",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.542437,
+    "lon": 121.837861,
+    "bearing": 13,
+    "conf": "official-text",
+    "coord_src": "odometer",
+    "audit_flags": [
+     "far_snapped"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-cb8318f74c",
+   "id": "tw-cb8318f74c-k46_8",
+   "by": "audit-1",
+   "set": {
+    "lat": 25.001006,
+    "lon": 121.026625,
+    "direction": "one",
+    "bearing": 26,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 90,
+    "direct_raw": "北向（46.8K→41.5K）",
+    "address": "台61線北向46.8K至41.5K（桃園）",
+    "len_m": 5300,
+    "len_src": "text",
+    "len_ref": "TY",
+    "len_date": "2026-11-05",
+    "len_rule": "桃園 171463（2024 下半年）：北向 46.8→41.5 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "source": "taoyuan",
+    "sources": [
+     "taoyuan"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-cb8318f74c",
+   "id": "tw-cb8318f74c-k41_6",
+   "by": "audit-1",
+   "set": {
+    "lat": 25.03549,
+    "lon": 121.060982,
+    "direction": "one",
+    "bearing": 238,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 90,
+    "direct_raw": "南向（41.6K→46.9K）",
+    "address": "台61線南向41.6K至46.9K（桃園）",
+    "len_m": 5300,
+    "len_src": "text",
+    "len_ref": "TY",
+    "len_date": "2026-11-05",
+    "len_rule": "桃園 171463（2024 下半年）：南向 41.6→46.9 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "source": "taoyuan",
+    "sources": [
+     "taoyuan"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-cb8318f74c",
+   "id": "tw-cb8318f74c-k12_1",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.847701,
+    "lon": 121.334478,
+    "direction": "one",
+    "bearing": 354,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 40,
+    "direct_raw": "北向（12.1K→8.2K）",
+    "address": "台7乙線北向12.1K至8.2K（桃園）",
+    "len_m": 3900,
+    "len_src": "text",
+    "len_ref": "TY",
+    "len_date": "2026-11-05",
+    "len_rule": "桃園 171463（2024 下半年）：北向 12.1→8.2 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "source": "taoyuan",
+    "sources": [
+     "taoyuan"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-cb8318f74c",
+   "id": "tw-cb8318f74c-k8_2",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.853979,
+    "lon": 121.357067,
+    "direction": "one",
+    "bearing": 218,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 40,
+    "direct_raw": "南向（8.2K→12.1K）",
+    "address": "台7乙線南向8.2K至12.1K（桃園）",
+    "len_m": 3900,
+    "len_src": "text",
+    "len_ref": "TY",
+    "len_date": "2026-11-05",
+    "len_rule": "桃園 171463（2024 下半年）：南向 8.2→12.1 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "source": "taoyuan",
+    "sources": [
+     "taoyuan"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-cb8318f74c",
+   "id": "tw-cb8318f74c-k14_8",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.950788,
+    "lon": 121.16122,
+    "direction": "one",
+    "bearing": 310,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 90,
+    "direct_raw": "西向（14.8K→11.5K）",
+    "address": "台66線西向14.8K至11.5K（桃園）",
+    "len_m": 3300,
+    "len_src": "text",
+    "len_ref": "TY",
+    "len_date": "2026-11-05",
+    "len_rule": "桃園 171463（2024 下半年）：西向 14.8→11.5 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "source": "taoyuan",
+    "sources": [
+     "taoyuan"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-cb8318f74c",
+   "id": "tw-cb8318f74c-k3_0",
+   "by": "audit-1",
+   "set": {
+    "lat": 25.016165,
+    "lon": 121.07862,
+    "direction": "one",
+    "bearing": 117,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 80,
+    "direct_raw": "東向（3.0K→6.9K）",
+    "address": "台66線東向3.0K至6.9K（桃園）",
+    "len_m": 3900,
+    "len_src": "text",
+    "len_ref": "TY",
+    "len_date": "2026-11-05",
+    "len_rule": "桃園 171463（2024 下半年）：東向 3.0→6.9 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "source": "taoyuan",
+    "sources": [
+     "taoyuan"
+    ]
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a9717abd77",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.456645,
+    "lon": 120.646473,
+    "direction": "one",
+    "bearing": 20,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "direct_raw": "北向（122.6K→115.6K）",
+    "address": "台61線北向122.6K至115.6K（苗栗）",
+    "len_m": 7000,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952（113 年下半年）：北向 122.6→115.6 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "status": "suspended",
+    "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒；原 7320 座標與 7040 里程牌 122.6K 相差數公里，改用里程牌內插（待現地確認）"
+   }
+  },
+  {
+   "action": "update",
+   "id": "tw-a9717abd77-s",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.459527,
+    "lon": 120.648719,
+    "direction": "one",
+    "bearing": 234,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "direct_raw": "南向（122.2K→130.2K）",
+    "address": "台61線南向122.2K至130.2K（苗栗）",
+    "len_m": 8000,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952（113 年下半年）：南向 122.2→130.2 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "status": "suspended",
+    "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒；原 7320 座標與 7040 里程牌 122.2K 相差數公里，改用里程牌內插（待現地確認）"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-257d22ac88",
+   "id": "tw-257d22ac88-k9_8",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.623967,
+    "lon": 120.848164,
+    "direction": "one",
+    "bearing": 241,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 60,
+    "direct_raw": "南向（9.8K→11.0K）",
+    "address": "台13甲線南向9.8K至11.0K（苗栗）",
+    "len_m": 1200,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952（113 年下半年）：南向 9.8→11.0 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "status": "suspended",
+    "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-257d22ac88",
+   "id": "tw-257d22ac88-k11_0",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.61657,
+    "lon": 120.83984,
+    "direction": "one",
+    "bearing": 60,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 60,
+    "direct_raw": "北向（11.0K→9.8K）",
+    "address": "台13甲線北向11.0K至9.8K（苗栗）",
+    "len_m": 1200,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952（113 年下半年）：北向 11.0→9.8 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ],
+    "status": "suspended",
+    "status_note": "苗栗 172952（113 下半年）：0 件，設備系統維護中；App 預設不提醒"
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-257d22ac88",
+   "id": "tw-257d22ac88-k114_3",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.536764,
+    "lon": 120.91816,
+    "direction": "one",
+    "bearing": 168,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 60,
+    "direct_raw": "南向（114.3K→123.6K）",
+    "address": "台3線南向114.3K至123.6K（苗栗）",
+    "len_m": 9300,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952（113 年下半年）：南向 114.3→123.6 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ]
+   }
+  },
+  {
+   "action": "add",
+   "from": "tw-257d22ac88",
+   "id": "tw-257d22ac88-k123_6",
+   "by": "audit-1",
+   "set": {
+    "lat": 24.470482,
+    "lon": 120.886754,
+    "direction": "one",
+    "bearing": 21,
+    "coord_src": "odometer",
+    "conf": "official-text",
+    "limit_kmh": 60,
+    "direct_raw": "北向（123.6K→114.3K）",
+    "address": "台3線北向123.6K至114.3K（苗栗）",
+    "len_m": 9300,
+    "len_src": "text",
+    "len_ref": "ML",
+    "len_date": "2025-02-25",
+    "len_rule": "苗栗 172952（113 年下半年）：北向 123.6→114.3 公里；起點座標由 7040 里程牌內插後吸附到 OSM 路段（方向依文字決定起點端）",
+    "audit_flags": [
+     "section_filled"
+    ]
+   }
+  }
  ],
- "missing": [
-  {"name": "台61桃園段 41.5K→46.8K 北向", "limit_kmh": 90, "len_m": 5300, "ref": "TY", "reason": "官方只有里程沒有座標；省道里程坐標 7040 號用 curl 下載被擋，需瀏覽器手動下載後換算"},
-  {"name": "台61桃園段 41.6K→46.9K 南向", "limit_kmh": 90, "len_m": 5300, "ref": "TY", "reason": "同上"},
-  {"name": "台七乙線 12.1K→8.2K 北向", "limit_kmh": 40, "len_m": 3900, "ref": "TY", "reason": "同上"},
-  {"name": "台七乙線 8.2K→12.1K 南向", "limit_kmh": 40, "len_m": 3900, "ref": "TY", "reason": "同上"},
-  {"name": "台66快速道路 14.8K→11.5K 西向", "limit_kmh": 90, "len_m": 3300, "ref": "TY", "reason": "同上"},
-  {"name": "台66快速道路 3K→6.9K 東向", "limit_kmh": 80, "len_m": 3900, "ref": "TY", "reason": "同上"}
- ]
+ "missing": []
 }

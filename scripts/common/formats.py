@@ -7,6 +7,7 @@ import zlib
 
 TSIG = b'TSIG'
 TRST = b'TRST'
+TSPL = b'TSPL'
 
 
 class FormatError(Exception):
@@ -74,6 +75,38 @@ def read_reststops_bin(data):
     return dict(version=ver, count=count, osm_ts=ts), rows
 
 
+def read_speedlimits_bin(data):
+    """taiwan-speedlimits.bin → (header dict, [(lat, lon, kmh, bearing, route, flags)])；NAV-SPEEDLIMIT-OFFICIAL-1"""
+    if len(data) < 24 or data[:4] != TSPL:
+        raise FormatError('速限檔魔術字或長度不符')
+    magic, ver, hlen, n, rlen, _, crc, ts = struct.unpack_from('<4sHHIHHII', data, 0)
+    if ver != 1 or rlen != 12:
+        raise FormatError('速限檔標頭錯誤 ver=%d rlen=%d' % (ver, rlen))
+    if zlib.crc32(data[hlen:]) & 0xFFFFFFFF != crc:
+        raise FormatError('速限檔 CRC 不符')
+    off = hlen + n * rlen
+    if len(data) < off + 2:
+        raise FormatError('速限檔被截斷')
+    (nr,) = struct.unpack_from('<H', data, off)
+    off += 2
+    routes = []
+    for _ in range(nr):
+        if off >= len(data):
+            raise FormatError('速限檔路線表被截斷')
+        ln = data[off]
+        if off + 1 + ln > len(data):
+            raise FormatError('速限檔路線名被截斷')
+        routes.append(data[off + 1:off + 1 + ln].decode('utf-8'))
+        off += 1 + ln
+    out = []
+    for i in range(n):
+        la, lo, kmh, b, rf = struct.unpack_from('<iiBBH', data, hlen + i * rlen)
+        if not (-90e6 <= la <= 90e6 and -180e6 <= lo <= 180e6):
+            raise FormatError('速限檔第 %d 筆座標超出範圍' % i)
+        out.append((la / 1e6, lo / 1e6, kmh, b * 360.0 / 256, routes[rf & 0x0FFF], rf >> 12))
+    return dict(version=ver, count=n, ts=ts, routes=len(routes)), out
+
+
 def load_json(data):
     return json.loads(data.decode('utf-8-sig'))
 
@@ -104,6 +137,8 @@ def count_records(name, data):
         return len(read_signals_bin(data)[1])
     if name == 'taiwan-reststops':
         return len(read_reststops_bin(data)[1])
+    if name == 'taiwan-speedlimits':
+        return len(read_speedlimits_bin(data)[1])
     doc = load_json(data)
     for key in ('cameras', 'spots', 'junctions', 'segments'):
         if key in doc:
