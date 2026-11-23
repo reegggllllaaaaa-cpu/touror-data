@@ -17,6 +17,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
+from common import paths  # noqa: E402
 from signals.sources import GOV_SIGNAL_SOURCES  # noqa: E402
 
 FLAG_SIGNAL = 1
@@ -25,6 +26,7 @@ OSM_MATCH_M = 40.0
 SELF_DEDUP_M = 20.0
 LAT_RANGE = (21.5, 26.5)
 LON_RANGE = (118.0, 123.0)
+TAICHUNG_FILTERED_KINDS = {'行人號誌桿'}
 
 
 def decode(b):
@@ -70,6 +72,34 @@ def pick(d, names):
 def is_flashing(src_key, d):
     text = ' '.join(d.get(k, '') for k in ('號誌種類', '號誌別', '運作情形'))
     return '閃光' in text or '閃燈' in text
+
+
+def read_taichung(path):
+    """讀取臺中市政府交通局清理後 CSV，回傳 (座標 list, 統計 dict)。
+
+    CSV 欄位：lat, lon, layer, kind, comboroad, num, control, light
+    只輸出 light == '三色號誌' 且 kind != '行人號誌桿' 的點（視為路口號誌）。
+    """
+    coords = []
+    stats = dict(rows=0, flag1=0, flasher=0, pedestrian_or_blank=0, skipped_other=0)
+    with open(path, newline='', encoding='utf-8-sig') as f:
+        for d in csv.DictReader(f):
+            stats['rows'] += 1
+            light = (d.get('light') or '').strip()
+            kind = (d.get('kind') or '').strip()
+            if light == '三色號誌' and kind != '行人號誌桿':
+                lat = fnum(d.get('lat'))
+                lon = fnum(d.get('lon'))
+                if lat is not None and lon is not None:
+                    coords.append((lat, lon))
+                    stats['flag1'] += 1
+            elif light == '閃光號誌' or kind in ('閃黃燈號誌', '閃紅燈號誌'):
+                stats['flasher'] += 1
+            elif kind == '行人號誌桿' or light == '':
+                stats['pedestrian_or_blank'] += 1
+            else:
+                stats['skipped_other'] += 1
+    return coords, stats
 
 
 def coord(src, d):
@@ -123,10 +153,34 @@ def merge(osm_rows, raw_dir, sources=GOV_SIGNAL_SOURCES):
     added_rows, stats = [], []
     for src in sources:
         path = os.path.join(raw_dir, src['file'])
+        if not os.path.exists(path) and src.get('static_path'):
+            path = os.path.join(paths.ROOT, src['static_path'], src['file'])
         st = dict(key=src['key'], dataset=src['dataset'], city=src['city'], file=src['file'],
                   rows=0, flashing=0, bad_coord=0, dup_osm=0, dup_gov=0, added=0, missing=False)
         if not os.path.exists(path):
             st['missing'] = True
+            stats.append(st)
+            continue
+        if src.get('fmt') == 'TAICHUNG_CSV':
+            coords, taichung_st = read_taichung(path)
+            st['rows'] = taichung_st['rows']
+            st['flag1'] = taichung_st['flag1']
+            st['flashing'] = taichung_st['flasher']
+            st['pedestrian_or_blank'] = taichung_st['pedestrian_or_blank']
+            st['skipped_other'] = taichung_st['skipped_other']
+            for lat, lon in coords:
+                if not (LAT_RANGE[0] <= lat <= LAT_RANGE[1] and LON_RANGE[0] <= lon <= LON_RANGE[1]):
+                    st['bad_coord'] += 1
+                    continue
+                if osm_grid.near(lat, lon, OSM_MATCH_M):
+                    st['dup_osm'] += 1
+                    continue
+                if gov_grid.near(lat, lon, SELF_DEDUP_M):
+                    st['dup_gov'] += 1
+                    continue
+                gov_grid.add(lat, lon)
+                added_rows.append((int(round(lat * 1e6)), int(round(lon * 1e6)), FLAG_SIGNAL | FLAG_GOV))
+                st['added'] += 1
             stats.append(st)
             continue
         for d in read_rows(path):

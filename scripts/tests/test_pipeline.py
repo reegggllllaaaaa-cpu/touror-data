@@ -266,6 +266,36 @@ class GovSignalTests(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_taichung_filter_and_merge(self):
+        tmp = tempfile.mkdtemp()
+        static = tempfile.mkdtemp()
+        try:
+            # 臺中 CSV 篩選：light=三色號誌、kind≠行人號誌桿；閃光號誌與純行人桿排除
+            write_csv(os.path.join(static, 'taichung_signals.csv'),
+                      ['lat', 'lon', 'layer', 'kind', 'comboroad', 'num', 'control', 'light'],
+                      [['24.2411757', '120.7154192', '8010504', '三色號誌', 'A路口', 'GT1', '', '三色號誌'],
+                       ['24.1900688', '120.6808608', '8010504', '行人號誌桿', 'B路口', 'N2', '', '三色號誌'],
+                       ['24.3243441', '120.7390241', '8010504', '閃紅燈號誌', 'C路口', 'N3', '', '閃光號誌'],
+                       ['24.1875581', '120.6787138', '8010504', '行人行車號誌共桿', 'D路口', 'N4', '', '三色號誌']])
+            coords, st = gov_signals.read_taichung(os.path.join(static, 'taichung_signals.csv'))
+            self.assertEqual((st['rows'], st['flag1'], st['flasher'], st['pedestrian_or_blank']), (4, 2, 1, 1))
+            self.assertEqual(len(coords), 2)
+
+            # merge：透過 static_path 找到臺中 CSV；D 路口與 OSM 點在 40 m 內 → 去重
+            src = [dict(key='taichung', dataset='103743', file='taichung_signals.csv', fmt='TAICHUNG_CSV',
+                        city='臺中市', static_path=static, title='臺中市號誌燈圖資', lat=('lat',), lon=('lon',))]
+            osm = [(24187550, 120678710, 1)]  # 與 D 路口約 1 m
+            rows, mst = gov_signals.merge(osm, tmp, sources=src)
+            by = {s['key']: s for s in mst}
+            self.assertEqual((by['taichung']['rows'], by['taichung']['flag1'], by['taichung']['added'], by['taichung']['dup_osm']),
+                             (4, 2, 1, 1))
+            added = rows[len(osm):]
+            self.assertEqual(len(added), 1)
+            self.assertEqual(added[0][2], 9)
+        finally:
+            shutil.rmtree(tmp)
+            shutil.rmtree(static)
+
 
 class TimingTests(unittest.TestCase):
     def test_plan_reds(self):

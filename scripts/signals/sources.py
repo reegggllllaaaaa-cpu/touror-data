@@ -11,6 +11,9 @@ GOV_SIGNAL_SOURCES = [
          title='澎湖縣紅綠燈號誌位置一覽表', gps=('GPS',), name=('位置路口名稱',)),
     dict(key='tainan', dataset='79978', file='tainan_signals_79978.csv', fmt='CSV', city='臺南市',
          title='臺南市交通號誌(路口紅綠燈)4G_WiFi點位資料', lat=('熱點緯度',), lon=('熱點經度',), name=('熱點名稱', '地址')),
+    dict(key='taichung', dataset='103743', file='taichung_signals.csv', fmt='TAICHUNG_CSV', city='臺中市',
+         static_path='data/gov-signals',
+         title='臺中市號誌燈圖資', lat=('lat',), lon=('lon',), name=('comboroad',)),
 ]
 
 # 時制（秒數）：臺北市 145720 三個資源＋澎湖 113153（同一份號誌表內含綠／黃燈秒數）

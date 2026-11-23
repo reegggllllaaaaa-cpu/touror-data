@@ -44,7 +44,7 @@ FILES = {
     'speedcams': ('data/speedcams/speedcams.json', GOV_LICENSE, '資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）'),
     'speedcams-full': ('data/speedcams/speedcams-full.csv', GOV_LICENSE, '資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）'),
     'mobile-hotspots': ('data/speedcams/mobile-hotspots.json', GOV_LICENSE, '資料來源：政府資料開放平臺（高雄市政府警察局、臺中市政府警察局）；參考點 © OpenStreetMap contributors'),
-    'taiwan-signals': ('data/signals/taiwan-signals.bin', ODBL, '© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市政府（政府資料開放授權條款第1版）'),
+    'taiwan-signals': ('data/signals/taiwan-signals.bin', ODBL, '© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市政府（政府資料開放授權條款第1版）'),
     'taiwan-reststops': ('data/reststops/taiwan-reststops.bin', ODBL, '© OpenStreetMap contributors'),
     'signal-timing-taipei': ('data/signals/signal-timing-taipei.json', GOV_LICENSE, '資料來源：臺北市政府交通局（臺北市路口號誌時制計畫）'),
     'signal-timing-penghu': ('data/signals/signal-timing-penghu.json', GOV_LICENSE, '資料來源：澎湖縣政府（紅綠燈號誌位置一覽表）'),
@@ -145,8 +145,12 @@ def group_signals(report, pbf, no_osm):
             raise PublishError(4, '--no-osm 需要目前的 data/signals/taiwan-signals.bin')
         head, rows = formats.read_signals_bin(open(prev, 'rb').read())
         osm_rows = [r for r in rows if not r[2] & gov_signals.FLAG_GOV]
+        existing_gov_rows = [r for r in rows if r[2] & gov_signals.FLAG_GOV]
         osm_ts = head['osm_ts']
-        report['checks']['signals OSM 來源'] = '沿用目前發布檔的 OSM 部分（%d 點）' % len(osm_rows)
+        report['checks']['signals OSM 來源'] = '沿用目前發布檔的 OSM 部分（%d 點）與既有政府補點（%d 點）' % (len(osm_rows), len(existing_gov_rows))
+        base_rows = osm_rows + existing_gov_rows
+        taichung_src = [s for s in GOV_SIGNAL_SOURCES if s['key'] == 'taichung']
+        rows, stats = gov_signals.merge(base_rows, paths.RAW_SIGNALS, sources=taichung_src)
     else:
         if not pbf:
             raise PublishError(4, '缺少 OSM PBF（--pbf 或 raw/osm/taiwan-latest.osm.pbf）')
@@ -158,12 +162,13 @@ def group_signals(report, pbf, no_osm):
             raise PublishError(2, '紅綠燈建置失敗：\n' + log[-2000:])
         head, osm_rows = formats.read_signals_bin(open(out, 'rb').read())
         osm_ts = head['osm_ts']
-    rows, stats = gov_signals.merge(osm_rows, paths.RAW_SIGNALS)
+        base_rows = osm_rows
+        rows, stats = gov_signals.merge(osm_rows, paths.RAW_SIGNALS)
     report['gov_signals'] = stats
     data = formats.write_signals_bin(rows, osm_ts)
     formats.read_signals_bin(data)
     floor = datetime.datetime.fromtimestamp(osm_ts, manifest.TAIPEI).strftime('%Y%m%d') if osm_ts else None
-    return {'taiwan-signals': (data, floor, dict(count=len(rows), osm=len(osm_rows), gov_added=len(rows) - len(osm_rows)))}
+    return {'taiwan-signals': (data, floor, dict(count=len(rows), osm=len(osm_rows), gov_added=len(rows) - len(base_rows), gov_existing=len(existing_gov_rows) if no_osm else 0))}
 
 
 def group_reststops(report, pbf):

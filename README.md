@@ -14,7 +14,7 @@ App 只 GET 這些靜態檔：不帶位置、不帶任何識別碼。大型資�
 | speedcams | data/speedcams/speedcams.json | 測速照相（固定式、闖紅燈、闖紅燈兼超速、區間起點、類型不明），App 格式 | 每日 | 政府資料開放授權條款第 1 版 |
 | speedcams-full | data/speedcams/speedcams-full.csv | 測速正本（全部欄位，含已汰除、重複點與出處） | 每日 | 同上 |
 | mobile-hotspots | data/speedcams/mobile-hotspots.json | 移動式測速常出沒路段（高雄、臺中公布的路段，以 OSM 路名點當參考點） | 每日 | 同上；參考點 ODbL |
-| taiwan-signals | data/signals/taiwan-signals.bin | 紅綠燈位置（OSM 號誌節點＋臺北、彰化、澎湖、臺南政府號誌位置補點） | 每週 | ODbL 1.0（補點：政府資料開放授權條款） |
+| taiwan-signals | data/signals/taiwan-signals.bin | 紅綠燈位置（OSM 號誌節點＋臺北、彰化、澎湖、臺南、臺中政府號誌位置補點） | 每週 | ODbL 1.0（補點：政府資料開放授權條款） |
 | taiwan-reststops | data/reststops/taiwan-reststops.bin | 休息點（服務區、休息區、加油站、便利商店、廁所、觀景點、咖啡廳） | 每週 | ODbL 1.0 |
 | signal-timing-taipei | data/signals/signal-timing-taipei.json | 臺北市路口號誌時制精簡版（各路口各星期、時段的週期與各分相紅燈秒數） | 每月 | 政府資料開放授權條款第 1 版 |
 | signal-timing-penghu | data/signals/signal-timing-penghu.json | 澎湖縣號誌時制（資料檔名 2018，可能偏舊；App 目前不讀） | 每月 | 同上 |
@@ -26,7 +26,7 @@ App 只 GET 這些靜態檔：不帶位置、不帶任何識別碼。大型資�
 ### 來源與標示
 - **政府資料開放平臺（data.gov.tw）**，依「政府資料開放授權條款－第 1 版」（https://data.gov.tw/license）：可商業利用，須標示來源。
   測速：內政部警政署 7320、國道公路警察局 13940／100856 及各縣市警察局資料集（完整清單見 manifest 的 sources）；
-  號誌位置：臺北市 121890、彰化縣 37695、澎湖縣 113153、臺南市 79978；時制：臺北市 145720、澎湖縣 113153；國道速限：40476。
+  號誌位置：臺北市 121890、彰化縣 37695、澎湖縣 113153、臺南市 79978、臺中市 103743；時制：臺北市 145720、澎湖縣 113153；國道速限：40476。
 - **OpenStreetMap**：© OpenStreetMap contributors，依 Open Database License（ODbL）1.0（https://opendatacommons.org/licenses/odbl/）。
   taiwan-signals.bin、taiwan-reststops.bin 與常出沒路段的參考點是 OSM 的衍生資料庫；本倉庫公開資料庫與產生方式（scripts/）即為 ODbL 要求的提供方式。
 - 測速資料只供提醒減速，位置僅供參考，請遵守現場速限標誌。

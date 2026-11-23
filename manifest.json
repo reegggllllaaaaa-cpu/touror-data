@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-22T23:33:00Z",
+ "generated": "2026-11-23T10:38:30Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -393,14 +393,14 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261123.1",
+   "version": "20261123.2",
    "date": "2026-11-23",
-   "count": 78037,
-   "sha256": "b0def2ab988db7f780f2833058f8c27567aaa63d8f135191574d38ef4820ed90",
-   "bytes": 702365,
+   "count": 80409,
+   "sha256": "4b82897163dcc2af21c71b36c6a5d6fd0c79b8ef7f2d7c182ff8bf7f529af286",
+   "bytes": 723713,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
-   "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市政府（政府資料開放授權條款第1版）",
+   "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市政府（政府資料開放授權條款第1版）",
    "sources": [
     {
      "title": "OpenStreetMap（Geofabrik taiwan-latest.osm.pbf）",
@@ -426,6 +426,11 @@
      "title": "臺南市交通號誌(路口紅綠燈)4G_WiFi點位資料",
      "url": "https://data.gov.tw/dataset/79978",
      "dataset": "79978"
+    },
+    {
+     "title": "臺中市號誌燈圖資",
+     "url": "https://data.gov.tw/dataset/103743",
+     "dataset": "103743"
     }
    ]
   }
