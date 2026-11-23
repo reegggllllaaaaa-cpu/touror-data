@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-23T11:09:18Z",
+ "generated": "2026-11-23T11:12:10Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -86,11 +86,11 @@
   {
    "name": "speedcams",
    "path": "data/speedcams/speedcams.json",
-   "version": "20261120.1",
-   "date": "2026-11-20",
-   "count": 2379,
-   "sha256": "7a6ae650bc6392b768698c6a737ac31343e264e1f6b5b9f8f242573ae0210019",
-   "bytes": 271916,
+   "version": "20261123.1",
+   "date": "2026-11-23",
+   "count": 2382,
+   "sha256": "b610df96f15197ceaa698c2480291660e38c1dce592fa8ed7c37a71f0883bae8",
+   "bytes": 272205,
    "minAppVersion": "0.0.1",
    "license": "政府資料開放授權條款－第1版",
    "attribution": "資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）",
@@ -230,11 +230,11 @@
   {
    "name": "speedcams-full",
    "path": "data/speedcams/speedcams-full.csv",
-   "version": "20261120.1",
-   "date": "2026-11-20",
-   "count": 2385,
-   "sha256": "c093ae8ae9b30e4f70b3d60359affcc63b231412051ced213617db03bc37397a",
-   "bytes": 543136,
+   "version": "20261123.1",
+   "date": "2026-11-23",
+   "count": 2388,
+   "sha256": "bf904a907092279154848cc4c6cf37cf6d3bc09f9fccd39e6517ceb0633449e1",
+   "bytes": 543589,
    "minAppVersion": "0.0.1",
    "license": "政府資料開放授權條款－第1版",
    "attribution": "資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）",
