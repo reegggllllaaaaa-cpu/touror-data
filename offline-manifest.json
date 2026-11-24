@@ -1,15 +1,15 @@
 {
  "schema": 1,
- "version": "20261126",
- "generated": "2026-11-24T09:32:14Z",
+ "version": "20261127",
+ "generated": "2026-11-24T12:07:03Z",
  "files": [
   {
    "name": "valhalla_tiles.tar",
    "kind": "tiles",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261119/valhalla_tiles.tar",
-   "bytes": 335431680,
-   "sha256": "8f0dd7b5ceec7754cb6fc46ef30025d1e70efd04abf9fb2fcc64c23697de891e",
-   "version": "20261119",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261127/valhalla_tiles.tar",
+   "bytes": 336250880,
+   "sha256": "f497695cdc8d9b58a3f737e80b487cdd23f113100bf58b45dc3da3b4c5885ab3",
+   "version": "20261127",
    "minAppVersion": "0.0.1",
    "description": "路網：全台離線算路（由 OpenStreetMap 資料產生的 Valhalla 路網）"
   },
