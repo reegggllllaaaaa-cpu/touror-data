@@ -1,0 +1,2 @@
+﻿id,條件_ref,條件_highway,改成_highway,override標記,採用,說明,依據URL,日期
+nf3a,3甲,motorway,trunk,nf3a,是,國道3甲（台北端～深坑端 0k～5.6k）依官方公告黃牌紅牌可行駛，但 OSM 標 motorway 會被 App 的 exclude_highways 排除；改 trunk 讓黃紅牌可走，白牌仍由 use_highways 0＋規則表走廊檢查排除。只改 ref=3甲 且 highway=motorway 的 way（國3主線與匝道 link 不動）,https://www.hpb.npa.gov.tw/ch/app/artwebsite/view?module=artwebsite&id=1625&serno=a5b76dd6-d822-46aa-b5c4-9291ef7a4289;https://www.mvdis.gov.tw/webMvdisLaw/SorderContent.aspx?SOID=15611,2026-11-25

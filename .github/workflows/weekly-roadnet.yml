@@ -41,7 +41,7 @@ jobs:
       - name: 套用 curated 覆蓋與補入政府缺口
         run: |
           cd build/rn
-          python -I ../../scripts/roadnet/apply_curated.py osm.pbf curated.pbf ../../curated/way覆蓋.csv | tee apply_curated.log
+          python -I ../../scripts/roadnet/apply_curated.py osm.pbf curated.pbf ../../curated/way覆蓋.csv ../../curated/類型覆蓋.csv | tee apply_curated.log
           python -I ../../scripts/roadnet/add_gov_gaps.py curated.pbf final.pbf ../../curated ../../curated/林道permit.json gov補入清單.csv gov補入統計.json
           rm -f osm.pbf curated.pbf
       - name: 建 tiles 並打包
