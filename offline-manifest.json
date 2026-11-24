@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "version": "20261123",
- "generated": "2026-11-23T13:36:35Z",
+ "version": "20261124",
+ "generated": "2026-11-24T06:30:00Z",
  "files": [
   {
    "name": "valhalla_tiles.tar",
@@ -26,12 +26,12 @@
   {
    "name": "touror_places.sqlite",
    "kind": "places",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261119/touror_places.sqlite",
-   "bytes": 52654080,
-   "sha256": "f7b5bc954ff70cfcbe63f47cc8966ff8faa7d83eac660544322737b662bd98f0",
-   "version": "20261119",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261124/touror_places.sqlite",
+   "bytes": 62844928,
+   "sha256": "5de0a64411b7f51d1b3a63d9ae62a638dc4347d75fb6973850be5d4a07468b36",
+   "version": "20261124",
    "minAppVersion": "0.0.1",
-   "description": "地名：目的地搜尋（由 OpenStreetMap 地名整理的資料庫）"
+   "description": "地名：目的地搜尋（由 OpenStreetMap 地名整理的資料庫，店家含分店名與路名門牌）"
   },
   {
    "name": "touror_addr.bin",
@@ -52,11 +52,32 @@
    "version": "20261123",
    "minAppVersion": "0.0.1",
    "description": "補充店家資料（選用）：補上 OpenStreetMap 沒有的店家，不下載也能搜尋（Overture Maps 資料）"
+  },
+  {
+   "name": "touror_places_gov.sqlite",
+   "kind": "places_gov",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261124/touror_places_gov.sqlite",
+   "bytes": 6254592,
+   "sha256": "de5bb33392bfa0d5d870c0e64aff93627a40daa0772761fabc9e9c7a85a9efea",
+   "version": "20261124",
+   "minAppVersion": "0.0.1",
+   "description": "政府公開地點（選用）：加油站、郵局、景點、旅宿"
+  },
+  {
+   "name": "touror_junctions.sqlite",
+   "kind": "junctions",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261124/touror_junctions.sqlite",
+   "bytes": 24870912,
+   "sha256": "667613fd54f8bcaeadb70cbf16683c8a4b18b7f3b4749996a5a93774b017a1b1",
+   "version": "20261124",
+   "minAppVersion": "0.0.1",
+   "description": "路口與交流道圖層（選用）：© OpenStreetMap contributors，ODbL 1.0"
   }
  ],
  "attribution": [
   "路網、底圖、地名、門牌：© OpenStreetMap contributors，依開放資料庫授權條款 ODbL 1.0 授權（衍生資料庫）。",
   "店家資料：Overture Maps Foundation, overturemaps.org；部分資料來自 Foursquare Labs, Inc.（Apache 2.0）與 AllThePlaces（CC0），依 CDLA Permissive 2.0 授權。",
+  "政府公開地點：政府資料開放平臺（政府資料開放授權第1版）。",
   "測速照相等小型資料另由「資料更新」取得：資料來源政府資料開放平臺，依政府資料開放授權條款－第 1 版。",
   "下載只取得公開的靜態檔，不傳送位置、識別碼或任何個人資料。完整授權清單見 設定 → 關於。"
  ]

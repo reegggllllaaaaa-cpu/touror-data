@@ -40,6 +40,12 @@ class OfflineManifestValidation(unittest.TestCase):
         d['files'].append(good_file(kind='places_overture', name='touror_places_overture.sqlite'))
         self.assertEqual(validate.offline_manifest_problems(d), [])
 
+    def test_known_gov_and_junctions_kinds_are_ok(self):
+        d = good_doc()
+        d['files'].append(good_file(kind='places_gov', name='touror_places_gov.sqlite'))
+        d['files'].append(good_file(kind='junctions', name='touror_junctions.sqlite'))
+        self.assertEqual(validate.offline_manifest_problems(d), [])
+
     def test_duplicate_kind_and_bad_fields(self):
         d = good_doc()
         bad = good_file()
