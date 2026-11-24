@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "version": "20261125",
- "generated": "2026-11-24T08:55:00Z",
+ "version": "20261126",
+ "generated": "2026-11-24T09:32:14Z",
  "files": [
   {
    "name": "valhalla_tiles.tar",
@@ -26,10 +26,10 @@
   {
    "name": "touror_places.sqlite",
    "kind": "places",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261124/touror_places.sqlite",
-   "bytes": 62844928,
-   "sha256": "5de0a64411b7f51d1b3a63d9ae62a638dc4347d75fb6973850be5d4a07468b36",
-   "version": "20261124",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261126/touror_places.sqlite",
+   "bytes": 63234048,
+   "sha256": "4585baf4092fb309010cf0c725e73c257c80500ce4665b4f167170396ffb3272",
+   "version": "20261126",
    "minAppVersion": "0.0.1",
    "description": "地名：目的地搜尋（由 OpenStreetMap 地名整理的資料庫，店家含分店名與路名門牌）"
   },
@@ -46,10 +46,10 @@
   {
    "name": "touror_places_overture.sqlite",
    "kind": "places_overture",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261125/touror_places_overture.sqlite",
-   "bytes": 99233792,
-   "sha256": "077615cd73d0da9162c114f2577a80dcfc0c22f1c694efc6e75726b59d54dbab",
-   "version": "20261125",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261126/touror_places_overture.sqlite",
+   "bytes": 99524608,
+   "sha256": "99344bbde939a2e9625683548fd55420c42198bc5ae4c0558509bba7d22d2de9",
+   "version": "20261126",
    "minAppVersion": "0.0.1",
    "description": "補充店家資料（選用）：補上 OpenStreetMap 沒有的店家，不下載也能搜尋（Overture Maps 資料）"
   },
