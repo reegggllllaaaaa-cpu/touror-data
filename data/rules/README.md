@@ -34,10 +34,13 @@
 | osm_sign_zun20 | OSM traffic_sign 含 遵20／兩段式（目前全台 0 個） | two_stage | high |
 | osm_inner_lane_moto_no | OSM `motorcycle:lanes(:forward/:backward)` 第一個（最內側）為 no（條件①） | two_stage | high |
 | taipei_lane3_inner_ban | 臺北「開放機車行駛第3車道」路段＝內側車道禁行機車（條件①） | two_stage | medium |
+| mly_ai_two_stage / mly_ai_moto_ban_inner | 街景判讀（路口版提示詞新欄位 `two_stage`、`moto_ban_inner` = yes，信心 medium↑；`data/lanes/mapillary_ai_moto_left.csv`，60 m 內對號誌） | two_stage | medium |
+| mly_sign_zun20:<feature_id> | Mapillary 偵測到遵20（類別 `regulatory--two-stage-right-turn-for-mopeds--g1`），60 m 內最近號誌、方向差 ≤60° | two_stage | 最後偵測 ≥2022 為 medium，否則 low |
 | oneway_3plus_osm/gov/inferred_v2 | 單行道且 ≥3 車道（條件②） | two_stage | medium；trunk/primary/secondary 為 low（多為分隔島雙線化，法律上未必是單行道） |
 | penghu_list | 澎湖縣設有機車兩段式左轉路口（路名配對，路口層級） | two_stage | medium |
 | kaohsiung_2016_enforce | 高雄市105年取締未依規定兩段式左轉前十大路口（舊資料） | two_stage | low |
 | taipei_rule_3lane / taipei_rule_2lane | 臺北市管制原則：該方向 ≥3 車道兩段式、≤2 車道直接左轉（例外即上面兩份清冊） | two_stage／direct | medium |
+| mly_sign_no_moto:<feature_id> | Mapillary 偵測到「禁行機車」標誌（多附「禁內側車道」副牌，但也可能全路段禁行） | two_stage | low |
 | no_evidence | 其餘 | unknown | none |
 
 ## 來源、授權、更新方式
@@ -49,6 +52,8 @@
 | 臺北市平面道路禁行機車、開放機車行駛第3車道（同上，`moto_restrictions_for_routing.csv`、`data/lanes/gov_lane_attrs.csv`） | 政府資料開放授權條款第1版 | 同上 |
 | 澎湖縣設有機車兩段式左轉路口（data.gov.tw 157480，28 處） | 政府資料開放授權條款第1版 | 腳本自動下載（`--no-download` 可略過） |
 | 高雄市105年度取締未依規定兩段式左轉前十大路口（data.gov.tw 47188） | 政府資料開放授權條款第1版 | 同上（2016 年資料，僅 low） |
+| Mapillary 地圖要素（`mapillary_moto_signs.csv`，`scripts/rules/fetch_mly_moto_signs.py` 以號誌所在 z14 圖磚分塊查 Graph API map_features） | CC BY-SA 4.0，© Mapillary | 手動重跑 fetch（約 10 分鐘），再重跑 builder |
+| 街景判讀新欄位（`data/lanes/mapillary_ai_moto_left.csv`，`kp.py decide` 產生） | 衍生自 Mapillary（CC BY-SA 4.0） | 每週車道判讀批次自動累積（2026-11-26 起的新批次才有） |
 | 車道推論 v2（WSL `/root/lanesinfer/out/inferred_lanes.csv`，只用 medium↑） | 衍生自 OSM＋政府資料 | 先跑 `scripts/lanes_infer/wsl_run.sh`；`--inferred` 可指定檔案 |
 
 data.gov.tw 查詢結果（2026-11-26）：全國只有臺北（例外清冊）、澎湖（兩段式路口）、高雄（2016 取締前十大）有相關資料；新北、桃園、臺中、臺南等**沒有**兩段式左轉路口清單。
@@ -64,4 +69,5 @@ python -I scripts/rules/build_moto_left_turn.py            # 約 1.5 分鐘，�
 - OSM 台灣幾乎沒有遵20標誌與 `motorcycle:lanes` 標記，全台（臺北以外）絕大多數為 unknown。
 - 澎湖清單多以地標描述，28 處只對到 2 處；高雄 10 處對到 2 處。
 - 臺北例外清冊 114 筆中 5 筆原始無座標、3 筆 40 m 內沒有 OSM 號誌節點。
+- Mapillary 類別驗證（2026-11-26）：抽樣臺北忠孝東路、仁愛路實照，`regulatory--two-stage-right-turn-for-mopeds--g1` 確實是遵20；`regulatory--no-motorcycles--g1` 是禁行機車圓牌（例：附「禁內側車道」副牌）。Mapillary **沒有**機車待轉區地面標線類別（只有通用 `marking--discrete--other-marking`）。向量圖磚每塊上限 8192 要素、市區會截斷，所以改用 Graph API。
 - 「三快車道」以總車道數近似，未扣除機慢車道；雙線化分隔道路被當成單行道（已降為 low）。

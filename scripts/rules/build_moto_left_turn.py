@@ -217,6 +217,8 @@ def main():
     ap.add_argument("--lanes-dir", default=os.path.join(R, "..", "資料", "車道"))
     ap.add_argument("--inferred", default="")
     ap.add_argument("--no-download", action="store_true")
+    ap.add_argument("--mly-signs", default=os.path.join(R, "data", "rules", "mapillary_moto_signs.csv"))
+    ap.add_argument("--mly-judge", default=os.path.join(R, "data", "lanes", "mapillary_ai_moto_left.csv"))
     a = ap.parse_args()
     low_priority()
     raw_dir = os.path.join(a.out, "raw")
@@ -287,6 +289,52 @@ def main():
             for n in ns[:4]:
                 for s in sides:
                     tp_exc[(n, SIDE[s])] = (rule, r["intersection"] + " " + r["direction"])
+
+    # Mapillary 偵測標誌（fetch_mly_moto_signs.py）：遵20、禁行機車 → 最近號誌（60 m 內）的進入方向
+    #   方向：有 aligned_direction（標誌正面朝向，約等於進入方向的上游方位）就用它，否則用「號誌→標誌」方位；與進入方向差 ≤60°
+    node_aps = defaultdict(list)
+    for ap_ in approaches:
+        node_aps[ap_["node"]].append(ap_)
+
+    def angd(x, y):
+        return min(abs(x - y) % 360, 360 - abs(x - y) % 360)
+
+    mly_sign = {}  # (node, way, dir) -> (kind, conf, feature_id)
+    mly_hit = Counter()
+    if os.path.exists(a.mly_signs):
+        for r in read_csv(a.mly_signs):
+            la, lo = float(r["lat"]), float(r["lon"])
+            ns = near_signals(la, lo, 60)
+            if not ns:
+                mly_hit[(r["kind"], "未對到號誌")] += 1
+                continue
+            n = ns[0]
+            ref = float(r["aligned_direction"]) if r.get("aligned_direction") else bearing(*signals[n], la, lo)
+            best = min(node_aps.get(n, []), key=lambda x: angd(x["brg"], ref), default=None)
+            if not best or angd(best["brg"], ref) > 60:
+                mly_hit[(r["kind"], "方向對不上")] += 1
+                continue
+            mly_hit[(r["kind"], "對到")] += 1
+            conf = "medium" if r["kind"] == "zun20" and r.get("last_seen", "") >= "2022" else "low"
+            k = (n, best["way"], best["dir"])
+            if k not in mly_sign or (mly_sign[k][0] != "zun20" and r["kind"] == "zun20"):
+                mly_sign[k] = (r["kind"], conf, r["feature_id"])
+
+    # 街景判讀新欄位（kp.py decide → data/lanes/mapillary_ai_moto_left.csv）：two_stage／moto_ban_inner = yes、信心 medium↑ 才用
+    mly_ai = defaultdict(list)  # (way, dir) -> [(lat, lon, field)]
+    if os.path.exists(a.mly_judge):
+        for r in read_csv(a.mly_judge):
+            if r.get("confidence") not in ("high", "medium"):
+                continue
+            for fld in ("two_stage", "moto_ban_inner"):
+                if r.get(fld) == "yes":
+                    mly_ai[(int(r["osm_way_id"]), r["direction"])].append((float(r["lat"]), float(r["lon"]), fld))
+
+    def ai_flag(nid, wid, d):
+        for la, lo, fld in mly_ai.get((wid, d), ()):
+            if dist_m(la, lo, *signals[nid]) <= 60:
+                return fld
+        return None
 
     # 澎湖、高雄清單：路名配對到號誌節點
     def names_of(w):
@@ -367,6 +415,11 @@ def main():
             rule, basis, conf = "two_stage", "osm_inner_lane_moto_no", "high"
         elif gmr.startswith("例外:開放機車行駛第3車道") and (f"({d})" in gmr or "(both)" in gmr):
             rule, basis, conf = "two_stage", "taipei_lane3_inner_ban", "medium"
+        elif ai_flag(nid, wid, d):
+            rule, basis, conf = "two_stage", "mly_ai_" + ai_flag(nid, wid, d), "medium"
+        elif (nid, wid, d) in mly_sign and mly_sign[(nid, wid, d)][0] == "zun20":
+            s = mly_sign[(nid, wid, d)]
+            rule, basis, conf = "two_stage", f"mly_sign_zun20:{s[2]}", s[1]
         elif ow and nl and nl >= 3:
             # trunk/primary/secondary 的 oneway 多半是分隔島雙線化道路（法律上未必是「單行道」）→ low
             dual = tags.get("highway", "").split("_")[0] in ("trunk", "primary", "secondary")
@@ -376,6 +429,8 @@ def main():
             rule, basis, conf = "two_stage", f"{b}:{t}", c
         elif county == "臺北市" and nl and nsrc != "inferred_v2":
             rule, basis, conf = ("two_stage", "taipei_rule_3lane", "medium") if nl >= 3 else ("direct", "taipei_rule_2lane", "medium")
+        elif (nid, wid, d) in mly_sign:   # 禁行機車標誌：多半是「禁內側車道」副牌，但也可能全路段禁行 → low
+            rule, basis, conf = "two_stage", f"mly_sign_no_moto:{mly_sign[(nid, wid, d)][2]}", "low"
         rows.append([nid, f"{lat:.7f}", f"{lon:.7f}", county, wid, d, round(ap_["brg"]), tags.get("name", ""),
                      tags.get("highway", ""), "yes" if ow else "no", nl or "", nsrc, rule, basis, conf])
 
@@ -395,6 +450,8 @@ def main():
            "signal_nodes": len(node_ways), "approaches": len(rows),
            "by_county": {k: dict(v) for k, v in sorted(stats.items())}, "by_basis": dict(bas.most_common()),
            "taipei_exceptions": dict(exc_hit), "list_match": {f"{k[0]}|{k[1]}": v for k, v in list_hit.items()},
+           "mapillary_signs": {f"{k[0]}|{k[1]}": v for k, v in mly_hit.items()},
+           "mapillary_ai_flags": sum(len(v) for v in mly_ai.values()),
            "datagov": meta}
     json.dump(out, open(os.path.join(a.out, "moto_left_turn_stats.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(json.dumps({k: out[k] for k in ("signal_nodes", "approaches", "by_basis", "taipei_exceptions", "list_match")}, ensure_ascii=False))
