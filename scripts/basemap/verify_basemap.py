@@ -10,6 +10,9 @@
    車輛可走等級（motorway…service、track）覆蓋率須 >= 99.0%，全部等級 >= 97.0%。
 3. 固定案例：鼎金一巷巷道（OSM way 209794955，2026-11-25 使用者回報「路線走在沒畫路的地方」）沿線點都要有線。
 4. 大小：新檔與舊檔（--old）相差在 -30%～+60% 內（只在有 --old 時檢查）。
+5. 車道級圖層（Touror 自訂）：lanes／lane_lines／road_areas／islands_pt 存在且欄位齊全；
+   固定案例國1鼎金段（z14 13668/7132）要有 motorway lane_count=5 的車道線。
+6. 舊 App 相容：有 --old 時，舊檔每個圖層與欄位在新檔都還在（只准新增，不准改名刪欄）。
 有 --old 時同一批樣本也量舊檔覆蓋率，方便比較。
 """
 import argparse, gzip, json, math, random, sys
@@ -24,6 +27,16 @@ OTHER = {"path", "footway", "cycleway", "bridleway", "steps", "pedestrian"}
 BBOX = (119.3, 21.8, 122.1, 25.4)
 MAX_M = 12.0
 CASE_POINTS = [(22.665434, 120.330072), (22.663038, 120.330653), (22.662598, 120.330747), (22.661626, 120.331126)]
+# 只列「台灣資料一定會出現」的欄位；placement、shoulder、divider、moped_lanes 等稀有標籤沒有人標時
+# 不會出現在 vector_layers 欄位表，不列為必要（圖層程式仍會輸出）。
+LANE_LAYERS = {
+    "lanes": {"highway", "name", "lanes", "lanes_forward", "lanes_backward", "lanes_source", "oneway", "turn_lanes",
+              "width", "motorcycle_lanes"},
+    "lane_lines": {"kind", "lane_index", "lane_count", "side", "turn", "offset_m", "line_type", "highway"},
+    "road_areas": {"kind"},
+    "islands_pt": {"kind"},
+}
+LANE_CASE_TILE = (14, 13668, 7132)  # 國1 鼎金段 lanes=5
 REQUIRED_LAYERS = {"earth", "landcover", "landuse", "water", "boundaries", "roads", "places", "pois"}
 
 
@@ -170,6 +183,32 @@ def main():
         fails.append(f"maxzoom={h.get('max_zoom')}（App 期待 14）")
     if str(h.get("tile_compression")).upper().find("GZIP") < 0:
         fails.append(f"壓縮 {h.get('tile_compression')}（期待 gzip）")
+
+    fields = {L["id"]: set(L.get("fields", {})) for L in meta.get("vector_layers", [])}
+    for lname, need in LANE_LAYERS.items():
+        if lname not in fields:
+            fails.append(f"車道圖層缺少 {lname}")
+        elif not need <= fields[lname]:
+            fails.append(f"{lname} 欄位缺少 {sorted(need - fields[lname])}")
+    d = t.r.get(*LANE_CASE_TILE)
+    case5 = 0
+    if d is not None:
+        tt = mvt.decode(gzip.decompress(d) if d[:2] == bytes([0x1F, 0x8B]) else d)
+        case5 = sum(1 for ft in tt.get("lane_lines", {}).get("features", [])
+                    if ft["properties"].get("kind") == "lane" and ft["properties"].get("lane_count") == 5
+                    and ft["properties"].get("highway") == "motorway")
+    report["lane_case_dingjin_5lane_features"] = case5
+    if case5 < 5:
+        fails.append(f"固定案例國1鼎金段 lane_count=5 車道線只有 {case5} 條")
+    if a.old:
+        with open(a.old, "rb") as fo:
+            old_meta = Reader(MmapSource(fo)).metadata()
+        for L in old_meta.get("vector_layers", []):
+            lost = set(L.get("fields", {})) - fields.get(L["id"], set())
+            if L["id"] not in fields:
+                fails.append(f"舊圖層 {L['id']} 不見了")
+            elif lost:
+                fails.append(f"舊圖層 {L['id']} 少了欄位 {sorted(lost)}")
 
     sp = Sampler(a.n * 3, a.seed)
     sp.apply_file(a.pbf, locations=True, idx="flex_mem")

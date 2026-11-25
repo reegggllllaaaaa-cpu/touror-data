@@ -20,11 +20,25 @@ R=basemaps/tiles/src/main/java/com/protomaps/basemap/layers/Roads.java
 grep -q 'sf.hasTag("access", "private", "no") ? Math.max(minZoom, 15)' "$R" || { echo "補丁失敗：Roads.java 私有路規則已變（請檢查 BASEMAPS_REV）"; exit 3; }
 sed -i 's/sf.hasTag("access", "private", "no") ? Math.max(minZoom, 15)/sf.hasTag("access", "private", "no") ? Math.max(minZoom, 14)/; s/setAttrWithMinzoom("access", sf.getTag("access"), 15)/setAttrWithMinzoom("access", sf.getTag("access"), 14)/' "$R"
 grep -q 'getTag("access"), 14)' "$R" || { echo "補丁失敗：access 屬性"; exit 3; }
+# Touror 車道級圖層（lanes／lane_lines／road_areas／islands_pt）：只新增圖層，既有圖層不動
+B=basemaps/tiles/src/main/java/com/protomaps/basemap/Basemap.java
+cp "$SCRIPT_DIR/lanes/Lanes.java" basemaps/tiles/src/main/java/com/protomaps/basemap/layers/Lanes.java
+grep -q 'import com.protomaps.basemap.layers.Roads;' "$B" && grep -q '    if (clip != null) {' "$B" || { echo "補丁失敗：Basemap.java 結構已變"; exit 3; }
+sed -i 's/^import com.protomaps.basemap.layers.Roads;/import com.protomaps.basemap.layers.Roads;\nimport com.protomaps.basemap.layers.Lanes;/' "$B"
+sed -i 's/^    if (clip != null) {/    if (layer.isEmpty()) {\n      var lanes = new Lanes();\n      registerHandler(lanes);\n      registerSourceHandler("osm", lanes::processOsm);\n    }\n\n    if (clip != null) {/' "$B"
+grep -q 'lanes::processOsm' "$B" || { echo "補丁失敗：Lanes 註冊"; exit 3; }
 ( cd basemaps/tiles && mvn -q -B -DskipTests package )
 JAR=$(ls basemaps/tiles/target/*-with-deps.jar | head -1)
 mkdir -p data/sources
 # 政府補入路段用 9e12 起的合成 ID，planetiler 節點索引吃不下，先改號（只給底圖用）
 "${PYTHON:-python3}" -I "$SCRIPT_DIR/renumber_synthetic.py" "$PBF" data/sources/taiwan.osm.pbf
+# 政府車道屬性（可選）：GOV_LANES_CSV=<資料/車道/gov_lane_attrs.csv>；不存在就跳過，lanes 只用 OSM＋推定
+rm -f data/sources/gov_lane_attrs.csv
+if [ -n "${GOV_LANES_CSV:-}" ] && [ -f "$GOV_LANES_CSV" ]; then
+  cp "$GOV_LANES_CSV" data/sources/gov_lane_attrs.csv; echo "使用政府車道屬性：$GOV_LANES_CSV"
+else
+  echo "未提供政府車道屬性 CSV（GOV_LANES_CSV），略過"
+fi
 rm -f "$OUT" data/sources/taiwan.osm.pbf.tmp
 java -Xmx"$XMX" -jar "$JAR" --area=taiwan --download --bounds="$BBOX" --maxzoom="$MAXZOOM" \
   --output="$OUT" --force --nodemap_type=sparsearray --storage=mmap 2>&1 | tail -n 40
