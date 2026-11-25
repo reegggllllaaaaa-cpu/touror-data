@@ -60,6 +60,35 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
     }
     System.err.println("Touror lanes：政府車道屬性 " + gov.size() + " 筆");
     loadMapillary(System.getProperty("touror.mapillaryLanes", "data/sources/mapillary_ai_lanes.csv"));
+    loadInferred(System.getProperty("touror.inferLanes", "data/sources/inferred_lanes.csv"));
+  }
+
+  /** 全台車道推論（scripts/lanes_infer/infer_lanes.py 每週產生）：路口反推／雙線化對向／路寬換算／先驗，附交叉驗證決定的信心。 */
+  record Inf(int lanes, String method, String conf) {}
+
+  private final Map<Long, Inf> inf = new HashMap<>();
+
+  private void loadInferred(String path) {
+    var f = java.nio.file.Path.of(path);
+    if (!java.nio.file.Files.exists(f)) return;
+    try (var lines = java.nio.file.Files.lines(f)) {
+      var it = lines.iterator();
+      String[] head = it.next().split(",", -1);
+      Map<String, Integer> col = new HashMap<>();
+      for (int i = 0; i < head.length; i++) col.put(head[i].trim(), i);
+      while (it.hasNext()) {
+        String[] c = it.next().split(",", -1);
+        if (c.length < head.length) continue;
+        long id = Long.parseLong(c[col.get("way_id")].trim());
+        if (id >= 9_100_000_000_000L) id = 2_000_000_000L + (id - 9_100_000_000_000L); // 與 renumber_synthetic.py 一致
+        Integer n = parseInt(c[col.get("lanes")]);
+        if (n != null) inf.put(id, new Inf(n, c[col.get("source")].trim(), c[col.get("confidence")].trim()));
+      }
+    } catch (Exception e) {
+      System.err.println("inferred_lanes.csv 讀取失敗，略過：" + e);
+      inf.clear();
+    }
+    System.err.println("Touror lanes：全台車道推論 " + inf.size() + " 條 way");
   }
 
   /** Mapillary 照片 AI 判讀車道（data/lanes/mapillary_ai_lanes.csv，CC BY-SA 4.0）：以 way id＋方向對應。 */
@@ -240,6 +269,18 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
     }
     // curated/車道覆蓋.csv（apply_curated.py 寫 touror:lanes_override）標成 curated，App 可區分人工判定與 OSM
     String source = osm ? (sf.getString("touror:lanes_override") != null ? "curated" : "osm") : useGov ? "gov" : useMly ? "mapillary_ai" : "inferred";
+    // 全台推論：lanes_source 仍是 inferred（App 舊樣式照常淡化），另給 lanes_method／lanes_conf 讓 App 區分路口反推等中高信心值
+    String conf = osm ? "high" : useGov ? (g.confidence() == null || g.confidence().isEmpty() ? "medium" : g.confidence()) : useMly ? "medium" : "prior";
+    String method = osm || useGov || useMly ? null : "default";
+    Inf in = (!osm && !useGov && !useMly) ? inf.get(sf.id()) : null;
+    if (in != null) {
+      lanesTag = in.lanes();
+      fwdTag = null;
+      bwdTag = null;
+      conf = in.conf();
+      method = in.method();
+    }
+    boolean infLines = in != null && ("high".equals(conf) || "medium".equals(conf));
     int total;
     if (lanesTag != null) total = lanesTag;
     else if (fwdTag != null) total = fwdTag + (bwdTag != null ? bwdTag : oneway ? 0 : 1);
@@ -293,6 +334,8 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       .setAttr("lanes_forward", oneway ? null : fwd)
       .setAttr("lanes_backward", oneway ? null : bwd)
       .setAttr("lanes_source", source)
+      .setAttr("lanes_conf", conf)
+      .setAttr("lanes_method", method)
       .setAttr("oneway", onewayAttr)
       .setAttr("turn_lanes", turn)
       .setAttr("turn_lanes_forward", turnF)
@@ -310,7 +353,7 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       .setPixelTolerance(0);
     structure(f, sf);
 
-    if (!osm && !useGov && !useMly) return; // lane_lines 只給 OSM／政府資料／AI 判讀有車道數的路（lanes_source 區分）
+    if (!osm && !useGov && !useMly && !infLines) return; // lane_lines 只給 OSM／政府資料／AI 判讀有車道數的路（lanes_source 區分）
     LineString base;
     try {
       base = (LineString) sf.line();
@@ -351,7 +394,7 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       for (int i = 0; i < fwd; i++) {
         double off = (i - (fwd - 1) / 2.0) * w - shift;
         var lo = structure(emitLane(features, base, mPerUnit, off, i, fwd, "forward", at(turnArr, i), at(mc, i), hw, false), sf);
-        if (lo != null) lo.setAttr("lanes_source", source);
+        if (lo != null) lo.setAttr("lanes_source", source).setAttr("lanes_conf", conf);
       }
       for (int k = 0; k <= fwd; k++) {
         double off = (k - fwd / 2.0) * w - shift;
@@ -362,12 +405,12 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       // 正向車道在右（正 offset），反向車道在左；0＝各自行進方向最左（最靠中線）
       for (int i = 0; i < fwd; i++) {
         var lf = structure(emitLane(features, base, mPerUnit, (i + 0.5) * w, i, fwd, "forward", at(turnArr, i), at(mc, i), hw, false), sf);
-        if (lf != null) lf.setAttr("lanes_source", source);
+        if (lf != null) lf.setAttr("lanes_source", source).setAttr("lanes_conf", conf);
       }
       for (int i = 0; i < bwd; i++) {
         var lb = structure(emitLane(features, base, mPerUnit, -(i + 0.5) * w, i, bwd, "backward", at(turnBArr, i), at(mcB, i),
           hw, true), sf);
-        if (lb != null) lb.setAttr("lanes_source", source);
+        if (lb != null) lb.setAttr("lanes_source", source).setAttr("lanes_conf", conf);
       }
       if (fwd > 0 && bwd > 0) {
         var c = structure(emitLine(features, base, mPerUnit, 0, 0, "both", "center", hw), sf);

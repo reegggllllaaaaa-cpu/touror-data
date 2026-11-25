@@ -50,6 +50,17 @@ jobs:
           python -I ../../scripts/roadnet/apply_curated.py osm.pbf curated.pbf ../../curated/way覆蓋.csv ../../curated/類型覆蓋.csv --moto-bans ../../curated/禁行機車.csv --moto-out . | tee apply_curated.log
           python -I ../../scripts/roadnet/add_gov_gaps.py curated.pbf final.pbf ../../curated ../../curated/林道permit.json gov補入清單.csv gov補入統計.json
           rm -f osm.pbf curated.pbf
+      - name: 全台車道數推論（路口反推／雙線化對向／路寬／先驗，交叉驗證定信心；閘門不過就不進底圖）
+        run: |
+          mkdir -p build/rn/lanes_infer
+          python -I scripts/lanes_infer/infer_lanes.py build/rn/final.pbf build/rn/lanes_infer --gov data/lanes/gov_lane_attrs.csv --mly data/lanes/mapillary_ai_lanes.csv | tail -n 20
+          if python -I scripts/lanes_infer/verify_infer.py build/rn/lanes_infer/infer_report.json scripts/lanes_infer/gate.json; then
+            echo "INFER_LANES_CSV=${{ github.workspace }}/build/rn/lanes_infer/inferred_lanes.csv" >> "$GITHUB_ENV"
+          else
+            echo "::warning::車道推論閘門未通過，本週底圖不帶推論值"
+          fi
+          cat build/rn/lanes_infer/infer_report.md >> "$GITHUB_STEP_SUMMARY"
+          gzip -kf build/rn/lanes_infer/inferred_lanes.csv
       - name: 建底圖（同一份 final.pbf；Protomaps basemap＋私有路 z14 補丁）
         env:
           GOV_LANES_CSV: ${{ github.workspace }}/data/lanes/gov_lane_attrs.csv
@@ -133,6 +144,8 @@ jobs:
           cp build/rn/tiles/valhalla_tiles.tar build/rn/valhalla_tiles.tar
           ASSETS="build/rn/valhalla_tiles.tar"
           [ "${{ steps.bmverify.outputs.code }}" = "0" ] && ASSETS="$ASSETS build/rn/taiwan-z14.pmtiles"
+          # 車道推論結果與報告（不進 manifest，供查核）
+          for x in build/rn/lanes_infer/inferred_lanes.csv.gz build/rn/lanes_infer/infer_report.md build/rn/lanes_infer/gaps_major.csv; do [ -f "$x" ] && ASSETS="$ASSETS $x"; done
           gh release create "$NEW_TAG" $ASSETS --repo "$REPO" \
             --title "路網與底圖 $NEW_VER" --notes "每週自動重建：OSM Geofabrik 台灣 extract＋curated 覆蓋＋政府林道步道補入；路網 Valhalla 3.9.3；底圖 Protomaps basemap 4.15.2（planetiler，與路網同一份 OSM，私有路 z14 起收錄；底圖驗證沒過就只發路網）。驗證閘門通過後發布。© OpenStreetMap contributors，ODbL 1.0。"
       - name: 更新 offline-manifest.json 並推送

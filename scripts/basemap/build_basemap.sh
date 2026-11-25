@@ -47,6 +47,13 @@ if [ -n "${MAPILLARY_LANES_CSV:-}" ] && [ -f "$MAPILLARY_LANES_CSV" ]; then
 else
   echo "未提供 Mapillary AI 判讀車道 CSV（MAPILLARY_LANES_CSV），略過"
 fi
+# 全台車道推論（可選）：INFER_LANES_CSV=<scripts/lanes_infer/infer_lanes.py 產出的 inferred_lanes.csv，需先過 verify_infer.py>
+rm -f data/sources/inferred_lanes.csv
+if [ -n "${INFER_LANES_CSV:-}" ] && [ -f "$INFER_LANES_CSV" ]; then
+  cp "$INFER_LANES_CSV" data/sources/inferred_lanes.csv; echo "使用全台車道推論：$INFER_LANES_CSV"
+else
+  echo "未提供全台車道推論 CSV（INFER_LANES_CSV），略過"
+fi
 rm -f "$OUT" data/sources/taiwan.osm.pbf.tmp
 java -Xmx"$XMX" -jar "$JAR" --area=taiwan --download --bounds="$BBOX" --maxzoom="$MAXZOOM" \
   --output="$OUT" --force --nodemap_type=sparsearray --storage=mmap 2>&1 | tail -n 40

@@ -1,0 +1,16 @@
+{
+ "_說明": "車道推論閘門：infer_lanes.py 依交叉驗證（OSM 已知車道藏起來推）決定各方法信心；未達 low 門檻的方法不採用（off）。verify_infer.py 再檢查整體門檻，不過就不把推論值放進底圖。",
+ "min_samples": 200,
+ "levels": [
+  {"level": "high", "exact": 0.90, "pm1": 0.98},
+  {"level": "medium", "exact": 0.75, "pm1": 0.95},
+  {"level": "low", "exact": 0.55, "pm1": 0.85}
+ ],
+ "require": {
+  "junction_both_min_exact": 0.70,
+  "prior_min_pm1": 0.70,
+  "min_rows": 100000,
+  "focus_min_non_prior_share": 0.95
+ },
+ "focus_name": "九如一路"
+}
