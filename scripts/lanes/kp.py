@@ -370,7 +370,11 @@ def thumb(iid):
     from mly import graph, fetch_bytes
     f = os.path.join(IMG, f"{iid}.jpg")
     if not os.path.exists(f):
-        r = graph(f"{iid}", fields="thumb_2048_url"); open(f, "wb").write(fetch_bytes(r["thumb_2048_url"]))
+        r = graph(f"{iid}", fields="thumb_2048_url,thumb_1024_url")
+        url = r.get("thumb_2048_url") or r.get("thumb_1024_url")
+        if not url:  # 照片已下架或無縮圖：略過這張，不讓整批失敗
+            return None
+        open(f, "wb").write(fetch_bytes(url))
     return f
 
 
@@ -412,9 +416,14 @@ def sheets_kind(A, judged, owners, per, seg):
             lab = a.get("label") or new_label(); a["label"] = lab
             tiles = []
             for iid, cap in zip(a["imgs"][:2], a["caps"][:2]):
-                im = Image.open(thumb(iid)).convert("RGB"); w, h = im.size
+                tf = thumb(iid)
+                if not tf:
+                    continue
+                im = Image.open(tf).convert("RGB"); w, h = im.size
                 im = im.crop((int(w * .08), int(h * top), int(w * .92), int(h * .90)))
                 im = im.resize((W, int(im.size[1] * W / im.size[0])), Image.LANCZOS); tiles.append((im, cap))
+            if not tiles:  # 兩張照片都拿不到：留待下週重查
+                a["status"] = "pending"; a.pop("label", None); continue
             hh = max(t[0].size[1] for t in tiles) + 20; row = Image.new("RGB", (W * 2 + 8, hh), (40, 40, 40)); d = ImageDraw.Draw(row)
             for i, (t, cap) in enumerate(tiles):
                 row.paste(t, (i * (W + 8), 20)); d.text((i * (W + 8) + 4, 4), f"{lab}{'ab'[i]}  {a['hw']} {a['name']} brg={round(a['brg'])}  {cap}", fill=(255, 255, 0))
