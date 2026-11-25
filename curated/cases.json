@@ -46,6 +46,10 @@
   {"id": "mb_zxw_yellow", "name": "忠孝西路 重慶南路→中山北路（臺北禁行機車）：黃牌仍可走", "plate": "yellow", "expect": {"rule": "moto-ban-003", "use": true}, "legs": [
     {"from": [25.04726, 121.51298], "to": [25.04552, 121.51987]}]},
   {"id": "mb_zxw_red", "name": "忠孝西路 重慶南路→中山北路（臺北禁行機車）：紅牌仍可走", "plate": "red", "expect": {"rule": "moto-ban-003", "use": true}, "legs": [
-    {"from": [25.04726, 121.51298], "to": [25.04552, 121.51987]}]}
+    {"from": [25.04726, 121.51298], "to": [25.04552, 121.51987]}]},
+  {"id": "songliao_flyover_nb", "name": "光明路三段北行上松寮陸橋（使用者 2026-11-25 實騎：App 播「靠右」，實際應靠左上橋）", "legs": [
+    {"from": [22.6344, 120.4040], "to": [22.66, 120.39]}],
+   "expect_maneuver": {"node": 6953658829, "at": [22.636075, 120.402361], "onto_way": 742811038, "side": "left",
+     "_說明": "岔路節點：引道 way 742811038（方位 343°）在平面光明路三段 way 1461814689（348°）左側。tiles 20261206 的 Valhalla 給 type 9 slight_right（Bear right onto 松寮陸橋），App 照 type 播「靠右」。verify.py 目前不檢查 maneuver 方向（只檢查時間／牌照覆蓋），此欄由 scripts/audit/fork_sides.py 稽核（該節點在 forks_*.csv 判定「不一致」）；App 端修正後應改為比對 App 播報側。"}}
  ]
 }
