@@ -1,0 +1,125 @@
+{
+ "generated": "2026-11-26 06:10",
+ "pbf": "taiwan-latest.osm.pbf",
+ "signal_nodes": 56095,
+ "approaches": 133998,
+ "by_county": {
+  "全台": {
+   "direct": 2938,
+   "two_stage": 5057,
+   "unknown": 126003
+  },
+  "南投縣": {
+   "unknown": 2320,
+   "two_stage": 55
+  },
+  "嘉義市": {
+   "unknown": 2529,
+   "two_stage": 126
+  },
+  "嘉義縣": {
+   "unknown": 2845,
+   "two_stage": 78
+  },
+  "基隆市": {
+   "unknown": 1032,
+   "two_stage": 28
+  },
+  "宜蘭縣": {
+   "unknown": 3676,
+   "two_stage": 1
+  },
+  "屏東縣": {
+   "unknown": 5259,
+   "two_stage": 18
+  },
+  "彰化縣": {
+   "unknown": 8625,
+   "two_stage": 19
+  },
+  "新北市": {
+   "unknown": 10487,
+   "two_stage": 508,
+   "direct": 2
+  },
+  "新竹市": {
+   "unknown": 2049,
+   "two_stage": 177
+  },
+  "新竹縣": {
+   "unknown": 3512,
+   "two_stage": 169
+  },
+  "桃園市": {
+   "unknown": 10822,
+   "two_stage": 377
+  },
+  "澎湖縣": {
+   "unknown": 585,
+   "two_stage": 7
+  },
+  "臺中市": {
+   "unknown": 18932,
+   "two_stage": 899
+  },
+  "臺北市": {
+   "direct": 2936,
+   "two_stage": 1876,
+   "unknown": 5372
+  },
+  "臺南市": {
+   "unknown": 16466,
+   "two_stage": 306
+  },
+  "臺東縣": {
+   "unknown": 1326,
+   "two_stage": 1
+  },
+  "花蓮縣": {
+   "unknown": 2186,
+   "two_stage": 11
+  },
+  "苗栗縣": {
+   "unknown": 3684,
+   "two_stage": 38
+  },
+  "金門縣": {
+   "unknown": 98
+  },
+  "雲林縣": {
+   "unknown": 4643,
+   "two_stage": 33
+  },
+  "高雄市": {
+   "unknown": 19555,
+   "two_stage": 330
+  }
+ },
+ "by_basis": {
+  "no_evidence": 124753,
+  "oneway_3plus_osm": 3069,
+  "taipei_rule_2lane": 2799,
+  "approach_moto_banned": 1250,
+  "oneway_3plus_inferred_v2": 1038,
+  "taipei_lane3_inner_ban": 532,
+  "oneway_3plus_gov": 239,
+  "taipei_exception_direct": 139,
+  "taipei_rule_3lane": 71,
+  "osm_inner_lane_moto_no": 47,
+  "taipei_exception_two_stage": 42,
+  "kaohsiung_2016_enforce": 12,
+  "penghu_list": 7
+ },
+ "taipei_exceptions": {
+  "對到": 106,
+  "未對到號誌": 3,
+  "原始無座標": 5
+ },
+ "list_match": {
+  "penghu_list|對到": 2,
+  "penghu_list|未對到": 27,
+  "kaohsiung_2016_enforce|未對到": 8,
+  "kaohsiung_2016_enforce|對到": 2
+ },
+ "datagov": {}
+}
