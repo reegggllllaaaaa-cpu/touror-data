@@ -7,8 +7,11 @@
 
 做法（全量，不抽樣）：
  1. pyosmium 讀出區域內所有汽機車道路（motorway…residential、*_link、living_street），保留 bridge/tunnel/layer/oneway 等標籤。
- 2. 每個節點、每條「進入」方向：找出偏離進入方位 ≤60° 的所有「離開」分支（照 oneway）。兩兩配對，其中一支沿路 200 m 內
+ 2. 每個節點、每條「進入」方向：找出偏離進入方位 ≤135° 的所有「離開」分支（照 oneway）。兩兩配對，其中一支沿路 200 m 內
     走到 立體（bridge／tunnel／layer≠0／*_link），另一支 100 m 內都在平面、且兩支在 50 m 處的夾角 ≤45° → 算一個岔路。
+    「平面」：原規則不含 *_link；2026-11-25 補：若立體那支真的走到 bridge／tunnel／layer，另一支是平面 *_link（迴轉道）也算。
+    舊版漏收（九如一路東行 2222785405：右轉約 90° 後才分成上橋 219634146→212429277 與迴轉道 tertiary_link 212429268）：
+    ①分支偏離 >60° 整個不看；②迴轉道是 *_link 被當成立體，兩支都「立體」不成對。輸出「收錄規則」欄標新規則收錄的。
  3. 幾何判斷：兩支各沿路走 50 m 取點，相對進入方位的有號角較小的是左邊（差 <3° 記「無法判斷」）。
  4. Valhalla：用 App 的機車 costing，從岔路前（進入路段往回最多 40 m）算到目標分支 120 m 處（帶 heading），
     找起點在岔路節點（≤20 m）的 maneuver，用 App 的 GuidanceClassifier.side(of:) 規則轉成左／右／直行／無提示。
@@ -25,6 +28,8 @@ REGIONS = {
 }
 DRIVE = {"motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential", "living_street",
          "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link"}
+VERT = {"bridge", "tunnel", "layer"}
+MAX_TURN = 135   # 分支相對進入方位的上限（2026-11-25 由 60° 放寬：右轉後才分岔、兩支並排的路口原本整個被排除）
 COSTING = "motorcycle"
 COSTING_OPTIONS = {"exclude_highways": True, "use_tracks": 0, "use_trails": 0}   # 同 curated/cases.json（App 機車 costing）
 
@@ -184,7 +189,8 @@ def branch_info(g, wi, pos, step):
     pts, acc, segs = g.walk(wi, pos, step, 200)
     cls200 = [(wclass(g.ways[w][1]), d0) for (w, d0) in segs]
     elev_at = next((d0 for c, d0 in cls200 if c), None)
-    return {"pts": pts, "acc": acc, "segs": segs, "elev_at": elev_at,
+    vert_at = next((d0 for c, d0 in cls200 if c in VERT), None)   # 真的離開平面（bridge／tunnel／layer），不含 *_link
+    return {"pts": pts, "acc": acc, "segs": segs, "elev_at": elev_at, "vert_at": vert_at,
             "elev_kind": next((c for c, d0 in cls200 if c), None), "len": acc[-1]}
 
 
@@ -210,7 +216,7 @@ def find_forks(g, bbox):
                     continue   # 掉頭
                 q = g.ways[wi][2][pos + step]
                 r = rel(bearing((la, lo), (q[1], q[2])), h_in)
-                if abs(r) <= 60:
+                if abs(r) <= MAX_TURN:
                     cands.append((wi, pos, step))
             if len(cands) < 2:
                 continue
@@ -221,14 +227,23 @@ def find_forks(g, bbox):
                     continue
                 for ib in range(len(cands)):
                     B = infos[ib]
-                    if ib == ia or (B["elev_at"] is not None and B["elev_at"] < 100) or B["len"] < 30:
+                    if ib == ia or B["len"] < 30:
+                        continue
+                    old_rule = B["elev_at"] is None or B["elev_at"] >= 100
+                    # 2026-11-25 補：A 真的上橋／下隧道、B 是平面 *_link（迴轉道、平面匝道）也算（九如一路 2222785405 漏收）
+                    link_rule = A["vert_at"] is not None and (B["vert_at"] is None or B["vert_at"] >= 100)
+                    if not (old_rule or link_rule):
                         continue
                     pa = g.point_at(A["pts"], A["acc"], 50); pb = g.point_at(B["pts"], B["acc"], 50)
                     ra = rel(bearing((la, lo), pa), h_in); rb = rel(bearing((la, lo), pb), h_in)
                     if abs(ra - rb) > 45:
                         continue
+                    why = []
+                    if max(abs(ra), abs(rb)) > 60: why.append("轉彎後並排")
+                    if not old_rule: why.append("平面link對立體")
                     forks.append({"node": nid, "lat": la, "lon": lo, "h_in": h_in, "in": (iwi, ipos, istep),
-                                  "A": cands[ia], "B": cands[ib], "Ainfo": A, "Binfo": B, "ra": ra, "rb": rb})
+                                  "A": cands[ia], "B": cands[ib], "Ainfo": A, "Binfo": B, "ra": ra, "rb": rb,
+                                  "rule": "＋".join(why) or "原規則"})
     return forks
 
 
@@ -353,13 +368,13 @@ def main():
             rows.append({"node": fk["node"], "lat": round(fk["lat"], 6), "lon": round(fk["lon"], 6),
                          "目標": "立體" if target == "A" else "平面",
                          "立體種類": fk["Ainfo"]["elev_kind"], "立體起點距岔路m": round(fk["Ainfo"]["elev_at"]),
-                         "進入way": iw[0], "進入名稱": iw[1].get("name", ""), "目標way": tw[0], "目標名稱": tw[1].get("name", ""),
+                         "進入way": iw[0], "進入方向": "forward" if fk["in"][2] == 1 else "backward", "進入名稱": iw[1].get("name", ""), "目標way": tw[0], "目標名稱": tw[1].get("name", ""),
                          "目標highway": tw[1].get("highway"), "另一支way": ow[0], "另一支名稱": ow[1].get("name", ""),
                          "目標相對角": round(rt, 1), "另一支相對角": round(ro, 1), "幾何應": geo,
                          "valhalla側": vs, "valhalla_type": vt if vt is not None else "", "type名": TYPE_NAME.get(vt, vt if vt is not None else ""),
                          "valhalla指令": ins or "", "判定": verdict,
                          "進入turn:lanes": iw[1].get("turn:lanes", "") or iw[1].get("turn:lanes:forward", ""),
-                         "osm": f"https://www.openstreetmap.org/node/{fk['node']}"})
+                         "收錄規則": fk["rule"], "osm": f"https://www.openstreetmap.org/node/{fk['node']}"})
         if k % 200 == 0:
             print(f"  {k}/{len(forks)} {time.time()-t0:.0f}s", flush=True)
     rows.sort(key=lambda r: (r["判定"] != "不一致（左右相反）", r["判定"], r["lat"]))

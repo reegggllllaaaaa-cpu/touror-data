@@ -4,6 +4,8 @@
 新版總時間 <= 舊版 x max_time_ratio；③curated 覆蓋的 way 在新 OSM 消失 -> 警示（不阻擋）。
 ④牌照案例（case 帶 plate＋expect）：照 App PlateRouting 的做法，把該牌照 prohibited 的走廊 way 以 exclude_locations 排除後算路，
   檢查路線是否經過（use）或繞開（avoid）指定規則的走廊；走廊檔由 apply_curated.py --moto-bans 每週產生。
+⑤分岔案例（case 帶 expect_via）：路線形狀必須經過（want=true）或不經過（want=false）指定點 tol_m 公尺內，
+  用來確認並排分岔（例：九如一路右轉後上橋 vs 平面迴轉道，相距約 8 m）算得出正確那一支。leg 可帶 from_opts／to_opts（heading 等）。
 結束碼：0 通過、1 不通過（原因寫在報告 failures）。"""
 import json, math, os, sys
 import valhalla
@@ -48,14 +50,25 @@ def plate_excludes(rules, plate, only=None):
             ex.append({"lat": (a[1] + b[1]) / 2, "lon": (a[0] + b[0]) / 2})
     return ex
 
+def pt_seg_m(p, a, b):
+    k = math.cos(math.radians(p[0])) * 111320.0
+    ax, ay, bx, by = (a[1] - p[1]) * k, (a[0] - p[0]) * 110540.0, (b[1] - p[1]) * k, (b[0] - p[0]) * 110540.0
+    dx, dy = bx - ax, by - ay; L = dx * dx + dy * dy
+    t = 0 if L == 0 else max(0, min(1, -(ax * dx + ay * dy) / L))
+    return math.hypot(ax + t * dx, ay + t * dy)
+
+def shape_dist(sh, p):
+    return min((pt_seg_m(p, sh[i], sh[i + 1]) for i in range(len(sh) - 1)), default=1e9)
+
 def route_all(tar, cfgj, tag, rules=None):
     work = os.path.join(os.path.dirname(os.path.abspath(tar)), "_none_" + tag); os.makedirs(work, exist_ok=True)
     actor = valhalla.Actor(valhalla.get_config(tile_extract=tar, tile_dir=work, verbose=False))
     res = {}
     for case in cfgj["cases"]:
-        tot, km, err = 0.0, 0.0, None
+        tot, km, err, shapes = 0.0, 0.0, None, []
         for leg in case["legs"]:
-            req = {"locations": [{"lat": leg["from"][0], "lon": leg["from"][1]}, {"lat": leg["to"][0], "lon": leg["to"][1]}],
+            req = {"locations": [{"lat": leg["from"][0], "lon": leg["from"][1], **leg.get("from_opts", {})},
+                                 {"lat": leg["to"][0], "lon": leg["to"][1], **leg.get("to_opts", {})}],
                    "costing": cfgj["costing"], "costing_options": {cfgj["costing"]: cfgj["costing_options"]}, "units": "kilometers"}
             plate, exp, share = case.get("plate"), case.get("expect"), None
             if plate and rules is None: err = "缺禁行機車走廊.json，無法驗證牌照案例"; break
@@ -69,7 +82,7 @@ def route_all(tar, cfgj, tag, rules=None):
                     if not new: break
                     hit |= new; req["exclude_locations"] = plate_excludes(rules, plate, hit)[:50]
                     r = json.loads(actor.route(json.dumps(req)))
-                s = r["trip"]["summary"]; tot += s["time"]; km += s["length"]
+                s = r["trip"]["summary"]; tot += s["time"]; km += s["length"]; shapes.append(decode6(r["trip"]["legs"][0]["shape"]))
                 if plate and exp:
                     rule = next((x for x in rules if x["id"] == exp["rule"]), None)
                     if rule is None: err = "走廊檔沒有規則 " + exp["rule"]; break
@@ -77,7 +90,8 @@ def route_all(tar, cfgj, tag, rules=None):
             except Exception as e:
                 err = str(e)[:200]; break
         res[case["id"]] = {"name": case["name"], "sec": None if err else round(tot, 1), "km": None if err else round(km, 2), "err": err,
-                           "plate": case.get("plate"), "expect": case.get("expect"), "share": None if err else share}
+                           "plate": case.get("plate"), "expect": case.get("expect"), "share": None if err else share,
+                           "via": None if err else [(v, round(min(shape_dist(sh, v["at"]) for sh in shapes), 1)) for v in case.get("expect_via", [])]}
     return res
 
 def main():
@@ -108,6 +122,12 @@ def main():
                 out["failures"].append(f"牌照案例 {n['name']}（{n['plate']}）應經過 {n['expect']['rule']}，實際只覆蓋 {n['share']:.0%}")
             if not want and n["share"] > 0.15:
                 out["failures"].append(f"牌照案例 {n['name']}（{n['plate']}）應繞開 {n['expect']['rule']}，實際仍經過 {n['share']:.0%}")
+        for v, d in (n.get("via") or []):
+            row.setdefault("via_m", []).append(d)
+            if v.get("want", True) and d > v.get("tol_m", 3):
+                out["failures"].append(f"分岔案例 {n['name']} 應經過 {v.get('label', v['at'])}，路線最近 {d} m")
+            if not v.get("want", True) and d <= v.get("tol_m", 3):
+                out["failures"].append(f"分岔案例 {n['name']} 不應經過 {v.get('label', v['at'])}，路線卻在 {d} m 內")
         if n["err"]: out["failures"].append(f"案例 {n['name']} 新版算不出路線：{n['err']}")
         elif o and o["sec"]:
             row["ratio"] = round(n["sec"] / o["sec"] - 1, 4)

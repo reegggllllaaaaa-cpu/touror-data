@@ -29,7 +29,10 @@
 
 ## 範圍、每週上限與不重複判讀
 
-- `extract` 收全台號誌（81,641 筆），只保留號誌附近（約 300–600 m 格網）的道路，避免整島路網進記憶體；改範圍或 OSM／號誌更新後重跑 `extract`。
+- `extract` 收全台號誌（81,641 筆），以及岔路稽核表的岔路節點，只保留這些點附近（約 300–600 m 格網）的道路，避免整島路網進記憶體；改範圍或 OSM／號誌更新後重跑 `extract`。
+- **岔路候選（2026-11-25 起）**：除號誌路口外，`forks_taiwan.csv`（`scripts/audit/fork_sides.py` 產生，`LANES_FORKS` 可改路徑）全部岔路節點的進入方向也排進每週佇列，停止線＝岔路節點。優先序：騎過（tier 0）→ 橋／隧道／高架與平面並存（tier 1，與兩條主幹道號誌路口同級）→ 匝道分流（tier 2）；與號誌路口重複的方向不重複排。進入道路可判讀等級比號誌多了 *_link、unclassified、residential（不含 motorway）。沿用同一個 `select N` 上限、Mapillary 900 次查詢上限與後備鏈。forks 表比 `work/kp_osm.pkl` 新時 `select` 會自動重跑 `extract`。
+  - 2026-11-25 全台：forks 表 4,121 個進入方向，可判讀 3,311（橋／平面並存 1,891、匝道分流 1,420）；扣掉已在號誌佇列的，新增 2,688 個候選（1,648／1,040）。`python scripts/lanes/kp.py forkcands` 只統計、不查 Mapillary。
+  - 起因：九如一路東行 2222785405 右轉後上橋（219634146→212429277）與平面迴轉道（212429268）並排約 8 m，OSM 都沒有 lanes，導航講不清楚。該處已人工看 Mapillary 補進 `curated/車道覆蓋.csv`（上橋 2 車道；迴轉道照片不足待補），`curated/cases.json` 加 `jiuru_fork_bridge`／`jiuru_fork_uturn`（`verify.py` ⑤ `expect_via` 檢查路線走對那一支）。
 - `select N`：N＝本週最多備妥幾個待判讀方向（排程預設 300）。Mapillary 查詢上限 900 次：先重查到期（`LANES_RECHECK_DAYS`，預設 7 天）的 pending／衝突方向，最多用 1/3；其餘給從沒查過的新路口（騎過的路口 → 兩條主幹道 → 主次幹道）。
 - 已判過的方向（`work/kp_judgments.json`）只有出現更新的照片才會重選、給新標籤重判（`kp.needs_judge`：紀錄的標籤 ≠ 目前標籤）；`decide` 不把舊判讀套到新照片。
 - 舊版 bug（已修）：重選有新照片的已判方向時，manifest 被整筆覆寫、標籤消失，但 sheets／todo 又以「已判過」排除，所以永遠卡在 ready（2026-11-25 select 的 ready 150 有 16 個是這種）。

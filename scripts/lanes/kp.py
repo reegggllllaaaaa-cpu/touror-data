@@ -14,6 +14,8 @@ Token 只經 mly.py 從檔案讀取，不印、不寫檔。
   LANES_PBF       taiwan-latest.osm.pbf，預設 <repo>/../資料/搜尋/路網來源/osm/taiwan-latest.osm.pbf
   LANES_SIGNALS   taiwan-signals.bin，預設 <repo>/../資料/紅綠燈/taiwan-signals.bin
   LANES_RIDES     騎行軌跡回報包資料夾（找 */**/ride.gpx），預設 ~/資料中心/工作日誌/回報包
+  LANES_FORKS     岔路稽核表 forks_taiwan.csv（scripts/audit/fork_sides.py 產生），預設 <repo>/../資料/搜尋/靠左靠右稽核/forks_taiwan.csv；
+                  表內所有岔路節點的進入方向也列為判讀候選（2026-11-25 起）；表比 work/kp_osm.pkl 新時 select 會自動重跑 extract
   LANES_REGION    taiwan（預設，全台）或 kp（舊範圍：高雄＋屏東）；改了要重跑 extract
   LANES_RECHECK_DAYS  pending／衝突方向多久重查一次 Mapillary（預設 7 天）
 每週上限：select N 的 N＝本週最多備妥幾個待判讀方向；Mapillary 查詢上限 900 次，其中 1/3 留給重查、其餘給從沒查過的路口。
@@ -29,6 +31,7 @@ WORK = os.path.join(VD, "work"); CACHE = os.path.join(WORK, "cache"); os.makedir
 IMG = os.path.join(VD, "照片"); SHEET = os.path.join(IMG, "kp"); os.makedirs(SHEET, exist_ok=True)
 PBF = os.environ.get("LANES_PBF") or os.path.join(ROOT, "資料", "搜尋", "路網來源", "osm", "taiwan-latest.osm.pbf")
 SIG = os.environ.get("LANES_SIGNALS") or os.path.join(ROOT, "資料", "紅綠燈", "taiwan-signals.bin")
+FORKS = os.environ.get("LANES_FORKS") or os.path.join(ROOT, "資料", "搜尋", "靠左靠右稽核", "forks_taiwan.csv")
 REPORTS = os.environ.get("LANES_RIDES") or os.path.join(os.path.expanduser("~"), "資料中心", "工作日誌", "回報包")
 OUTD = os.path.join(REPO, "data", "lanes")
 MAX_WAY_M = 400      # AI 判讀只套用在長度 ≤ 400 m 的 way
@@ -77,7 +80,10 @@ class Elev:
                     if d < best[0]: best = (d, e)
         return best[0] <= ELEV_RAD and best[1]
 HW_JUDGE = {"trunk", "primary", "secondary", "tertiary"}
-RANK = {"trunk": 0, "primary": 0, "secondary": 1, "tertiary": 2}
+RANK = {"trunk": 0, "primary": 0, "secondary": 1, "tertiary": 2, "trunk_link": 1, "primary_link": 1, "secondary_link": 2,
+        "tertiary_link": 2, "unclassified": 3, "residential": 3, "motorway": 0, "motorway_link": 1}
+# 岔路候選（forks 表）的進入道路可判讀等級：號誌路口的 HW_JUDGE 之外，再加匝道與一般道路（不含 motorway：國道車道 OSM 多已有）
+FORK_HW = HW_JUDGE | {"trunk_link", "primary_link", "secondary_link", "tertiary_link", "unclassified", "residential"}
 
 
 REGION = os.environ.get("LANES_REGION", "taiwan")
@@ -130,7 +136,7 @@ def extract():
         la /= 1e6; lo /= 1e6
         if in_region(la, lo): sigs.append((la, lo, fl))
     near = set()
-    for la, lo, _ in sigs:
+    for la, lo in [(a, b) for a, b, _ in sigs] + [(f["lat"], f["lon"]) for f in load_forks()]:
         k = (round(la / 0.003), round(lo / 0.003))
         for a in (-1, 0, 1):
             for b in (-1, 0, 1): near.add((k[0] + a, k[1] + b))
@@ -149,6 +155,36 @@ def extract():
 
 
 # ---------------- helpers ----------------
+def load_forks():
+    """forks 表 → 每個（節點, 進入 way, 方向）一筆；kind＝vert（橋／隧道／高架與平面並存）或 link（匝道分流）。"""
+    if not os.path.exists(FORKS): return []
+    out = {}
+    for r in csv.DictReader(open(FORKS, encoding="utf-8-sig")):
+        if not r.get("進入方向"): continue   # 舊版表（2026-11-25 前）沒有進入方向欄 → 重跑 fork_sides.py
+        k = (int(r["node"]), int(r["進入way"]), r["進入方向"])
+        vert = r.get("立體種類") in ("bridge", "tunnel", "layer") or "link對立體" in r.get("收錄規則", "")
+        f = out.setdefault(k, {"node": k[0], "way": k[1], "dir": k[2], "lat": float(r["lat"]), "lon": float(r["lon"]), "kind": "link"})
+        if vert: f["kind"] = "vert"
+    return list(out.values())
+
+
+def fork_inters(ways, ride_hits, seen):
+    """岔路候選：進入方向（停止線＝岔路節點）。tier：騎過 0、橋／平面並存 1、匝道分流 2；與號誌路口同一方向的不重複。"""
+    byid = {w["id"]: w for w in ways}; res = []
+    for f in load_forks():
+        w = byid.get(f["way"]); c = (f["lat"], f["lon"])
+        if not w: continue
+        aps = [a for a in approaches(c, [w], rad=3) if a["dir"] == f["dir"] and a["hw"] in FORK_HW]
+        aps = [a for a in aps if f'{a["way"]}:{a["dir"]}' not in seen]
+        if not aps: continue
+        for a in aps: seen.add(f'{a["way"]}:{a["dir"]}')
+        rh = ride_hits(c)
+        res.append({"c": c, "tier": 0 if rh else 1 if f["kind"] == "vert" else 2, "ride": rh, "aps": aps,
+                    "rank": min(RANK[a["hw"]] for a in aps), "fork": f["node"], "kind": f["kind"]})
+    return res
+
+
+
 def cluster(sigs, rad=35):
     out = []; grid = collections.defaultdict(list)
     for la, lo, fl in sigs:
@@ -244,6 +280,8 @@ def pick(ims, ap, elev=None):
 
 # ---------------- select ----------------
 def select(limit=150, max_queries=900):
+    if os.path.exists(FORKS) and (not os.path.exists(PKL) or os.path.getmtime(FORKS) > os.path.getmtime(PKL)):
+        print("forks 表比 kp_osm.pkl 新 → 重跑 extract"); extract()
     D = pickle.load(open(PKL, "rb")); ways = D["ways"]; elev = Elev(ways)
     grid = collections.defaultdict(list)
     for w in ways:
@@ -269,6 +307,9 @@ def select(limit=150, max_queries=900):
         tier = 0 if rh else 1 if len(major) >= 2 else 2 if len(sec) >= 2 else 3
         if tier == 3: continue
         inters.append({"c": c, "tier": tier, "ride": rh, "aps": aps, "rank": min(RANK[a["hw"]] for a in aps)})
+    seen = {f'{a["way"]}:{a["dir"]}' for it in inters for a in it["aps"]}
+    fi = fork_inters(ways, ride_hits, seen); inters += fi
+    print("fork candidates (entry directions):", sum(len(i["aps"]) for i in fi), collections.Counter(i["kind"] for i in fi))
     inters.sort(key=lambda i: (i["tier"], -i["ride"], i["rank"]))
     print("intersections tier0/1/2:", collections.Counter(i["tier"] for i in inters))
     man = jload(MAN, {"approaches": {}, "runs": []}); A = man["approaches"]; judged = jload(JUD, {})
@@ -495,6 +536,14 @@ def elevcheck():
         a["newest"] = 0
     jsave(MAN, man); jsave(JUD, J); jsave(os.path.join(WORK, "kp_invalid.json"), inv); print(dict(n), "photo_index", len(idx))
 
+def forkcands():
+    """只統計岔路候選數（不查 Mapillary）。"""
+    D = pickle.load(open(PKL, "rb")); fk = load_forks()
+    fi = fork_inters(D["ways"], lambda c: 0, set())   # 與號誌方向的去重在 select 做；這裡列全部岔路候選
+    n = sum(len(i["aps"]) for i in fi)
+    print("forks 表進入方向", len(fk), "可判讀候選", n, collections.Counter(i["kind"] for i in fi), "其中 way 未在 pkl／非可判讀等級／上游不足 20 m", len(fk) - n)
+
+
 if __name__ == "__main__":
     m = sys.argv[1]
     if m == "extract": extract()
@@ -502,3 +551,4 @@ if __name__ == "__main__":
     elif m == "sheets": sheets()
     elif m == "decide": decide()
     elif m == "elevcheck": elevcheck()
+    elif m == "forkcands": forkcands()

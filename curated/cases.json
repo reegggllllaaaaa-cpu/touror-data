@@ -50,6 +50,8 @@
   {"id": "songliao_flyover_nb", "name": "光明路三段北行上松寮陸橋（使用者 2026-11-25 實騎：App 播「靠右」，實際應靠左上橋）", "legs": [
     {"from": [22.6344, 120.4040], "to": [22.66, 120.39]}],
    "expect_maneuver": {"node": 6953658829, "at": [22.636075, 120.402361], "onto_way": 742811038, "side": "left",
-     "_說明": "岔路節點：引道 way 742811038（方位 343°）在平面光明路三段 way 1461814689（348°）左側。tiles 20261206 的 Valhalla 給 type 9 slight_right（Bear right onto 松寮陸橋），App 照 type 播「靠右」。verify.py 目前不檢查 maneuver 方向（只檢查時間／牌照覆蓋），此欄由 scripts/audit/fork_sides.py 稽核（該節點在 forks_*.csv 判定「不一致」）；App 端修正後應改為比對 App 播報側。"}}
- ]
+     "_說明": "岔路節點：引道 way 742811038（方位 343°）在平面光明路三段 way 1461814689（348°）左側。tiles 20261206 的 Valhalla 給 type 9 slight_right（Bear right onto 松寮陸橋），App 照 type 播「靠右」。verify.py 目前不檢查 maneuver 方向（只檢查時間／牌照覆蓋），此欄由 scripts/audit/fork_sides.py 稽核（該節點在 forks_*.csv 判定「不一致」）；App 端修正後應改為比對 App 播報側。"}},
+  {"id": "jiuru_fork_bridge", "name": "九如一路東行右轉上橋往建國一路（2222785405 並排分岔：上橋）", "legs": [{"from": [22.63785, 120.33503], "to": [22.6345, 120.33657], "to_opts": {"heading": 185, "heading_tolerance": 30}}], "expect_via": [{"at": [22.637358, 120.336762], "tol_m": 3, "label": "上橋支 node 2222785400（212429277 起點）", "want": true}, {"at": [22.637361, 120.336677], "tol_m": 3, "label": "平面迴轉道 node 2222785401（212429268）", "want": false}], "expect_maneuver": {"node": 2222785405, "at": [22.637539, 120.336755], "onto_way": 219634146, "side": "left", "_說明": "使用者 2026-11-25 實騎走進迴轉道。右轉後兩支並排約 8 m：上橋引道 219634146→212429277（Mapillary 1097446094801663／1826179524484515／909806197199334：2 車道，左車道路面「禁行…」字樣）在左、平面迴轉道 212429268 在右。tiles 20261206 Valhalla 對上橋給 type 9 Bear right、對迴轉道給 type 18 ramp_right，兩支都播「右」→ forks_taiwan.csv 判「不一致」。"}},
+  {"id": "jiuru_fork_uturn", "name": "九如一路東行右轉走平面迴轉道（終點在迴轉道北返段 2222785398 附近）（2222785405 並排分岔：平面）", "legs": [{"from": [22.63785, 120.33503], "to": [22.63725, 120.33755], "to_opts": {"heading": 0, "heading_tolerance": 30}}], "expect_via": [{"at": [22.637361, 120.336677], "tol_m": 3, "label": "平面迴轉道 node 2222785401（212429268）", "want": true}, {"at": [22.637358, 120.336762], "tol_m": 3, "label": "上橋支 node 2222785400（212429277 起點）", "want": false}]}
+]
 }
