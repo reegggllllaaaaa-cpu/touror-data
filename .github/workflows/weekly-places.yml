@@ -1,18 +1,18 @@
-# 每週重建店家庫（OSM 主庫）並產生 place_addr（路名／巷／門牌）。【尚未啟用排程：只有 workflow_dispatch，cron 已註解，等主管審過再開】
-# 範圍與限制：只重建 OSM 主庫（build_places.py --branch-labels＋build_place_addr.py）。官方名冊升格（build_chain_branches）與
-# Overture 名稱補全（build_name_completion）需要 Overture 原始資料與名冊抓取，尚未移植到 CI，所以 publish 預設 false：
-# 只產生候選庫＋驗證報告（artifact），不動線上 manifest。移植完成後才把 publish 設 true。
-# 說明：資料中心\專案\重機導航\資料\搜尋\門牌欄位盤點報告.md
+# 每週店家庫三庫（主庫 touror_places、touror_places_overture、touror_places_gov）從零重建、驗證、自動發布。
+# 流程（scripts/places/build_all.sh，順序照線上版）：Overture S3 → OSM 主庫 v2 → Overture 庫 → 連鎖名冊（抓新的，失敗用 repo 快取）
+#   → 名冊升格分店名 → 7-11 去重 → 政府庫（中油、郵局、觀光署，失敗用快取）→ Overture 名稱補全 → 名冊補名 → OSM 路名表 → place_addr（含英文地址轉中文）
+# 驗證閘門 scripts/places/verify.py 不過就開 issue、不發布。發布只改 manifest 的店家三項（先抓最新 main，不蓋掉別的 workflow 剛發的號誌／路網）。
+# 時段：週二 03:00 台北（路網是週一 03:00）。人工更新的快取在 data/places_inputs/（說明見 data/places_inputs/README.md）。
 name: 每週店家庫重建
 on:
+  # schedule:   # 手動觸發驗證通過後才啟用
+  #   - cron: '0 19 * * 1'   # UTC 週一 19:00＝台灣時間週二 03:00
   workflow_dispatch:
     inputs:
       publish:
-        description: '驗證通過後發布 Release 並更新 manifest（目前請維持 false）'
+        description: '驗證通過後發布 Release 並更新 manifest'
         type: boolean
-        default: false
-  # schedule:
-  #   - cron: '0 20 * * 0'   # 台灣時間週一 04:00（路網 03:00 之後）；啟用前先把名稱補全移植進來
+        default: true
 permissions:
   contents: write
   issues: write
@@ -23,18 +23,20 @@ concurrency:
 jobs:
   places:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 240
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
       PYTHONUNBUFFERED: "1"
+      PYTHONUTF8: "1"
+      PUBLISH: ${{ github.event_name == 'schedule' || inputs.publish }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: 安裝建置工具
-        run: python -m pip install --disable-pip-version-check osmium==4.3.2 shapely numpy scipy pandas pyarrow opencc-python-reimplemented
+        run: python -m pip install --disable-pip-version-check osmium==4.3.2 shapely numpy scipy pandas pyarrow duckdb==1.5.6 pypinyin opencc-python-reimplemented
       - name: 下載 Geofabrik 台灣 extract（核對 MD5）
         run: |
           mkdir -p build/pl && cd build/pl
@@ -42,40 +44,130 @@ jobs:
           sleep 40
           curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o osm.pbf.md5 https://download.geofabrik.de/asia/taiwan-latest.osm.pbf.md5
           echo "$(cut -d' ' -f1 osm.pbf.md5)  osm.pbf" | md5sum -c -
-      - name: 下載目前線上版店家庫（比對與驗證用）
+      - name: 下載目前線上版店家三庫與門牌包（比對、v2 補分店名、驗證用；核對 sha256）
         run: |
+          mkdir -p build/pl/old
           python -I - <<'PY'
-          import json, urllib.request
+          import json, urllib.request, hashlib
           m = json.load(open('offline-manifest.json', encoding='utf-8'))
-          t = next(x for x in m['files'] if x['kind'] == 'places')
-          urllib.request.urlretrieve(t['url'], 'build/pl/old_places.sqlite')
-          print(t['version'], t['bytes'])
+          for k, fn in [('places', 'touror_places.sqlite'), ('places_overture', 'touror_places_overture.sqlite'), ('places_gov', 'touror_places_gov.sqlite'), ('addr', 'touror_addr.bin')]:
+              t = next(x for x in m['files'] if x['kind'] == k)
+              p = 'build/pl/old/' + fn
+              urllib.request.urlretrieve(t['url'], p)
+              h = hashlib.sha256(open(p, 'rb').read()).hexdigest()
+              assert h == t['sha256'], (k, h, t['sha256'])
+              print(k, t['version'], t['bytes'])
           PY
-      - name: 建 OSM 主庫（含分店名與地址 note）並產生 place_addr
-        run: |
-          cd build/pl
-          python -I ../../scripts/places/build_places.py --pbf osm.pbf --out base_places.sqlite --work work --branch-labels
-          python -I ../../scripts/places/build_place_addr.py --kind main --src base_places.sqlite --out touror_places.sqlite --raw work/raw.pkl --report-dir report
+          cp offline-manifest.json build/pl/prev_manifest.json
+          df -h . | tail -1
+      - name: 從零重建三庫
+        run: bash scripts/places/build_all.sh build/pl/osm.pbf build/pl/old build/pl/work build/pl/new 2>&1 | tee build/pl/build.log; test ${PIPESTATUS[0]} = 0
       - name: 驗證閘門
         id: verify
         run: |
           set +e
-          python -I scripts/places/verify.py build/pl/touror_places.sqlite build/pl/old_places.sqlite build/pl/report/gate.json
+          df -h . | tail -1
+          python scripts/places/verify.py build/pl/new build/pl/old build/pl/new/report/gate.json
           echo "code=$?" >> "$GITHUB_OUTPUT"
-      - name: 上傳候選庫與報告（不發布）
+      - name: 上傳候選庫與報告
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: places-candidate
+          retention-days: 14
           path: |
-            build/pl/touror_places.sqlite
-            build/pl/report/
-      - name: 驗證未通過 -> 開 issue
+            build/pl/new/
+            build/pl/build.log
+      - name: 驗證未通過 -> 開 issue（不發布）
         if: steps.verify.outputs.code != '0'
         run: |
-          gh issue create --repo "$REPO" --title "每週店家庫重建未通過驗證" --body "執行：${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}（報告在 artifact places-candidate/report/gate.json）。線上版維持不變。"
+          python -I - <<'PY' > build/pl/issue.md
+          import json, os
+          r = json.load(open('build/pl/new/report/gate.json', encoding='utf-8'))
+          run = '%s/%s/actions/runs/%s' % (os.environ['GITHUB_SERVER_URL'], os.environ['REPO'], os.environ['GITHUB_RUN_ID'])
+          print('執行：' + run + '\n\n未通過原因：\n' + '\n'.join('- ' + x for x in r.get('failures', [])) + '\n\n線上店家庫維持不變，沒有發布。報告在 artifact places-candidate/report/。')
+          PY
+          gh issue create --repo "$REPO" --title "每週店家庫重建未發布（驗證未通過）" --body-file build/pl/issue.md
           exit 1
-      - name: 發布（預設不執行）
-        if: inputs.publish == true
+      - name: 決定版本與 tag（不倒退、不覆蓋既有 Release）
+        if: env.PUBLISH == 'true'
         run: |
-          echo "發布步驟尚未實作：名稱補全與名冊升格移植完成前不得發布（會讓線上店家庫名稱品質退步）。"
+          python -I - <<'PY' >> "$GITHUB_ENV"
+          import json, datetime, subprocess, os
+          m = json.load(open('offline-manifest.json', encoding='utf-8'))
+          fmt = '%Y%m%d'
+          last = max(x['version'] for x in m['files'] if x['kind'] in ('places', 'places_overture', 'places_gov'))
+          today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=8)).date()
+          cand = max(today, datetime.datetime.strptime(last, fmt).date() + datetime.timedelta(days=1))
+          while subprocess.run(['gh', 'release', 'view', 'offline-' + cand.strftime(fmt), '--repo', os.environ['REPO']], capture_output=True).returncode == 0:
+              cand += datetime.timedelta(days=1)
+          print('NEW_VER=' + cand.strftime(fmt)); print('NEW_TAG=offline-' + cand.strftime(fmt))
+          PY
+      - name: 建 Release 並上傳三庫（不刪任何舊 Release）
+        if: env.PUBLISH == 'true'
+        run: |
+          cd build/pl/new
+          gh release create "$NEW_TAG" touror_places.sqlite touror_places_overture.sqlite touror_places_gov.sqlite --repo "$REPO" \
+            --title "店家庫 $NEW_VER" --notes "每週自動重建：OSM Geofabrik＋Overture Places＋連鎖名冊／商工登記／政府開放資料；驗證閘門通過後發布。來源紀錄見 workflow artifact places-candidate/report/inputs.json。© OpenStreetMap contributors (ODbL 1.0)；Overture Maps (CDLA-Permissive-2.0 等)。"
+      - name: 更新 offline-manifest.json（先抓最新 main、只改店家三項）並推送
+        if: env.PUBLISH == 'true'
+        run: |
+          git config user.name "touror-data-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git checkout -q -B main origin/main
+            python -I scripts/places/update_manifest.py set offline-manifest.json build/pl/new "$NEW_TAG" "$NEW_VER" "$REPO" | tee build/pl/new.json
+            git add offline-manifest.json
+            git commit -q -m "店家庫每週更新：places／places_overture／places_gov 換成 $NEW_TAG"
+            git push -q origin main && exit 0
+            sleep 15
+          done
+          exit 1
+      - name: 觸發 Pages 部署並等完成
+        if: env.PUBLISH == 'true'
+        run: |
+          T0=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          gh workflow run daily-speedcams.yml --repo "$REPO" --ref main
+          RID=""
+          for i in $(seq 1 30); do
+            sleep 10
+            RID=$(gh run list --repo "$REPO" --workflow daily-speedcams.yml --event workflow_dispatch --limit 5 --json databaseId,createdAt -q "[.[] | select(.createdAt >= \"$T0\")][0].databaseId")
+            [ -n "$RID" ] && [ "$RID" != "null" ] && break
+          done
+          echo "deploy run: $RID"
+          [ -n "$RID" ] && [ "$RID" != "null" ]
+          gh run watch "$RID" --repo "$REPO" --exit-status --interval 20
+      - name: 線上核對（Pages manifest 店家三項 sha256 與新庫一致、下載 Release 資產核對 sha256）；不符就還原
+        id: check
+        if: env.PUBLISH == 'true'
+        run: |
+          set +e
+          OWNER=${REPO%%/*}; NAME=${REPO##*/}
+          PAGES="https://${OWNER}.github.io/${NAME}/offline-manifest.json"
+          ok=1
+          for i in $(seq 1 12); do
+            curl -fsSL -H 'Cache-Control: no-cache' -o build/pl/pages.json "$PAGES?t=$i" && python -I scripts/places/update_manifest.py check build/pl/pages.json build/pl/new && ok=0 && break
+            sleep 30
+          done
+          if [ $ok = 0 ]; then
+            mkdir -p build/pl/dl
+            for k in places places_overture places_gov; do
+              URL=$(python -I -c "import json;print(next(x['url'] for x in json.load(open('build/pl/pages.json'))['files'] if x['kind']=='$k'))")
+              curl -fsSL --retry 3 -o "build/pl/dl/$(basename "$URL")" "$URL" || ok=1
+            done
+            [ $ok = 0 ] && python -I scripts/places/update_manifest.py check build/pl/pages.json build/pl/dl || ok=1
+          fi
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          echo "### 店家庫線上核對：$([ $ok = 0 ] && echo 一致（$NEW_TAG） || echo 不一致，已還原 manifest 店家三項)" >> "$GITHUB_STEP_SUMMARY"
+      - name: 核對失敗 -> manifest 店家三項還原、重新部署、開 issue
+        if: env.PUBLISH == 'true' && steps.check.outputs.ok != '0'
+        run: |
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git checkout -q -B main origin/main
+            python -I scripts/places/update_manifest.py restore offline-manifest.json build/pl/prev_manifest.json
+            git add offline-manifest.json && git commit -q -m "店家庫每週更新核對失敗：manifest 店家三項還原" && git push -q origin main && break
+            sleep 15
+          done
+          gh workflow run daily-speedcams.yml --repo "$REPO" --ref main
+          gh issue create --repo "$REPO" --title "每週店家庫發布後核對失敗（已還原 manifest）" --body "執行：${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}。新 Release $NEW_TAG 保留，manifest 店家三項已還原到上一版並重新部署。"
           exit 1

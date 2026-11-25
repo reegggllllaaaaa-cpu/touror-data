@@ -11,7 +11,8 @@ place_addr(place_id PK＝place.id, city, district, road（路名含段，例 忠
 
 用法（Python 讀外部資料一律加 -I）：
   python -I build_place_addr.py --kind main     --src 原庫.sqlite --out 新庫.sqlite --raw raw.pkl --report-dir 報告目錄
-  python -I build_place_addr.py --kind overture --src 原庫.sqlite --out 新庫.sqlite --flat flat.parquet --report-dir ...
+  python -I build_place_addr.py --kind overture --src 原庫.sqlite --out 新庫.sqlite --flat flat.parquet --osm-roads _work_en/osm_road_names.pkl --report-dir ...
+  （osm_road_names.pkl 由 extract_osm_road_names.py 從 taiwan-latest.osm.pbf 產生；英文轉換邏輯在 en_road.py）
   python -I build_place_addr.py --kind gov      --src 原庫.sqlite --out 新庫.sqlite --report-dir ...
   python -I build_place_addr.py --verify --kind main --src 原庫.sqlite --out 新庫.sqlite   # 只做一致性檢查
 """
@@ -161,14 +162,27 @@ def load_flat_match(rows, flat_path):
     ft = cKDTree(np.c_[flat.lat.values * 111000.0, flat.lon.values * kx])
     xy = np.c_[[r[4] * 111000.0 for r in rows], [r[5] * kx for r in rows]]
     near = ft.query_ball_point(xy, 3.0)
+    near10 = ft.query_ball_point(xy, 10.0)
     P, A = flat.primary_name.values, flat.addr.values
     Z = [flat.c_zhhant.values, flat.c_zhtw.values, flat.c_zh.values]
     out, stat = {}, collections.Counter()
     for i, r in enumerate(rows):
         cand = near[i]
-        if not cand:
-            stat['無座標鄰近'] += 1; continue
         nk = key(r[1])
+        if not cand:
+            # 3 m 內沒有原始資料：放寬到 10 m，但必須名稱相符（相等，或互相包含且較短者 >= 3 字），且相符者地址唯一
+            hits = set()
+            for j in near10[i]:
+                for n in [P[j]] + [z[j] for z in Z]:
+                    kn = key(n) if n else ''
+                    if kn and (kn == nk or (min(len(kn), len(nk)) >= 3 and (kn in nk or nk in kn))):
+                        hits.add(j); break
+            addrs = {str(A[j]) for j in hits}
+            if len(addrs) == 1:
+                j = min(hits); out[r[0]] = (str(A[j]), flat.locality.values[j], True); stat['10m名稱配對'] += 1
+            else:
+                stat['無座標鄰近' if not hits else '10m名稱配對地址不一'] += 1
+            continue
         pick = None
         for j in cand:
             names = [P[j]] + [z[j] for z in Z]
@@ -178,11 +192,11 @@ def load_flat_match(rows, flat_path):
             pick = cand[0]; stat['單一鄰近免名稱'] += 1
         if pick is None:
             stat['多筆鄰近無法定名'] += 1; continue
-        out[r[0]] = (str(A[pick]), flat.locality.values[pick])
+        out[r[0]] = (str(A[pick]), flat.locality.values[pick], False)
     return out, stat
 
 
-def build(kind, src, outp, raw=None, flat=None, report_dir=None):
+def build(kind, src, outp, raw=None, flat=None, report_dir=None, osm_roads=None):
     t0 = time.time()
     if os.path.abspath(src) != os.path.abspath(outp):
         shutil.copyfile(src, outp)
@@ -201,6 +215,10 @@ def build(kind, src, outp, raw=None, flat=None, report_dir=None):
     flat_map, flat_stat = ({}, {})
     if kind == 'overture':
         flat_map, flat_stat = load_flat_match([r for r in rows if r[2] not in SKIP_KINDS], flat)
+    en = None
+    if osm_roads:
+        en_mod = _load('en_road', 'en_road.py'); en = en_mod.EnRoad(osm_roads, normalize)
+    en_stat = collections.Counter()
     print('prep %.0fs 行政區 %d' % (time.time() - t0, len(dists)), flush=True)
 
     out_rows, avail, gaps, srcstat = [], {}, [], collections.Counter()
@@ -213,7 +231,7 @@ def build(kind, src, outp, raw=None, flat=None, report_dir=None):
             if tx: cands.append(('osm', tx, None))
         elif kind == 'overture':
             f = flat_map.get(pid)
-            if f: cands.append(('overture', f[0], f[1]))
+            if f: cands.append(('overture_10m' if f[2] else 'overture', f[0], f[1]))
         else:
             if gov.get(pid): cands.append(('gov', gov[pid], None))
         if note: cands.append(('note', note, None))
@@ -227,6 +245,18 @@ def build(kind, src, outp, raw=None, flat=None, report_dir=None):
                 parsed.append((src_name, d))
             else:
                 reasons.append((src_name, why))
+        if not parsed and en:
+            for src_name, tx, loc in cands:
+                if not src_name.startswith('overture') or not re.search(r'[A-Za-z]', tx):
+                    continue
+                d, why = en.convert(tx, lat, lon, normalize)
+                en_stat[why or '採用'] += 1
+                if d:
+                    if loc and DIST_END.search(loc) and len(loc) <= 4: d['district'] = normalize(loc)
+                    parsed.append(('overture_en', d))
+                else:
+                    reasons.insert(0, ('overture_en', why))
+                break
         sc, sd = split_sub(sub)
         avail[pid] = {s for s, _ in parsed}
         best = next((p for p in parsed if p[1]['number']), None) or (parsed[0] if parsed else None)
@@ -249,13 +279,13 @@ CREATE TABLE place_addr_meta(key TEXT PRIMARY KEY, value TEXT);
     con.executemany('INSERT INTO place_addr VALUES(?,?,?,?,?,?,?,?,?,?,?)', out_rows)
     con.executemany('INSERT INTO place_addr_meta VALUES(?,?)', [
         ('version', '1'), ('norm', 'NAV-ADDR-1 normalize（臺→台、中文數字、之）；road 含段（忠孝東路4段）'),
-        ('road_kinds', '路,街,大道,道,線,巷,弄（巷弄僅限有名稱者）'), ('sources', 'osm,overture,gov,note,name'), ('rows', str(len(out_rows))),
+        ('road_kinds', '路,街,大道,道,線,巷,弄（巷弄僅限有名稱者）'), ('sources', 'osm,overture,overture_10m,overture_en,gov,note,name（overture_10m＝座標10m內名稱相符配對；overture_en＝英文地址經OSM道路300m內唯一對應轉中文路名）'), ('rows', str(len(out_rows))),
         ('built_at', time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))])
     con.commit()
     con.execute('VACUUM'); con.close()
 
     byid = {r[0]: r for r in out_rows}
-    rep = {'kind': kind, 'rows': len(out_rows), 'sources': dict(srcstat), 'flat_match': dict(flat_stat)}
+    rep = {'kind': kind, 'rows': len(out_rows), 'sources': dict(srcstat), 'flat_match': dict(flat_stat), 'en_convert': dict(en_stat)}
     by_kind = collections.defaultdict(collections.Counter)
     by_city = collections.defaultdict(collections.Counter)
     for (pid, name, k, sub, lat, lon, note) in rows:
@@ -318,7 +348,7 @@ def verify(kind, src, outp):
     pat = re.compile(r'^[0-9]+(之[0-9]+)?$')
     badn = [r for r in rows if (r[9] and not pat.match(r[9])) or (r[7] and not pat.match(r[7])) or (r[8] and not pat.match(r[8]))]
     if badn: bad('lane/alley/number 格式不符 %d（例 %s）' % (len(badn), badn[:2]))
-    if [r for r in rows if r[10] not in ('osm', 'overture', 'gov', 'note', 'name')]: bad('source 未知')
+    if [r for r in rows if r[10] not in ('osm', 'overture', 'overture_10m', 'overture_en', 'gov', 'note', 'name')]: bad('source 未知')
     if [r for r in rows if '臺' in r[3] or re.search(r'[一二三四五六七八九十]段', r[3])]: bad('路名未正規化（臺或中文段）')
     dists = {r[2] for r in rows if r[2]}
     mism = []
@@ -343,11 +373,12 @@ if __name__ == '__main__':
     ap.add_argument('--src', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--raw'); ap.add_argument('--flat'); ap.add_argument('--report-dir')
+    ap.add_argument('--osm-roads', help='extract_osm_road_names.py 產物；給了才做英文地址轉中文路名（overture）')
     ap.add_argument('--verify', action='store_true')
     a = ap.parse_args()
     if not a.verify:
-        rep = build(a.kind, a.src, a.out, a.raw, a.flat, a.report_dir)
-        print(json.dumps({k: rep[k] for k in ('rows', 'sources', 'flat_match', 'gap_reasons')}, ensure_ascii=False))
+        rep = build(a.kind, a.src, a.out, a.raw, a.flat, a.report_dir, a.osm_roads)
+        print(json.dumps({k: rep[k] for k in ('rows', 'sources', 'flat_match', 'en_convert', 'gap_reasons')}, ensure_ascii=False))
     ok, msgs = verify(a.kind, a.src, a.out)
     print('\n'.join(msgs)); print('VERIFY', 'OK' if ok else 'FAIL')
     sys.exit(0 if ok else 1)

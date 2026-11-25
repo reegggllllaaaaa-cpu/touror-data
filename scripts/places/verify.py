@@ -1,62 +1,112 @@
 # -*- coding: utf-8 -*-
-"""每週店家庫重建的驗證閘門。用法：python -I verify.py 新庫 舊庫(目前線上版) 報告.json
+"""每週店家庫重建的驗證閘門（三庫）。用法：python verify.py <新庫資料夾> <舊庫資料夾(目前線上版)> <報告.json>
+兩個資料夾都要有 touror_places.sqlite、touror_places_overture.sqlite、touror_places_gov.sqlite。
 閘門（任一不過回傳 1，不發布）：
- 1 檔案大小與舊版相差 <= ±15%
- 2 place 筆數與舊版相差 <= ±10%
- 3 place_addr：孤兒／重複／空路名／道路段掛地址 全為 0；road_kind／source 合法；格式 pattern
- 4 place_addr 覆蓋率（有路名者／非 road 筆數）不低於舊版 5 個百分點以上
- 5 既有 place 欄位 schema 與舊版一致（不得增刪欄位，note 例外只允許新增）
- 6 關鍵案例：名稱查得到（谷關、日月潭、合歡山、逢甲夜市、7-ELEVEN 數量 >= 5000）
- 7 PRAGMA integrity_check ok
+ 每庫：
+  1 檔案大小與舊版相差 <= ±15%
+  2 place 筆數與舊版相差 <= ±5%
+  3 place_addr：孤兒／重複／空路名／道路段掛地址 全為 0；road_kind／source 合法；lane/alley/number 格式
+  4 place_addr 覆蓋率（筆數／非 road 筆數）不低於舊版 2 個百分點以上
+  5 place 欄位 schema 與舊版相容（只允許新增欄位）
+  6 PRAGMA integrity_check ok
+ 主庫＋Overture 合併：
+  7 四大超商（7-11／全家／萊爾富／OK）分店名覆蓋率（有分店名／該品牌筆數）整體不低於舊版 2 個百分點以上
+  8 各品牌分店名比例不退步（容許 0.5 個百分點誤差）、各品牌筆數不少於舊版 95%
+  9 關鍵案例：FTS 搜尋要查得到（谷關、日月潭、合歡山、逢甲夜市、台北101、九份、中油、郵局；政府庫要有中油與郵局）
 """
 import json, os, re, sqlite3, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from build_places import fts_query  # noqa: E402
 
-def stats(p):
-    c = sqlite3.connect('file:%s?mode=ro' % p, uri=True)
-    n = c.execute('SELECT COUNT(*) FROM place').fetchone()[0]
-    nr = c.execute("SELECT COUNT(*) FROM place WHERE kind!='road'").fetchone()[0]
-    try: na = c.execute('SELECT COUNT(*) FROM place_addr').fetchone()[0]
-    except Exception: na = None
-    return c, n, nr, na
+DBS = {'main': 'touror_places.sqlite', 'overture': 'touror_places_overture.sqlite', 'gov': 'touror_places_gov.sqlite'}
+BRANDS = {
+    '7-11': re.compile(r'^\s*(7[\s\-]?eleven|7[\s\-]?11|統一超商)', re.I),
+    '全家': re.compile(r'^\s*(全家便利商店|全家|family\s*mart)', re.I),
+    '萊爾富': re.compile(r'^\s*(萊爾富便利商店|萊爾富|hi[\s\-]?life)', re.I),
+    'OK': re.compile(r'^\s*(ok\s*mart|ok\s*超商|ok便利商店|ok(?=[\s\-]|[一-鿿]))', re.I),
+}
+STRIP = re.compile(r'^[\s\-－‐·．.()（）]*(便利商店|超商)?[\s\-－‐·．.()（）]*')
+KEY = ['谷關', '日月潭', '合歡山', '逢甲夜市', '台北101', '九份', '中油', '郵局']
 
-def main(new, old, out):
-    fails, warns, info = [], [], {}
-    cn, nn, nrn, nan_ = stats(new); co, no, nro, nao = stats(old)
-    r = os.path.getsize(new) / os.path.getsize(old) - 1
-    info['size_ratio'] = r
-    if abs(r) > 0.15 and nao is not None: fails.append('檔案大小變化 %+.1f%% 超過 ±15%%' % (100 * r))
-    elif abs(r) > 0.25: fails.append('檔案大小變化 %+.1f%%（舊版沒有 place_addr，放寬到 ±25%%）' % (100 * r))
-    rr = nn / no - 1; info['rows_ratio'] = rr
-    if abs(rr) > 0.10: fails.append('place 筆數變化 %+.1f%% 超過 ±10%%' % (100 * rr))
-    if nan_ is None: fails.append('新庫沒有 place_addr')
-    else:
-        ids = dict(cn.execute('SELECT id,kind FROM place'))
-        rows = cn.execute('SELECT place_id,road,road_base,road_kind,lane,alley,number,source FROM place_addr').fetchall()
-        if len({r_[0] for r_ in rows}) != len(rows): fails.append('place_addr place_id 重複')
-        if [r_ for r_ in rows if r_[0] not in ids]: fails.append('place_addr 有孤兒 place_id')
-        if [r_ for r_ in rows if not r_[1] or not r_[2]]: fails.append('place_addr 有空路名')
-        if [r_ for r_ in rows if ids.get(r_[0]) == 'road']: fails.append('place_addr 掛在道路段上')
-        if {r_[3] for r_ in rows} - {'路', '街', '大道', '道', '線', '巷', '弄'}: fails.append('road_kind 不合法')
-        if {r_[7] for r_ in rows} - {'osm', 'overture', 'gov', 'note', 'name'}: fails.append('source 不合法')
-        pat = re.compile(r'^[0-9]+(之[0-9]+)?$')
-        if [r_ for r_ in rows if any(v and not pat.match(v) for v in r_[4:7])]: fails.append('lane/alley/number 格式不符')
-        cov = nan_ / max(1, nrn); info['coverage_new'] = cov
-        if nao is not None:
-            covo = nao / max(1, nro); info['coverage_old'] = covo
-            if cov < covo - 0.05: fails.append('place_addr 覆蓋率 %.1f%% 比舊版 %.1f%% 低超過 5 點' % (100 * cov, 100 * covo))
+
+def ro(p):
+    return sqlite3.connect('file:%s?mode=ro' % p.replace('\\', '/'), uri=True)
+
+
+def brand_stats(cons):
+    tot = {b: 0 for b in BRANDS}; br = {b: 0 for b in BRANDS}
+    for c in cons:
+        for (name,) in c.execute("SELECT name FROM place WHERE kind!='road'"):
+            for b, rx in BRANDS.items():
+                m = rx.match(name or '')
+                if m:
+                    tot[b] += 1
+                    rest = STRIP.sub('', name[m.end():])
+                    if re.search(r'[一-鿿].*(店|門市)\s*$', rest): br[b] += 1  # 完整門市名：品牌後面接「XX店／XX門市」
+                    break
+    return {b: {'n': tot[b], 'branch': br[b], 'ratio': br[b] / max(1, tot[b])} for b in BRANDS}, sum(br.values()) / max(1, sum(tot.values()))
+
+
+def fts_hits(c, q):
+    e = fts_query(q)
+    return c.execute('SELECT COUNT(*) FROM (SELECT rowid FROM search WHERE search MATCH ? LIMIT 50)', (e,)).fetchone()[0] if e else 0
+
+
+def check_db(kind, new, old, fails, info):
+    cn, co = ro(new), ro(old)
+    d = info[kind] = {}
+    r = os.path.getsize(new) / os.path.getsize(old) - 1; d['size_ratio'] = round(r, 4)
+    if abs(r) > 0.15: fails.append('%s 檔案大小變化 %+.1f%% 超過 ±15%%' % (kind, 100 * r))
+    nn = cn.execute('SELECT COUNT(*) FROM place').fetchone()[0]; no = co.execute('SELECT COUNT(*) FROM place').fetchone()[0]
+    d['rows_new'], d['rows_old'] = nn, no
+    if abs(nn / no - 1) > 0.05: fails.append('%s place 筆數 %d→%d 變化超過 ±5%%' % (kind, no, nn))
+    ids = dict(cn.execute('SELECT id,kind FROM place'))
+    rows = cn.execute('SELECT place_id,road,road_base,road_kind,lane,alley,number,source FROM place_addr').fetchall()
+    if len({x[0] for x in rows}) != len(rows): fails.append(kind + ' place_addr place_id 重複')
+    if any(x[0] not in ids for x in rows): fails.append(kind + ' place_addr 有孤兒 place_id')
+    if any(not x[1] or not x[2] for x in rows): fails.append(kind + ' place_addr 有空路名')
+    if any(ids.get(x[0]) == 'road' for x in rows): fails.append(kind + ' place_addr 掛在道路段上')
+    if {x[3] for x in rows} - {'路', '街', '大道', '道', '線', '巷', '弄'}: fails.append(kind + ' road_kind 不合法')
+    if {x[7] for x in rows} - {'osm', 'overture', 'overture_en', 'overture_10m', 'gov', 'note', 'name'}: fails.append(kind + ' source 不合法')
+    pat = re.compile(r'^[0-9]+(之[0-9]+)?$')
+    if any(v and not pat.match(v) for x in rows for v in x[4:7]): fails.append(kind + ' lane/alley/number 格式不符')
+    nr_new = cn.execute("SELECT COUNT(*) FROM place WHERE kind!='road'").fetchone()[0]
+    nr_old = co.execute("SELECT COUNT(*) FROM place WHERE kind!='road'").fetchone()[0]
+    cov = len(rows) / max(1, nr_new); covo = co.execute('SELECT COUNT(*) FROM place_addr').fetchone()[0] / max(1, nr_old)
+    d['addr_cov_new'], d['addr_cov_old'] = round(cov, 4), round(covo, 4)
+    if cov < covo - 0.02: fails.append('%s place_addr 覆蓋率 %.1f%% 比舊版 %.1f%% 低超過 2 點' % (kind, 100 * cov, 100 * covo))
     cols = lambda c: [(x[1], x[2]) for x in c.execute('PRAGMA table_info(place)')]
     a, b = cols(co), cols(cn)
-    if b[:len(a)] != a and a[:len(b)] != b: fails.append('place 欄位與舊版不相容 %s vs %s' % (a, b))
-    for nm in ('谷關', '日月潭', '合歡山', '逢甲夜市'):
-        if not cn.execute("SELECT 1 FROM place WHERE name LIKE ? LIMIT 1", ('%' + nm + '%',)).fetchone(): fails.append('關鍵案例查不到：' + nm)
-    n711 = cn.execute("SELECT COUNT(*) FROM place WHERE name LIKE '%7-ELEVEN%' OR name LIKE '%7-11%'").fetchone()[0]
-    info['n711'] = n711
-    if n711 < 50: warns.append('7-ELEVEN 只有 %d 筆（OSM 主庫本來就少，超商主要在名冊升格後）' % n711)
-    if cn.execute('PRAGMA integrity_check').fetchone()[0] != 'ok': fails.append('integrity_check 不通過')
-    rep = {'ok': not fails, 'failures': fails, 'warnings': warns, 'info': info}
+    if b[:len(a)] != a: fails.append('%s place 欄位與舊版不相容 %s vs %s' % (kind, a, b))
+    if cn.execute('PRAGMA integrity_check').fetchone()[0] != 'ok': fails.append(kind + ' integrity_check 不通過')
+    return cn, co
+
+
+def main(newdir, olddir, out):
+    fails, info = [], {}
+    cons = {}
+    for k, f in DBS.items():
+        cons[k] = check_db(k, os.path.join(newdir, f), os.path.join(olddir, f), fails, info)
+    bn, tn = brand_stats([cons['main'][0], cons['overture'][0]])
+    bo, to = brand_stats([cons['main'][1], cons['overture'][1]])
+    info['branch_cov_new'], info['branch_cov_old'] = round(tn, 4), round(to, 4)
+    info['brands_new'], info['brands_old'] = bn, bo
+    if tn < to - 0.02: fails.append('四大超商分店名覆蓋率 %.1f%% 比舊版 %.1f%% 低超過 2 點' % (100 * tn, 100 * to))
+    for b in BRANDS:
+        if bn[b]['ratio'] < bo[b]['ratio'] - 0.005: fails.append('%s 分店名比例 %.1f%% 退步（舊 %.1f%%）' % (b, 100 * bn[b]['ratio'], 100 * bo[b]['ratio']))
+        if bn[b]['n'] < 0.95 * bo[b]['n']: fails.append('%s 筆數 %d 少於舊版 %d 的 95%%' % (b, bn[b]['n'], bo[b]['n']))
+    info['key_cases'] = {}
+    for q in KEY:
+        h = sum(fts_hits(cons[k][0], q) for k in DBS)
+        info['key_cases'][q] = h
+        if not h: fails.append('關鍵案例搜尋不到：' + q)
+    for q in ('中油', '郵局'):
+        if not fts_hits(cons['gov'][0], q): fails.append('政府庫搜尋不到：' + q)
+    rep = {'ok': not fails, 'failures': fails, 'info': info}
     json.dump(rep, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(json.dumps(rep, ensure_ascii=False, indent=1))
     return 0 if not fails else 1
+
 
 if __name__ == '__main__':
     sys.exit(main(*sys.argv[1:4]))
