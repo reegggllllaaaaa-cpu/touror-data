@@ -460,7 +460,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn('PYTHONUNBUFFERED', daily)
         self.assertIn('issues: write', daily)
         weekly = self.read('weekly-osm.yml')
-        self.assertIn('download.geofabrik.de/asia/taiwan-latest.osm.pbf', weekly)
+        self.assertIn('download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf', weekly)
         self.assertIn('scripts/fetch.py signals', weekly)
         self.assertIn('scripts/fetch.py speedcams-counties', weekly)
         monthly = self.read('monthly-timing.yml')
