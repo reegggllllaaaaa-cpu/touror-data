@@ -1,0 +1,81 @@
+# 每週重建店家庫（OSM 主庫）並產生 place_addr（路名／巷／門牌）。【尚未啟用排程：只有 workflow_dispatch，cron 已註解，等主管審過再開】
+# 範圍與限制：只重建 OSM 主庫（build_places.py --branch-labels＋build_place_addr.py）。官方名冊升格（build_chain_branches）與
+# Overture 名稱補全（build_name_completion）需要 Overture 原始資料與名冊抓取，尚未移植到 CI，所以 publish 預設 false：
+# 只產生候選庫＋驗證報告（artifact），不動線上 manifest。移植完成後才把 publish 設 true。
+# 說明：資料中心\專案\重機導航\資料\搜尋\門牌欄位盤點報告.md
+name: 每週店家庫重建
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: '驗證通過後發布 Release 並更新 manifest（目前請維持 false）'
+        type: boolean
+        default: false
+  # schedule:
+  #   - cron: '0 20 * * 0'   # 台灣時間週一 04:00（路網 03:00 之後）；啟用前先把名稱補全移植進來
+permissions:
+  contents: write
+  issues: write
+  actions: write
+concurrency:
+  group: touror-data-places
+  cancel-in-progress: false
+jobs:
+  places:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 安裝建置工具
+        run: python -m pip install --disable-pip-version-check osmium==4.3.2 shapely numpy scipy pandas pyarrow opencc-python-reimplemented
+      - name: 下載 Geofabrik 台灣 extract（核對 MD5）
+        run: |
+          mkdir -p build/pl && cd build/pl
+          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o osm.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+          sleep 40
+          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o osm.pbf.md5 https://download.geofabrik.de/asia/taiwan-latest.osm.pbf.md5
+          echo "$(cut -d' ' -f1 osm.pbf.md5)  osm.pbf" | md5sum -c -
+      - name: 下載目前線上版店家庫（比對與驗證用）
+        run: |
+          python -I - <<'PY'
+          import json, urllib.request
+          m = json.load(open('offline-manifest.json', encoding='utf-8'))
+          t = next(x for x in m['files'] if x['kind'] == 'places')
+          urllib.request.urlretrieve(t['url'], 'build/pl/old_places.sqlite')
+          print(t['version'], t['bytes'])
+          PY
+      - name: 建 OSM 主庫（含分店名與地址 note）並產生 place_addr
+        run: |
+          cd build/pl
+          python -I ../../scripts/places/build_places.py --pbf osm.pbf --out base_places.sqlite --work work --branch-labels
+          python -I ../../scripts/places/build_place_addr.py --kind main --src base_places.sqlite --out touror_places.sqlite --raw work/raw.pkl --report-dir report
+      - name: 驗證閘門
+        id: verify
+        run: |
+          set +e
+          python -I scripts/places/verify.py build/pl/touror_places.sqlite build/pl/old_places.sqlite build/pl/report/gate.json
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+      - name: 上傳候選庫與報告（不發布）
+        uses: actions/upload-artifact@v4
+        with:
+          name: places-candidate
+          path: |
+            build/pl/touror_places.sqlite
+            build/pl/report/
+      - name: 驗證未通過 -> 開 issue
+        if: steps.verify.outputs.code != '0'
+        run: |
+          gh issue create --repo "$REPO" --title "每週店家庫重建未通過驗證" --body "執行：${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}（報告在 artifact places-candidate/report/gate.json）。線上版維持不變。"
+          exit 1
+      - name: 發布（預設不執行）
+        if: inputs.publish == true
+        run: |
+          echo "發布步驟尚未實作：名稱補全與名冊升格移植完成前不得發布（會讓線上店家庫名稱品質退步）。"
+          exit 1
