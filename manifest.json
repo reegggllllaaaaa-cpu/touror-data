@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-25T09:09:13Z",
+ "generated": "2026-11-25T14:18:40Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -393,11 +393,11 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261125.4",
+   "version": "20261125.5",
    "date": "2026-11-25",
-   "count": 81641,
-   "sha256": "093ea9aab851a2861634af347ee2bc5706a538a0c2c6c4fdd708697c112bf2dd",
-   "bytes": 734801,
+   "count": 81642,
+   "sha256": "e17bae5d96206ff3ff70258fea32801496c958ed040849e5884187bb0bc79e2f",
+   "bytes": 734810,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市、高雄市、新竹市政府（政府資料開放授權條款第1版）；使用者實地確認補點",
