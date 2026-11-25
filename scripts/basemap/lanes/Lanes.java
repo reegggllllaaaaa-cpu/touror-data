@@ -211,10 +211,10 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
           bwdTag = null;
           useMly = true;
         }
-      } else if (m.fwd() != null || m.bwd() != null) {
-        int half = Math.max(1, inferredLanes(hw)[1] / 2);
-        fwdTag = m.fwd() != null ? m.fwd() : half;
-        bwdTag = m.bwd() != null ? m.bwd() : half;
+      } else if (m.fwd() != null && m.bwd() != null) {
+        // 雙向道路：兩個方向都有判讀才採用；只判讀一個方向時不以推定值一半補另一方向，維持原來源（inferred）
+        fwdTag = m.fwd();
+        bwdTag = m.bwd();
         lanesTag = fwdTag + bwdTag;
         useMly = true;
       }

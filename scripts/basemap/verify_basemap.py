@@ -37,7 +37,16 @@ LANE_LAYERS = {
     "islands_pt": {"kind"},
 }
 LANE_CASE_TILE = (14, 13668, 7132)  # 國1 鼎金段 lanes=5
-REQUIRED_LAYERS = {"earth", "landcover", "landuse", "water", "boundaries", "roads", "places", "pois"}
+# App 實際讀的欄位（ios App/MapStyle.swift、MapPOI.swift、MapCartography.swift，2026-11-25 rg 查證）；改 App 樣式時要同步更新
+APP_FIELDS = {
+    "earth": {"kind", "name"},
+    "landuse": {"kind"},
+    "water": {"kind", "name", "min_zoom"},
+    "roads": {"kind", "kind_detail", "is_bridge", "is_tunnel", "oneway", "min_zoom", "name", "name:zh-Hant", "network", "shield_text"},
+    "pois": {"kind", "min_zoom", "name", "name:zh-Hant", "elevation"},
+    "places": {"kind", "kind_detail", "min_zoom", "name", "name:zh-Hant"},
+}
+REQUIRED_LAYERS ={"earth", "landcover", "landuse", "water", "boundaries", "roads", "places", "pois"}
 
 
 def lonlat_to_tile(lat, lon, z):
@@ -203,12 +212,24 @@ def main():
     if a.old:
         with open(a.old, "rb") as fo:
             old_meta = Reader(MmapSource(fo)).metadata()
+        # 舊圖層不得消失；欄位只檢查 App（MapStyle.swift／MapPOI.swift／MapCartography.swift）實際讀的欄位。
+        # 理由（2026-11-25 查證）：線上舊底圖是 Protomaps 全球建置裁出台灣，metadata 欄位表帶著全球才有的
+        # name3、pgf:*、script*、罕見 name:xx、ref:*、network_4~6 等；自建版同一 schema（4.15.2）但只列台灣實際出現的欄位。
+        # 高雄 z14 圖磚實測舊有新無的欄位為 0，App 也不讀這些欄位，因此不以全欄位表判失敗，只列入報告。
         for L in old_meta.get("vector_layers", []):
             lost = set(L.get("fields", {})) - fields.get(L["id"], set())
             if L["id"] not in fields:
                 fails.append(f"舊圖層 {L['id']} 不見了")
-            elif lost:
-                fails.append(f"舊圖層 {L['id']} 少了欄位 {sorted(lost)}")
+                continue
+            need = lost & APP_FIELDS.get(L["id"], set())
+            if need:
+                fails.append(f"舊圖層 {L['id']} 少了 App 使用的欄位 {sorted(need)}")
+            if lost - need:
+                report.setdefault("old_fields_not_used_by_app_missing", {})[L["id"]] = sorted(lost - need)
+        for lid, need in APP_FIELDS.items():
+            miss = need - fields.get(lid, set())
+            if miss:
+                fails.append(f"圖層 {lid} 缺 App 使用的欄位 {sorted(miss)}")
 
     sp = Sampler(a.n * 3, a.seed)
     sp.apply_file(a.pbf, locations=True, idx="flex_mem")
