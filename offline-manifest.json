@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "version": "20261201",
- "generated": "2026-11-24T19:17:13Z",
+ "version": "20261202",
+ "generated": "2026-11-25T02:23:00Z",
  "files": [
   {
    "name": "valhalla_tiles.tar",
@@ -26,10 +26,10 @@
   {
    "name": "touror_places.sqlite",
    "kind": "places",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261129/touror_places.sqlite",
-   "bytes": 66506752,
-   "sha256": "9ddce832f17b94d94a5a361f2959b83936c35a52caa0d6dbc379ee50d28bebb6",
-   "version": "20261129",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261202/touror_places.sqlite",
+   "bytes": 79278080,
+   "sha256": "796b4f8413f1ad512f6d4b8a09563c499738baa31bcf1cc20c824c847b38cef5",
+   "version": "20261202",
    "minAppVersion": "0.0.1",
    "description": "地名：目的地搜尋（由 OpenStreetMap 地名整理的資料庫，店家含分店名與路名門牌）"
   },
@@ -46,20 +46,20 @@
   {
    "name": "touror_places_overture.sqlite",
    "kind": "places_overture",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261129/touror_places_overture.sqlite",
-   "bytes": 101228544,
-   "sha256": "a3e3e1929541ec36c463c0a62979df3f156bf2d2d97ddafac5f94928d9cd7713",
-   "version": "20261129",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261202/touror_places_overture.sqlite",
+   "bytes": 119922688,
+   "sha256": "9a5d9acf82fcc4576404914ce849065113b773b596d7bd87361b5dc457e482be",
+   "version": "20261202",
    "minAppVersion": "0.0.1",
    "description": "補充店家資料（選用）：補上 OpenStreetMap 沒有的店家，不下載也能搜尋（Overture Maps 資料）"
   },
   {
    "name": "touror_places_gov.sqlite",
    "kind": "places_gov",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261124/touror_places_gov.sqlite",
-   "bytes": 6254592,
-   "sha256": "de5bb33392bfa0d5d870c0e64aff93627a40daa0772761fabc9e9c7a85a9efea",
-   "version": "20261124",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261202/touror_places_gov.sqlite",
+   "bytes": 7528448,
+   "sha256": "f383e3bccd395d19cd783e5898d973283b01d0eb74cb7248390627485de50e5b",
+   "version": "20261202",
    "minAppVersion": "0.0.1",
    "description": "政府公開地點（選用）：加油站、郵局、景點、旅宿"
   },
