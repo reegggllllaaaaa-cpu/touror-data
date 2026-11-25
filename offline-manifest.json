@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "version": "20261203",
- "generated": "2026-11-25T03:57:13Z",
+ "version": "20261204",
+ "generated": "2026-11-25T04:55:16Z",
  "files": [
   {
    "name": "valhalla_tiles.tar",
@@ -26,10 +26,10 @@
   {
    "name": "touror_places.sqlite",
    "kind": "places",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261202/touror_places.sqlite",
-   "bytes": 79278080,
-   "sha256": "796b4f8413f1ad512f6d4b8a09563c499738baa31bcf1cc20c824c847b38cef5",
-   "version": "20261202",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261204/touror_places.sqlite",
+   "bytes": 79593472,
+   "sha256": "33c9f36b66fb19b9799849e37dbe139bad58573917b84ebe03d03b9fbe6f3384",
+   "version": "20261204",
    "minAppVersion": "0.0.1",
    "description": "地名：目的地搜尋（由 OpenStreetMap 地名整理的資料庫，店家含分店名與路名門牌）"
   },
@@ -46,20 +46,20 @@
   {
    "name": "touror_places_overture.sqlite",
    "kind": "places_overture",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261203/touror_places_overture.sqlite",
-   "bytes": 139821056,
-   "sha256": "4d7eaf44ef65203d06ce93e5f26f091dc6e6ef1fc30c4e90e2ac50233038c0ab",
-   "version": "20261203",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261204/touror_places_overture.sqlite",
+   "bytes": 139653120,
+   "sha256": "4ce89b0fd71de7ccf4d80e5d2515ddc99407f2d515867eb6058f25b0918fd028",
+   "version": "20261204",
    "minAppVersion": "0.0.1",
    "description": "補充店家資料（選用）：補上 OpenStreetMap 沒有的店家，不下載也能搜尋（Overture Maps 資料）"
   },
   {
    "name": "touror_places_gov.sqlite",
    "kind": "places_gov",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261202/touror_places_gov.sqlite",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261204/touror_places_gov.sqlite",
    "bytes": 7528448,
-   "sha256": "f383e3bccd395d19cd783e5898d973283b01d0eb74cb7248390627485de50e5b",
-   "version": "20261202",
+   "sha256": "bad532876083f9a027ff639f846f388db3d3cf896f5139082e805cdb726679a6",
+   "version": "20261204",
    "minAppVersion": "0.0.1",
    "description": "政府公開地點（選用）：加油站、郵局、景點、旅宿"
   },
