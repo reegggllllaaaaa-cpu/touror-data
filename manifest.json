@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-25T04:49:32Z",
+ "generated": "2026-11-25T05:27:21Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -393,10 +393,10 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261125.2",
+   "version": "20261125.3",
    "date": "2026-11-25",
    "count": 81638,
-   "sha256": "c6c4235001798d3590f49e4401fb6d436d853342864708e00e38c97a7026ed16",
+   "sha256": "3c6f0b84a3497011c675606a195ae828d2569e48ca238b1e3403c62445183411",
    "bytes": 734774,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
