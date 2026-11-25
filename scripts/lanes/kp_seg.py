@@ -5,7 +5,9 @@
 manifest 鍵：seg:<way>:<forward|backward>:<點序>，kind=segment。Token 只經 mly.py 讀取。
 """
 import os, sys, json, csv, math, gzip, pickle, collections
-from kp import (WORK, PBF, RECHECK_DAYS, dist, bearing, adiff, seg_dist, daytime, ymd, today, days_since, jload, Elev)
+from kp import (WORK, PBF, RECHECK_DAYS, dist, bearing, adiff, seg_dist, daytime, ymd, today, days_since, jload, Elev,
+                is_elev, ELEV_RAD)
+import datetime
 
 GAPS = os.environ.get("LANES_GAPS") or os.path.join(WORK, "gaps_major.csv")
 SEG_PKL = os.path.join(WORK, "kp_seg.pkl")
@@ -13,10 +15,12 @@ TILES = os.path.join(WORK, "mlytiles"); os.makedirs(TILES, exist_ok=True)
 TILE_URL = "https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}"
 SEG_HW = ["motorway", "trunk", "primary", "secondary"]
 SEG_RAD = 30         # 照片離代表點 ≤30 m
-SEG_LAT = 12         # 照片離目標路線 ≤12 m（排除平行側車道／對向分離車道）
+SEG_LAT = 10         # 照片離目標路線 ≤10 m（排除平行側車道／對向分離車道）
+SEG_ANG = 25         # 相機方位與路段行進方向相差 ≤25°
+SUN_MIN = 10         # 太陽高度角 ≥10°（另限台灣時間 06:30–17:30），排除清晨／黃昏／夜間
 SEG_STEP = 1000      # 長段每 1 km 一點
 SEG_SHARE = 3        # 每週方向上限與查詢預算的 1/3 留給路段候選
-PENDING_REASON = "缺少 2 張合格照片（路段點 30 m 內、同向 ±30°、白天、非高架、在目標道路上）"
+PENDING_REASON = "缺少 2 張合格照片（路段點 30 m 內、離路線 ≤10 m、同向 ±25°、太陽高度 ≥10°、非全景、高架層一致）"
 
 
 def ow_of(t):
@@ -97,14 +101,43 @@ def tile_imgs(x, y, maxage=RECHECK_DAYS, fetch=True):
     json.dump({"date": today(), "imgs": out}, open(f, "w", encoding="utf-8")); return out, True
 
 
+def sun_ok(ms, lat, lon):
+    """台灣時間 06:30–17:30 且太陽高度角 ≥ SUN_MIN（NOAA 簡式，誤差 <1°）。"""
+    if not ms: return False
+    u = datetime.datetime.utcfromtimestamp(ms / 1000); tw = u + datetime.timedelta(hours=8)
+    if not (6 * 60 + 30 <= tw.hour * 60 + tw.minute <= 17 * 60 + 30): return False
+    n = u.timetuple().tm_yday; g = 2 * math.pi / 365 * (n - 1 + (u.hour - 12) / 24)
+    decl = 0.006918 - 0.399912 * math.cos(g) + 0.070257 * math.sin(g) - 0.006758 * math.cos(2 * g) + 0.000907 * math.sin(2 * g)         - 0.002697 * math.cos(3 * g) + 0.00148 * math.sin(3 * g)
+    eqt = 229.18 * (0.000075 + 0.001868 * math.cos(g) - 0.032077 * math.sin(g) - 0.014615 * math.cos(2 * g) - 0.040849 * math.sin(2 * g))
+    tst = u.hour * 60 + u.minute + u.second / 60 + eqt + 4 * lon
+    ha = math.radians(tst / 4 - 180); la = math.radians(lat)
+    el = math.degrees(math.asin(math.sin(la) * math.sin(decl) + math.cos(la) * math.cos(decl) * math.cos(ha)))
+    return el >= SUN_MIN
+
+
+def layer_ok(elev, q, ang, w):
+    """照片附近若同時有高架與平面道路：只看與相機方位一致（±SEG_ANG，雙向）的道路；其中有任何一條高架與否和目標 way 不同 → 無法確定拍在哪一層，排除。"""
+    if not elev: return True
+    te = is_elev(w["tags"]); k = (round(q[0] / 0.001), round(q[1] / 0.001))
+    for a in (-1, 0, 1):
+        for b in (-1, 0, 1):
+            for sa, sb, e, wid in elev.g[(k[0] + a, k[1] + b)]:
+                if wid == w["id"] or e == te: continue
+                if seg_dist(q, sa, sb) > ELEV_RAD: continue
+                h = bearing(sa, sb)
+                if min(adiff(ang, h), adiff(ang, (h + 180) % 360)) <= SEG_ANG: return False
+    return True
+
+
 def seg_pick(imgs, p, brg, w, elev):
     ns = [n[1:] for n in w["nodes"]]; c = []
     for iid, la, lo, cap, ang, pano, seq in imgs:
-        if pano or ang is None or not daytime(cap): continue
+        if pano or ang is None or not sun_ok(cap, la, lo): continue
         q = (la, lo); d = dist(p, q)
-        if d > SEG_RAD or adiff(ang, brg) > 30: continue
+        if d > SEG_RAD or adiff(ang, brg) > SEG_ANG: continue
         if min(seg_dist(q, ns[i], ns[i + 1]) for i in range(len(ns) - 1)) > SEG_LAT: continue
         if elev and elev.bad(q, w["id"]): continue
+        if not layer_ok(elev, q, ang, w): continue
         c.append((d, cap, iid, seq, q))
     c.sort(key=lambda t: -t[1]); out = []
     for t in c:  # 最新優先；第二張盡量不同序列，否則相距 ≥8 m

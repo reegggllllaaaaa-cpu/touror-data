@@ -52,7 +52,12 @@ def check(path, labels):
     for lab, v in d.items():
         if lab not in want: errs.append(f"{lab} 不在這批標籤內"); continue
         if not isinstance(v, dict): errs.append(f"{lab} 不是物件"); continue
+        extra = set(v) - {"a", "b", "note"}
+        if extra: errs.append(f"{lab} 多出欄位 {','.join(sorted(extra))}")
         for side in ("a", "b"):
+            if lab.startswith("B") and isinstance(v.get(side), dict):   # 路段點欄位嚴格：五個欄位缺一不可、不可多
+                ks = set(v[side]); need = {"lanes", "tl", "vis", "moto", "median"}
+                if ks != need: errs.append(f"{lab}.{side} 欄位應為 {','.join(sorted(need))}，實得 {','.join(sorted(ks))}")
             p = v.get(side)
             if not isinstance(p, dict): errs.append(f"{lab}.{side} 缺漏"); continue
             if lab.startswith("B"):   # 路段點：不判箭頭；要有 moto（機慢車道）、median（分隔島）

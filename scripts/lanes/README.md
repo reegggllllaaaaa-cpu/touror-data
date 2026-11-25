@@ -46,12 +46,14 @@
 
 - 來源：車道推論輸出的 `gaps_major.csv`（motorway～secondary 只有先驗的 way；本機 WSL `/root/lanesinfer/out2/`，複製到 `work/gaps_major.csv`，或用 `LANES_GAPS` 指定）。比 `work/kp_seg.pkl` 新時 `select` 自動重跑 `segextract` 取幾何。
 - 代表點：每段 1 點（路段中點）；長段每 1 km 一點（n＝ceil(長度/1 km)，取各等分中點）。方位取點前後各 20 m 連線；雙向路兩個方向各一個候選。
-- 照片：Mapillary 覆蓋圖磚（z14 `image` 圖層，一格一次查詢拿到整格照片的座標／方位／時間；快取 `work/mlytiles/`，超過 `LANES_RECHECK_DAYS` 才重抓）。點 30 m 內、拍攝方位與行進方向差 ≤30°、白天、非全景、離目標路線 ≤12 m、非高架（缺口 way＋路口 way 一起判）；≥2 張（盡量不同序列）才進候選。
+- 照片：Mapillary 覆蓋圖磚（z14 `image` 圖層，一格一次查詢拿到整格照片的座標／方位／時間；快取 `work/mlytiles/`，超過 `LANES_RECHECK_DAYS` 才重抓）。點 30 m 內、拍攝方位與行進方向差 ≤25°、台灣時間 06:30–17:30 且太陽高度角 ≥10°（排除冬季黃昏與夜間）、非全景、離目標路線 ≤10 m、非高架（缺口 way＋路口 way 一起判）；另外照片 15 m 內若有與相機方位一致（±25°）、但高架／平面與目標 way 不同的道路（上下層重疊），無法確定拍在哪層 → 排除（2026-11-26 收緊）。≥2 張（盡量不同序列）才進候選。
 - 優先序：騎過（回報包 ride.gpx 30 m 內）→ 道路等級 motorway → trunk → primary → secondary → 缺口長度（長的先）。
 - 配額：`select N` 的 1/3 方向、Mapillary 查詢上限 900 次的 1/3 留給路段（排程 300 → 路段 100 方向／300 次圖磚）；其餘給路口與岔路。`run-weekly-lanes.ps1 -SegmentsOnly`（＝`LANES_SEG_ONLY=1`）只做路段、全部配額給路段（測試用）。
-- 拼圖 `G###.jpg`、標籤 `B###`（裁切保留較多路面），判讀提示詞 `judge_prompt_segment.md`：該方向車道數、`moto`（有無機慢車道）、`median`（有無實體分隔島），不判轉向箭頭；`kp_batch.py check` 檢查 `moto`／`median` 欄位、`tl` 必須空。
+- 拼圖 `G###.jpg`、標籤 `B###`（裁切保留較多路面），判讀提示詞 `judge_prompt_segment.md`：該方向車道數、`moto`（有無機慢車道）、`median`（有無實體分隔島），不判轉向箭頭；`kp_batch.py check` 嚴格檢查：每張只能有 `lanes`／`tl`／`vis`／`moto`／`median` 五欄、每筆只能有 `a`／`b`／`note`，`tl` 必須空；回覆前後的說明文字或 markdown 圍欄會自動剝掉。
+- 判讀模型一律在唯讀環境執行（codex 唯讀沙箱、agy plan 模式、copilot 未授權寫檔），所以兩份提示詞都要求「最後回覆只有 JSON」，由腳本寫檔；不要叫模型用 Write 寫檔（2026-11-26 路段版曾因此讓 codex／copilot 回「無法寫入」、agy 無輸出，全部落到 claude）。
 - 收錄（`decide`）：兩張 lanes 相同 → 兩張都 `vis=clear` 為 `medium`，否則 `low`；一張 clear、另一張看不清 → `low`；與 OSM／政府資料衝突不收。同一 way 同方向各點車道數不同就不收。輸出 `data/lanes/mapillary_ai_segments.csv`（欄位與 `mapillary_ai_lanes.csv` 相同，note 記機慢車道／分隔島）。
 - 推論引擎 `scripts/lanes_infer/infer_lanes.py` 讀 `--mly` 時自動一併讀同資料夾的 `mapillary_ai_segments.csv`（只收 medium 以上當錨點；同一 way 同方向以路口判讀為準）。
+- 底圖：`scripts/basemap/build_basemap.sh` 複製 `MAPILLARY_LANES_CSV` 時，自動併入同目錄的 `mapillary_ai_segments.csv`（可用 `MAPILLARY_SEGMENTS_CSV` 指定），只併 confidence 非 low 的列，同一 way＋方向已在路口檔者以路口檔為準；workflow 與 Lanes.java 不用改。
 - `python scripts/lanes/kp.py segcands [--nofetch]`：只算候選數（全量查圖磚，快取 30 天；`--nofetch` 只用快取），依等級寫 `work/kp_seg_cands.json`。
 
 ## 每週流程

@@ -44,6 +44,17 @@ fi
 rm -f data/sources/mapillary_ai_lanes.csv
 if [ -n "${MAPILLARY_LANES_CSV:-}" ] && [ -f "$MAPILLARY_LANES_CSV" ]; then
   cp "$MAPILLARY_LANES_CSV" data/sources/mapillary_ai_lanes.csv; echo "使用 Mapillary AI 判讀車道：$MAPILLARY_LANES_CSV"
+  # 路段中點判讀（同欄位格式）：MAPILLARY_SEGMENTS_CSV，未設定時自動找路口檔同目錄的 mapillary_ai_segments.csv。
+  # 只併入 confidence 不是 low 的列，且同一 way＋方向已在路口檔出現時以路口檔為準（不併入）。
+  SEG_CSV="${MAPILLARY_SEGMENTS_CSV:-$(dirname "$MAPILLARY_LANES_CSV")/mapillary_ai_segments.csv}"
+  if [ -f "$SEG_CSV" ]; then
+    awk -F, 'NR==FNR { if (FNR > 1) seen[$1 "," $2] = 1; next }
+             FNR > 1 && !(($1 "," $2) in seen) && $5 != "low" && $1 != "" { print }' \
+      data/sources/mapillary_ai_lanes.csv "$SEG_CSV" > data/sources/.mly_seg_add.csv
+    [ -n "$(tail -c1 data/sources/mapillary_ai_lanes.csv)" ] && echo >> data/sources/mapillary_ai_lanes.csv
+    cat data/sources/.mly_seg_add.csv >> data/sources/mapillary_ai_lanes.csv
+    echo "併入 Mapillary 路段判讀：$SEG_CSV（+$(wc -l < data/sources/.mly_seg_add.csv) 列）"; rm -f data/sources/.mly_seg_add.csv
+  fi
 else
   echo "未提供 Mapillary AI 判讀車道 CSV（MAPILLARY_LANES_CSV），略過"
 fi
