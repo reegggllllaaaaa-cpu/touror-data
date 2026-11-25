@@ -416,10 +416,18 @@ def sheets_kind(A, judged, owners, per, seg):
             lab = a.get("label") or new_label(); a["label"] = lab
             tiles = []
             for iid, cap in zip(a["imgs"][:2], a["caps"][:2]):
-                tf = thumb(iid)
-                if not tf:
+                try:
+                    tf = thumb(iid)
+                    im = Image.open(tf).convert("RGB") if tf else None
+                except Exception:  # 快取檔損壞或下載失敗：刪掉快取，略過這張
+                    try:
+                        os.remove(os.path.join(IMG, f"{iid}.jpg"))
+                    except OSError:
+                        pass
+                    im = None
+                if im is None:
                     continue
-                im = Image.open(tf).convert("RGB"); w, h = im.size
+                w, h = im.size
                 im = im.crop((int(w * .08), int(h * top), int(w * .92), int(h * .90)))
                 im = im.resize((W, int(im.size[1] * W / im.size[0])), Image.LANCZOS); tiles.append((im, cap))
             if not tiles:  # 兩張照片都拿不到：留待下週重查
