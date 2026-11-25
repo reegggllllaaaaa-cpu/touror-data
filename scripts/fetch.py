@@ -64,7 +64,7 @@ def main(argv=None):
                 continue
             start = time.time()
             print('開始 %s 資料集 %s → %s' % (g, t['dataset'], t['file']), flush=True)
-            if t.get('fmt') == 'TAICHUNG_CSV':
+            if t.get('fmt') in ('TAICHUNG_CSV', 'POINTS_CSV'):  # 倉庫內靜態點位，直接複製不連網
                 # 臺中 103743 圖資下載網址為 Google Drive，不經 data.gov.tw API；從版控 static 複製到 raw
                 src = os.path.join(paths.ROOT, t['static_path'], t['file']) if t.get('static_path') else None
                 if src and os.path.exists(src):
