@@ -1,5 +1,7 @@
 # 每週重建全台離線路網：OSM 台灣 extract -> 套用 curated 覆蓋 -> 補入政府林道步道缺口 -> Valhalla 3.9.3 建 tiles
 # -> 驗證閘門（大小、5 個固定案例算路與時間）-> 通過才發 Release、更新 offline-manifest.json、部署 Pages -> 線上核對（不符就還原）
+# 底圖（taiwan-z14.pmtiles，Protomaps 圖層）也用同一份 final.pbf 重建、另有驗證閘門（覆蓋率、相容、固定案例、大小），
+# 確保底圖與路網永遠同步；底圖沒過閘門時只發路網、底圖維持舊版並開 issue。
 # 台灣時間每週一 03:00（UTC 週日 19:00）。說明：資料中心\專案\重機導航\資料\搜尋\路網每週自動更新說明.md
 name: 每週路網重建
 on:
@@ -16,7 +18,7 @@ concurrency:
 jobs:
   roadnet:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 210
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
@@ -26,16 +28,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - name: 安裝建置工具（pyvalhalla 3.9.3 與 App 內建 valhalla-mobile 同版）
         run: |
-          python -m pip install --disable-pip-version-check pyvalhalla==3.9.3 osmium==4.3.2 numpy scipy pyproj
+          python -m pip install --disable-pip-version-check pyvalhalla==3.9.3 osmium==4.3.2 numpy scipy pyproj pmtiles==3.4.1 mapbox-vector-tile==2.1.0
           test -x /usr/bin/time || sudo apt-get install -y time
       - name: 下載 Geofabrik 台灣 extract（核對 MD5）
         run: |
           mkdir -p build/rn && cd build/rn
-          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o osm.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+          curl -fsSL --retry 5 --retry-delay 60 --retry-all-errors -A "touror-data-builder" -o osm.pbf https://download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf
           sleep 40
-          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o taiwan-latest.osm.pbf.md5 https://download.geofabrik.de/asia/taiwan-latest.osm.pbf.md5
+          curl -fsSL --retry 5 --retry-delay 60 --retry-all-errors -A "touror-data-builder" -o taiwan-latest.osm.pbf.md5 https://download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf.md5
           echo "$(cut -d' ' -f1 taiwan-latest.osm.pbf.md5)  osm.pbf" | md5sum -c -
           ls -l osm.pbf
       - name: 套用 curated 覆蓋與補入政府缺口
@@ -44,6 +50,25 @@ jobs:
           python -I ../../scripts/roadnet/apply_curated.py osm.pbf curated.pbf ../../curated/way覆蓋.csv ../../curated/類型覆蓋.csv | tee apply_curated.log
           python -I ../../scripts/roadnet/add_gov_gaps.py curated.pbf final.pbf ../../curated ../../curated/林道permit.json gov補入清單.csv gov補入統計.json
           rm -f osm.pbf curated.pbf
+      - name: 建底圖（同一份 final.pbf；Protomaps basemap＋私有路 z14 補丁）
+        run: |
+          sudo mkdir -p /mnt/bm && sudo chown "$USER" /mnt/bm
+          bash scripts/basemap/build_basemap.sh build/rn/final.pbf build/rn/taiwan-z14.pmtiles /mnt/bm
+          rm -rf /mnt/bm/data/sources /mnt/bm/data/tmp
+      - name: 底圖驗證閘門（不過只發路網）
+        id: bmverify
+        run: |
+          set +e
+          OLD_BM=$(python -I -c "import json;t=next(x for x in json.load(open('offline-manifest.json',encoding='utf-8'))['files'] if x['kind']=='basemap');print(t['url'],t['sha256'])")
+          curl -fsSL --retry 3 -o build/rn/old.pmtiles "${OLD_BM% *}" && echo "${OLD_BM#* }  build/rn/old.pmtiles" | sha256sum -c -
+          python -I scripts/basemap/verify_basemap.py build/rn/final.pbf build/rn/taiwan-z14.pmtiles --old build/rn/old.pmtiles --n 2000 --json build/rn/bm_report.json > build/rn/bm_verify.txt
+          c=$?
+          cat build/rn/bm_verify.txt
+          echo "code=$c" >> "$GITHUB_OUTPUT"
+          { echo "## 底圖驗證：$([ $c = 0 ] && echo 通過 || echo 未通過，底圖不更新)"; echo '```'; tail -n 60 build/rn/bm_verify.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: 底圖未通過 -> 開 issue（路網照常）
+        if: steps.bmverify.outputs.code != '0'
+        run: gh issue create --repo "$REPO" --title "每週底圖重建未發布（驗證未通過）" --body "執行：${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}。底圖維持上一版；路網照常發布。原因見執行摘要。"
       - name: 建 tiles 並打包
         run: python -I scripts/roadnet/build_tiles.py build/rn/final.pbf build/rn/tiles
       - name: 下載目前線上版 tiles（比對用）
@@ -103,16 +128,23 @@ jobs:
       - name: 建 Release 並上傳 tiles（不刪任何舊 Release）
         run: |
           cp build/rn/tiles/valhalla_tiles.tar build/rn/valhalla_tiles.tar
-          gh release create "$NEW_TAG" build/rn/valhalla_tiles.tar --repo "$REPO" \
-            --title "路網 $NEW_VER" --notes "每週自動重建：OSM Geofabrik 台灣 extract＋curated 覆蓋＋政府林道步道補入；Valhalla 3.9.3。驗證閘門通過後發布。© OpenStreetMap contributors，ODbL 1.0。"
+          ASSETS="build/rn/valhalla_tiles.tar"
+          [ "${{ steps.bmverify.outputs.code }}" = "0" ] && ASSETS="$ASSETS build/rn/taiwan-z14.pmtiles"
+          gh release create "$NEW_TAG" $ASSETS --repo "$REPO" \
+            --title "路網與底圖 $NEW_VER" --notes "每週自動重建：OSM Geofabrik 台灣 extract＋curated 覆蓋＋政府林道步道補入；路網 Valhalla 3.9.3；底圖 Protomaps basemap 4.15.2（planetiler，與路網同一份 OSM，私有路 z14 起收錄；底圖驗證沒過就只發路網）。驗證閘門通過後發布。© OpenStreetMap contributors，ODbL 1.0。"
       - name: 更新 offline-manifest.json 並推送
         run: |
           git config user.name "touror-data-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rev-parse HEAD > build/rn/prev_commit.txt
           python -I scripts/roadnet/update_manifest.py offline-manifest.json build/rn/valhalla_tiles.tar "$NEW_TAG" "$NEW_VER" "$REPO" | tee build/rn/new.json
+          MSG="路網每週更新：tiles 換成 $NEW_TAG"
+          if [ "${{ steps.bmverify.outputs.code }}" = "0" ]; then
+            python -I scripts/roadnet/update_manifest.py offline-manifest.json build/rn/taiwan-z14.pmtiles "$NEW_TAG" "$NEW_VER" "$REPO" basemap | tee -a build/rn/new.json
+            MSG="路網與底圖每週更新：tiles、basemap 換成 $NEW_TAG"
+          fi
           git add offline-manifest.json
-          git commit -m "路網每週更新：tiles 換成 $NEW_TAG"
+          git commit -m "$MSG"
           git pull --rebase
           git push
       - name: 觸發 Pages 部署並等完成
@@ -142,9 +174,11 @@ jobs:
             sleep 30
           done
           if [ $ok = 0 ]; then
-            URL=$(python -I -c "import json;print(next(x['url'] for x in json.load(open('build/rn/pages.json'))['files'] if x['kind']=='tiles'))")
-            SHA=$(python -I -c "import json;print(next(x['sha256'] for x in json.load(open('build/rn/pages.json'))['files'] if x['kind']=='tiles'))")
-            curl -fsSL --retry 3 -o build/rn/dl.tar "$URL" && echo "$SHA  build/rn/dl.tar" | sha256sum -c - || ok=1
+            for K in tiles basemap; do
+              URL=$(python -I -c "import json;print(next(x['url'] for x in json.load(open('build/rn/pages.json'))['files'] if x['kind']=='$K'))")
+              SHA=$(python -I -c "import json;print(next(x['sha256'] for x in json.load(open('build/rn/pages.json'))['files'] if x['kind']=='$K'))")
+              curl -fsSL --retry 3 -o build/rn/dl.bin "$URL" && echo "$SHA  build/rn/dl.bin" | sha256sum -c - || ok=1
+            done
           fi
           echo "ok=$ok" >> "$GITHUB_OUTPUT"
           echo "### 線上核對：$([ $ok = 0 ] && echo 一致 || echo 不一致，已還原 manifest)" >> "$GITHUB_STEP_SUMMARY"
