@@ -5,8 +5,8 @@
 # 時段：週二 03:00 台北（路網是週一 03:00）。人工更新的快取在 data/places_inputs/（說明見 data/places_inputs/README.md）。
 name: 每週店家庫重建
 on:
-  # schedule:   # 手動觸發驗證通過後才啟用
-  #   - cron: '0 19 * * 1'   # UTC 週一 19:00＝台灣時間週二 03:00
+  schedule:
+    - cron: '0 19 * * 1'   # UTC 週一 19:00＝台灣時間週二 03:00
   workflow_dispatch:
     inputs:
       publish:
