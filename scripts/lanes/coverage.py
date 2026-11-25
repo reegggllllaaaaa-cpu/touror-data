@@ -20,6 +20,8 @@ print("counties", sorted(set(c[0] for c in cty)), file=sys.stderr)
 def county(lon, lat):
     for n,p,b in cty:
         if b[0]<=lon<=b[2] and b[1]<=lat<=b[3] and p.contains_point((lon,lat)): return n
+    # 高雄市 relation 含東沙／南沙，台灣範圍 pbf 裁掉後組不成面；鄰縣市都組得成，故落在高雄外框內又不屬任何縣市者歸高雄市
+    if 120.10<=lon<=121.10 and 22.40<=lat<=23.50: return "高雄市"
     return "（界外）"
 def hav(a,b):
     la1,lo1,la2,lo2=map(math.radians,(a[1],a[0],b[1],b[0]))
@@ -27,7 +29,7 @@ def hav(a,b):
     return 12742000*math.asin(math.sqrt(h))
 st = {}; dump = []
 C=(120.402,22.636)
-for w in osmium.FileProcessor(pbf, osmium.osm.NODE | osmium.osm.WAY).with_locations().with_filter(osmium.filter.KeyFilter("highway")):
+for w in osmium.FileProcessor(pbf, osmium.osm.NODE | osmium.osm.WAY).with_locations().with_filter(osmium.filter.KeyFilter("highway").enable_for(osmium.osm.WAY)):
     hw = w.tags.get("highway")
     try: pts=[(n.lon,n.lat) for n in w.nodes]
     except Exception: continue
