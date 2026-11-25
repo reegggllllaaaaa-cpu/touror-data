@@ -1,5 +1,5 @@
 {
- "_說明": "路網驗證用固定案例。每案一或多段（from/to = [lat, lon]），新版總時間不得比舊版多 15% 以上。座標為公開地點；回家終點只留到小數 2 位（約 1 km），不放實際住址。",
+ "_說明": "路網驗證用固定案例。帶 plate＋expect 的是牌照案例（禁行機車走廊，見 verify.py ④）。每案一或多段（from/to = [lat, lon]），新版總時間不得比舊版多 15% 以上。座標為公開地點；回家終點只留到小數 2 位（約 1 km），不放實際住址。",
  "max_time_ratio": 1.15,
  "max_size_ratio": 0.15,
  "costing": "motorcycle",
@@ -28,6 +28,24 @@
   {"id": "dingjin_ch_w_se", "name": "鼎金渠化：西→東南（金鼎路直行）", "legs": [
     {"from": [22.66285, 120.32800], "to": [22.65950, 120.33120]}]},
   {"id": "dingjin_ch_se_w", "name": "鼎金渠化：東南→西（金鼎路直行）", "legs": [
-    {"from": [22.65950, 120.33120], "to": [22.66285, 120.32800]}]}
+    {"from": [22.65950, 120.33120], "to": [22.66285, 120.32800]}]},
+  {"id": "mb_tdi_white", "name": "堤頂大道1段 港墘路→南京東路（臺北禁行機車）：白牌應繞開", "plate": "white", "expect": {"rule": "moto-ban-001", "use": false}, "legs": [
+    {"from": [25.07538, 121.57203], "to": [25.05362, 121.57679]}]},
+  {"id": "mb_tdi_yellow", "name": "堤頂大道1段 港墘路→南京東路（臺北禁行機車）：黃牌仍可走", "plate": "yellow", "expect": {"rule": "moto-ban-001", "use": true}, "legs": [
+    {"from": [25.07538, 121.57203], "to": [25.05362, 121.57679]}]},
+  {"id": "mb_tdi_red", "name": "堤頂大道1段 港墘路→南京東路（臺北禁行機車）：紅牌仍可走", "plate": "red", "expect": {"rule": "moto-ban-001", "use": true}, "legs": [
+    {"from": [25.07538, 121.57203], "to": [25.05362, 121.57679]}]},
+  {"id": "mb_hhn_white", "name": "環河北路 社中街→民生西路（臺北禁行機車）：白牌應繞開", "plate": "white", "expect": {"rule": "moto-ban-002", "use": false}, "legs": [
+    {"from": [25.09033, 121.49237], "to": [25.05614, 121.5085]}]},
+  {"id": "mb_hhn_yellow", "name": "環河北路 社中街→民生西路（臺北禁行機車）：黃牌仍可走", "plate": "yellow", "expect": {"rule": "moto-ban-002", "use": true}, "legs": [
+    {"from": [25.09033, 121.49237], "to": [25.05614, 121.5085]}]},
+  {"id": "mb_hhn_red", "name": "環河北路 社中街→民生西路（臺北禁行機車）：紅牌仍可走", "plate": "red", "expect": {"rule": "moto-ban-002", "use": true}, "legs": [
+    {"from": [25.09033, 121.49237], "to": [25.05614, 121.5085]}]},
+  {"id": "mb_zxw_white", "name": "忠孝西路 重慶南路→中山北路（臺北禁行機車）：白牌應繞開", "plate": "white", "expect": {"rule": "moto-ban-003", "use": false}, "legs": [
+    {"from": [25.04726, 121.51298], "to": [25.04552, 121.51987]}]},
+  {"id": "mb_zxw_yellow", "name": "忠孝西路 重慶南路→中山北路（臺北禁行機車）：黃牌仍可走", "plate": "yellow", "expect": {"rule": "moto-ban-003", "use": true}, "legs": [
+    {"from": [25.04726, 121.51298], "to": [25.04552, 121.51987]}]},
+  {"id": "mb_zxw_red", "name": "忠孝西路 重慶南路→中山北路（臺北禁行機車）：紅牌仍可走", "plate": "red", "expect": {"rule": "moto-ban-003", "use": true}, "legs": [
+    {"from": [25.04726, 121.51298], "to": [25.04552, 121.51987]}]}
  ]
 }

@@ -53,6 +53,21 @@ python -I scripts/dryrun.py monthly [--fetch]        # monthly-timing.yml
 ```
 乾跑只寫 `build/`。真的更新本機 `data/`：`python -I scripts/publish.py <群組…>`（群組：speedcams、signals、reststops、timing、speedlimits、all）。
 
+### 禁行機車路段（curated/禁行機車.csv）
+
+每週路網重建時 `apply_curated.py --moto-bans` 依 osm_way_id 對位（核對 way 仍存在、是道路、路名與公告相符、方向與單行一致），每列都寫進 `build/rn/禁行機車對應清單.csv`（成功／對不到＋原因）與 `禁行機車統計.json`。牌照照規則表慣例：四種牌照都禁的才寫 `motorcycle=no` 進 tiles；只禁綠白（禁3，大型重機除外）的不能寫進 tiles（會連黃紅一起擋），改輸出 `禁行機車走廊.json`（rules_with_plate 格式＋corridor），由 App 依牌照排除重算。`verify.py` 的牌照案例（cases.json 的 `mb_*`）照 App 做法排除走廊後檢查：白牌繞開、黃紅牌仍走。來源 CSV 由 `資料/車道/scripts/conflate_gov_lanes.py` 產生，更新後複製進來並保留「採用」欄。
+
+### 通行限制資料集上傳（touror_restrictions.sqlite，kind=restrictions，手動）
+
+資料集由 `資料/搜尋/restrictions/build_restrictions.py` 本機建置，不在每週 workflow 內。上傳步驟（與其他資料相同：Release 資產＋manifest sha256）：
+
+1. `gh release view offline-<版本> || gh release create offline-<版本> --title "通行限制資料集 <版本>" --notes "OSM＋政府公告整理的通行限制屬性。© OpenStreetMap contributors，ODbL 1.0；政府資料開放授權第 1 版。"`
+2. `gh release upload offline-<版本> <路徑>/touror_restrictions.sqlite`
+3. `python -I scripts/roadnet/update_manifest.py offline-manifest.json <路徑>/touror_restrictions.sqlite offline-<版本> <版本> <owner/repo> restrictions "<說明>"`（第一次要給說明才會新增該項）
+4. 下載 Release 上的檔案核對 sha256 與 manifest 相同，再 commit／push manifest。
+
+注意：舊版 App 遇到不認得的 kind 會整份拒絕 manifest（見 scripts/validate.py），push 含 restrictions 的 manifest 前要先確認使用者裝的 App 已支援略過未知 kind。
+
 ## 人工建檔（data/curated/）
 
 人工資料**優先於**自動抓取。四張表（UTF-8 CSV，Excel 可直接開）：
