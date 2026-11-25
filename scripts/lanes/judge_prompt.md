@@ -23,6 +23,10 @@
 3. 透視：右側車道往左上斜的箭頭通常是透視造成的直行，記 `through`。
 4. 高架誤配：照片若明顯拍在高架道路／快速道路上（看得到護欄高架、下方是另一層道路、或與標示的道路等級明顯不符），在該方向的 `note` 寫「照片在高架道路上」，該張 `lanes` 填 null、`tl` 留空、`vis` 填 none。
 5. 照片看不到路口（例如被大車擋住、夜間、模糊），照實填 null／""／none，不要補。
+6. 機車左轉線索（每張照片各記，值只能是 `yes`、`no`、`unclear`）：
+   - `two_stage`：看得到「機慢車兩段左轉」標誌（藍底圓牌、遵20）或地面「機車待轉區」框線 → `yes`；路口清楚可見且兩者都沒有 → `no`；看不清、被擋、路口不在畫面內 → `unclear`。
+   - `moto_ban_inner`：看得到「禁行機車」標誌（含「內側車道」副牌）或內側車道路面標字「禁行機車」→ `yes`；路口與內側車道清楚可見且沒有 → `no`；否則 `unclear`。
+   - 不確定一律填 `unclear`，不要依路型或常識推測。
 
 ## 輸出
 
@@ -31,8 +35,8 @@
 
 ```
 {
-  "A123": {"a": {"lanes": 3, "tl": "left|through|through;right", "vis": "clear"},
-           "b": {"lanes": null, "tl": "", "vis": "none"},
+  "A123": {"a": {"lanes": 3, "tl": "left|through|through;right", "vis": "clear", "two_stage": "yes", "moto_ban_inner": "no"},
+           "b": {"lanes": null, "tl": "", "vis": "none", "two_stage": "unclear", "moto_ban_inner": "unclear"},
            "note": "可選，簡短備註"}
 }
 ```

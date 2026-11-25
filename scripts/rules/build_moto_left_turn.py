@@ -324,9 +324,9 @@ def main():
     mly_ai = defaultdict(list)  # (way, dir) -> [(lat, lon, field)]
     if os.path.exists(a.mly_judge):
         for r in read_csv(a.mly_judge):
-            if r.get("confidence") not in ("high", "medium"):
-                continue
             for fld in ("two_stage", "moto_ban_inner"):
+                if r.get(fld + "_conf", r.get("confidence")) not in ("high", "medium"):
+                    continue
                 if r.get(fld) == "yes":
                     mly_ai[(int(r["osm_way_id"]), r["direction"])].append((float(r["lat"]), float(r["lon"]), fld))
 

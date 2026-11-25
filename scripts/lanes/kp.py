@@ -486,8 +486,18 @@ def judge_one(pa, pb):
     return (la if la and la == lb else None), None, None
 
 
+def moto_one(pa, pb, f):
+    """路口機車左轉線索（two_stage／moto_ban_inner）兩張合併。舊判讀沒有這欄視為 unclear。
+    兩張同為 yes／no → medium；一張 yes／no、另一張 unclear → low；yes 與 no 衝突或都 unclear → unclear。"""
+    va, vb = (p.get(f) if p.get(f) in ("yes", "no") else "unclear" for p in (pa, pb))
+    if va == vb: return (va, "medium") if va != "unclear" else ("unclear", "")
+    if "unclear" in (va, vb): return (va if vb == "unclear" else vb), "low"
+    return "unclear", ""
+
+
 def decide():
     man = jload(MAN, {}); A = man["approaches"]; J = jload(JUD, {}); G = gov_dir_lanes()
+    moto_rows = []   # 路口機車左轉線索 → mapillary_ai_moto_left.csv（給 build_moto_left_turn.py）
     WL = {w["id"]: way_len(w) for w in pickle.load(open(PKL, "rb"))["ways"]} if os.path.exists(PKL) else {}
     from kp_seg import seg_judge, seg_note, write_segments
     rows, conflicts, stats = [], [], collections.Counter(); seg_rows = []
@@ -513,6 +523,12 @@ def decide():
             seg_rows.append({"osm_way_id": a["way"], "direction": a["dir"], "lanes": lanes, "turn_lanes": "", "confidence": conf,
                              "image_ids": " ".join(a["imgs"]), "captured_at": " ".join(a["captured"]), "note": seg_note(j)})
             continue
+        ts, tsc = moto_one(j["a"], j["b"], "two_stage"); mb, mbc = moto_one(j["a"], j["b"], "moto_ban_inner")
+        if ts != "unclear" or mb != "unclear":   # 與車道數是否採用無關，路口標誌另外輸出
+            moto_rows.append({"osm_way_id": a["way"], "direction": a["dir"], "lat": a["lat"], "lon": a["lon"],
+                              "two_stage": ts, "two_stage_conf": tsc, "moto_ban_inner": mb, "moto_ban_inner_conf": mbc,
+                              "image_ids": " ".join(a["imgs"]), "captured_at": " ".join(a["captured"])})
+            stats[f"moto_two_stage_{ts}_{tsc}"] += 1; stats[f"moto_ban_inner_{mb}_{mbc}"] += 1
         lanes, tl, tlc = judge_one(j["a"], j["b"])
         if not lanes:
             a["status"] = "pending"; a["reason"] = "兩張照片車道數不一致或看不清"; stats["pending"] += 1; continue
@@ -548,6 +564,11 @@ def decide():
     os.makedirs(OUTD, exist_ok=True)
     with open(os.path.join(OUTD, "mapillary_ai_lanes.csv"), "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, ["osm_way_id", "direction", "lanes", "turn_lanes", "confidence", "image_ids", "captured_at", "note"]); w.writeheader(); w.writerows(sorted(final, key=lambda r: (int(r["osm_way_id"]), r["direction"])))
+    with open(os.path.join(OUTD, "mapillary_ai_moto_left.csv"), "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, ["osm_way_id", "direction", "lat", "lon", "two_stage", "two_stage_conf", "moto_ban_inner",
+                               "moto_ban_inner_conf", "image_ids", "captured_at"])
+        w.writeheader(); w.writerows(sorted(moto_rows, key=lambda r: (int(r["osm_way_id"]), r["direction"], r["lat"])))
+    stats["moto_rows"] = len(moto_rows)
     write_segments(seg_rows, OUTD, stats)
     pend = [a for a in A.values() if a["status"] in ("pending", "ready")]
     with open(os.path.join(OUTD, "mapillary_pending.csv"), "w", encoding="utf-8", newline="") as f:
