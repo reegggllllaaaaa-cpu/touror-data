@@ -1,25 +1,25 @@
 {
  "schema": 1,
- "version": "20261208",
- "generated": "2026-11-25T16:31:02Z",
+ "version": "20261209",
+ "generated": "2026-11-25T17:15:28Z",
  "files": [
   {
    "name": "valhalla_tiles.tar",
    "kind": "tiles",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261208/valhalla_tiles.tar",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261209/valhalla_tiles.tar",
    "bytes": 336271360,
-   "sha256": "252fd210efd6f65fc5dd75786ebc90eb2d0c8f8f4c627a17cd0b7a7c972600b2",
-   "version": "20261208",
+   "sha256": "4f1ff1277bf9f32c95c67acd55d6dde97c5f80efe9f3dfd58ea01319f5198e51",
+   "version": "20261209",
    "minAppVersion": "0.0.1",
    "description": "路網：全台離線算路（由 OpenStreetMap 資料產生的 Valhalla 路網）"
   },
   {
    "name": "taiwan-z14.pmtiles",
    "kind": "basemap",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261208/taiwan-z14.pmtiles",
-   "bytes": 119816419,
-   "sha256": "2b59bbc91dbec542a890b6205edb2ff24ad2850549fe14354eae35c331b2d1d7",
-   "version": "20261208",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261209/taiwan-z14.pmtiles",
+   "bytes": 121280992,
+   "sha256": "9164d7981adda3fe4f6b07767f0af7e8d302ac312183f4e4890414ac3cec8397",
+   "version": "20261209",
    "minAppVersion": "0.0.1",
    "description": "底圖：全台離線地圖（Protomaps 圖層、OpenStreetMap 資料，縮放到 14 級）"
   },
