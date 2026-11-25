@@ -146,6 +146,25 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
     return v.isEmpty() ? "none" : v;
   }
 
+  /** 立體結構屬性（bridge／tunnel／layer／is_link），讓 App 把橋上車道與平面道路分層；都沒有就不寫（省空間）。 */
+  static FeatureCollector.Feature structure(FeatureCollector.Feature f, SourceFeature sf) {
+    if (f == null) return null;
+    String br = sf.getString("bridge"), tu = sf.getString("tunnel"), hw = sf.getString("highway");
+    if (br != null && !br.equals("no")) f.setAttr("bridge", 1);
+    if (tu != null && !tu.equals("no")) f.setAttr("tunnel", 1);
+    String ly = sf.getString("layer");
+    if (ly != null) {
+      try {
+        int v = Integer.parseInt(ly.trim().split(";")[0].trim());
+        if (v != 0 && v >= -5 && v <= 5) f.setAttr("layer", v);
+      } catch (NumberFormatException e) {
+        // 非整數 layer 略過
+      }
+    }
+    if (hw != null && hw.endsWith("_link")) f.setAttr("is_link", 1);
+    return f;
+  }
+
   public void processOsm(SourceFeature sf, FeatureCollector features) {
     // ---- islands_pt ----
     if (sf.isPoint()) {
@@ -165,8 +184,8 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       sf.hasTag("traffic_calming", "island"))) {
       String kind = areaHw != null ? areaHw : sf.hasTag("traffic_calming", "island") ? "traffic_island" :
         sf.getString("highway");
-      features.polygon("road_areas").setAttr("kind", kind).setAttr("highway", sf.getString("highway"))
-        .setMinZoom(14).setPixelTolerance(0);
+      structure(features.polygon("road_areas").setAttr("kind", kind).setAttr("highway", sf.getString("highway"))
+        .setMinZoom(14).setPixelTolerance(0), sf);
       return;
     }
     // ---- lanes / lane_lines ----
@@ -219,7 +238,8 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
         useMly = true;
       }
     }
-    String source = osm ? "osm" : useGov ? "gov" : useMly ? "mapillary_ai" : "inferred";
+    // curated/車道覆蓋.csv（apply_curated.py 寫 touror:lanes_override）標成 curated，App 可區分人工判定與 OSM
+    String source = osm ? (sf.getString("touror:lanes_override") != null ? "curated" : "osm") : useGov ? "gov" : useMly ? "mapillary_ai" : "inferred";
     int total;
     if (lanesTag != null) total = lanesTag;
     else if (fwdTag != null) total = fwdTag + (bwdTag != null ? bwdTag : oneway ? 0 : 1);
@@ -288,6 +308,7 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       .setAttr("shoulder", sf.getString("shoulder"))
       .setMinZoom(minZoom)
       .setPixelTolerance(0);
+    structure(f, sf);
 
     if (!osm && !useGov && !useMly) return; // lane_lines 只給 OSM／政府資料／AI 判讀有車道數的路（lanes_source 區分）
     LineString base;
@@ -329,35 +350,35 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       }
       for (int i = 0; i < fwd; i++) {
         double off = (i - (fwd - 1) / 2.0) * w - shift;
-        var lo = emitLane(features, base, mPerUnit, off, i, fwd, "forward", at(turnArr, i), at(mc, i), hw, false);
+        var lo = structure(emitLane(features, base, mPerUnit, off, i, fwd, "forward", at(turnArr, i), at(mc, i), hw, false), sf);
         if (lo != null) lo.setAttr("lanes_source", source);
       }
       for (int k = 0; k <= fwd; k++) {
         double off = (k - fwd / 2.0) * w - shift;
         String type = (k == 0 || k == fwd) ? "edge" : boundaryType(chg, k - 1);
-        emitLine(features, base, mPerUnit, off, k, "forward", type, hw);
+        structure(emitLine(features, base, mPerUnit, off, k, "forward", type, hw), sf);
       }
     } else {
       // 正向車道在右（正 offset），反向車道在左；0＝各自行進方向最左（最靠中線）
       for (int i = 0; i < fwd; i++) {
-        var lf = emitLane(features, base, mPerUnit, (i + 0.5) * w, i, fwd, "forward", at(turnArr, i), at(mc, i), hw, false);
+        var lf = structure(emitLane(features, base, mPerUnit, (i + 0.5) * w, i, fwd, "forward", at(turnArr, i), at(mc, i), hw, false), sf);
         if (lf != null) lf.setAttr("lanes_source", source);
       }
       for (int i = 0; i < bwd; i++) {
-        var lb = emitLane(features, base, mPerUnit, -(i + 0.5) * w, i, bwd, "backward", at(turnBArr, i), at(mcB, i),
-          hw, true);
+        var lb = structure(emitLane(features, base, mPerUnit, -(i + 0.5) * w, i, bwd, "backward", at(turnBArr, i), at(mcB, i),
+          hw, true), sf);
         if (lb != null) lb.setAttr("lanes_source", source);
       }
       if (fwd > 0 && bwd > 0) {
-        var c = emitLine(features, base, mPerUnit, 0, 0, "both", "center", hw);
+        var c = structure(emitLine(features, base, mPerUnit, 0, 0, "both", "center", hw), sf);
         if (c != null) c.setAttr("divider", sf.getString("divider"));
       }
       for (int k = 1; k <= fwd; k++) {
-        emitLine(features, base, mPerUnit, k * w, k, "forward", k == fwd ? "edge" : boundaryType(chg, k - 1), hw);
+        structure(emitLine(features, base, mPerUnit, k * w, k, "forward", k == fwd ? "edge" : boundaryType(chg, k - 1), hw), sf);
       }
       String[] chgB = split(sf.getString("change:lanes:backward"));
       for (int k = 1; k <= bwd; k++) {
-        emitLine(features, base, mPerUnit, -k * w, k, "backward", k == bwd ? "edge" : boundaryType(chgB, k - 1), hw);
+        structure(emitLine(features, base, mPerUnit, -k * w, k, "backward", k == bwd ? "edge" : boundaryType(chgB, k - 1), hw), sf);
       }
     }
   }

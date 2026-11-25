@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """套用 curated/way覆蓋.csv（採用=是）到 OSM PBF，輸出新 PBF；不改原檔。
 用法：python -I apply_curated.py <in.pbf> <out.pbf> [way覆蓋.csv] [類型覆蓋.csv]
+車道覆蓋.csv（同資料夾，沒有就略過）：依 way_id 改 lanes（turn_lanes 有值且段數相符才改 turn:lanes），原值存 touror:orig_lanes，標 touror:lanes_override=<來源>；路網與底圖吃同一份 final.pbf。
 類型覆蓋.csv（預設取 way覆蓋.csv 同資料夾的 類型覆蓋.csv，沒有就略過）：依條件（ref＋原 highway）把整類 way 改 highway，
 保留其他標籤並加 touror:override；例如國3甲（ref=3甲、highway=motorway）改 trunk，使黃紅牌的 exclude_highways 不再排除它。輸出被改 way 清單（id、長度）。
 動作：解除private＝移除 access 並標 touror:override=rode；捷西路升級＝highway=tertiary、maxspeed=50、touror:override=jiexi。
@@ -30,6 +31,24 @@ def load_type_rules(csvp):
                 if r["採用"].strip() == "是":
                     rules.append((r["條件_ref"].strip(), r["條件_highway"].strip(), r["改成_highway"].strip(), r["override標記"].strip(), r["id"].strip()))
     return rules
+
+def load_lanes(csvp):
+    out = {}
+    if csvp and os.path.exists(csvp):
+        with open(csvp, encoding="utf-8-sig") as f:
+            for r in csv.DictReader(f):
+                if r["採用"].strip() == "是" and r["lanes"].strip().isdigit():
+                    out[int(r["way_id"])] = (r["lanes"].strip(), r.get("turn_lanes", "").strip(), r.get("來源", "").strip() or "curated")
+    return out
+
+def lanes_fix(tags, ov):
+    t = {k: v for k, v in tags}
+    n, tl, src = ov
+    if "lanes" in t: t["touror:orig_lanes"] = t["lanes"]
+    t["lanes"] = n
+    if tl and len(tl.split("|")) == int(n): t["turn:lanes"] = tl
+    t["touror:lanes_override"] = src
+    return t
 
 def match_type(rules, tags):
     for ref, hw, new, mark, rid in rules:
@@ -86,6 +105,7 @@ def main():
     acts = load(csvp)
     tcsv = argv[4] if len(argv) > 4 else os.path.join(os.path.dirname(os.path.abspath(csvp)), "類型覆蓋.csv")
     trules = load_type_rules(tcsv)
+    lov = load_lanes(os.path.join(os.path.dirname(os.path.abspath(csvp)), "車道覆蓋.csv")); ldone = []
     t0 = time.time(); done = {}
     if os.path.exists(dst): os.remove(dst)
     # 預掃：解除private 的 way 上的節點（閘門/車擋 barrier 的 access=private 會讓 Valhalla 加 private_access_penalty，一併解除）
@@ -115,6 +135,11 @@ def main():
     coords = {}; tdone = []
     nodefix = []
     w = osmium.SimpleWriter(dst)
+    _add_way = w.add_way
+    def add_way(o):  # 車道覆蓋最後套用（其他覆蓋已改好的標籤保留）
+        ov = lov.get(o.id)
+        if ov is None: return _add_way(o)
+        ldone.append((o.id, o.tags.get("lanes"), ov[0])); _add_way(o.replace(tags=lanes_fix(o.tags, ov)))
     for o in osmium.FileProcessor(src):
         if o.is_node():
             if o.id in tnodes: coords[o.id] = (o.location.lat, o.location.lon)
@@ -133,7 +158,7 @@ def main():
                 if o.id in tile_ban: t["motorcycle"] = "no"
                 t["touror:moto_ban"] = ";".join(sorted(p + ":" + d for p, d in mark_ban[o.id]))
                 if a is None:
-                    w.add_way(o.replace(tags=t)); continue
+                    add_way(o.replace(tags=t)); continue
                 pre = t
             if a is None:
                 m = match_type(trules, o.tags) if trules else None
@@ -142,9 +167,9 @@ def main():
                     t["touror:orig_highway"] = t["highway"]; t["highway"] = m[0]; t["touror:override"] = m[1]
                     pts = [coords[n.ref] for n in o.nodes if n.ref in coords]
                     tdone.append((o.id, m[2], sum(hav(pts[i], pts[i+1]) for i in range(len(pts)-1))))
-                    w.add_way(o.replace(tags=t))
+                    add_way(o.replace(tags=t))
                 else:
-                    w.add_way(o)
+                    add_way(o)
                 continue
             t = dict(pre) if pre is not None else {k: v for k, v in o.tags}
             before = {k: v for k, v in o.tags}
@@ -153,7 +178,7 @@ def main():
             elif a == "捷西路升級":
                 t["highway"] = "tertiary"; t["maxspeed"] = "50"; t["touror:override"] = "jiexi"
             done[o.id] = (before, t)
-            w.add_way(o.replace(tags=t))
+            add_way(o.replace(tags=t))
         else:
             w.add_relation(o)
     w.close()
@@ -164,6 +189,8 @@ def main():
         L = [x for x in tdone if x[1] == rid]
         print(f"類型覆蓋 {rid}：改 {len(L)} 條 way，共 {sum(x[2] for x in L)/1000:.2f} km")
         for i, _, l in L: print("類型覆蓋way", rid, i, f"{l:.0f}m")
+    if lov: print(f"車道覆蓋：套用 {len(ldone)}/{len(lov)} 條；缺：{sorted(set(lov) - {x[0] for x in ldone})}")
+    for i, a, b in ldone: print("車道覆蓋way", i, a, "->", b)
     if trules and not tdone: print("警示：類型覆蓋規則沒有命中任何 way")
     if "--moto-bans" in opt: write_bans(judged, ban_nodes, bcoords, opt.get("--moto-out", os.path.dirname(os.path.abspath(dst))))
     for i, (b, t) in done.items():
