@@ -41,7 +41,8 @@ def main():
     info = {'source': a.source, 'bytes': size, 'osm_timestamp': None, 'bbox': None}
     if not errs:
         import osmium
-        hdr = osmium.io.Reader(a.pbf, osmium.osm.osm_entity_bits.NOTHING).header()
+        # 明確指定 pbf 格式：暫存檔（.part）副檔名無法讓 osmium 自動判斷
+        hdr = osmium.io.Reader(osmium.io.File(a.pbf, 'pbf'), osmium.osm.osm_entity_bits.NOTHING).header()
         ts = hdr.get('osmosis_replication_timestamp') or hdr.get('timestamp') or ''
         info['osm_timestamp'] = ts or None
         box = hdr.box()
