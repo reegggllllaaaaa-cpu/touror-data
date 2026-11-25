@@ -55,6 +55,10 @@ def check(path, labels):
         for side in ("a", "b"):
             p = v.get(side)
             if not isinstance(p, dict): errs.append(f"{lab}.{side} 缺漏"); continue
+            if lab.startswith("B"):   # 路段點：不判箭頭；要有 moto（機慢車道）、median（分隔島）
+                if p.get("tl"): errs.append(f"{lab}.{side}.tl 路段點不判箭頭，須留空")
+                for f in ("moto", "median"):
+                    if p.get(f) not in ("yes", "no", "unknown"): errs.append(f"{lab}.{side}.{f} 不合法")
             if p.get("lanes") is not None and not (isinstance(p["lanes"], int) and 1 <= p["lanes"] <= 12): errs.append(f"{lab}.{side}.lanes 不合法")
             if not isinstance(p.get("tl", ""), str): errs.append(f"{lab}.{side}.tl 不是字串")
             if p.get("vis") not in ("none", "partial", "clear"): errs.append(f"{lab}.{side}.vis 不合法")

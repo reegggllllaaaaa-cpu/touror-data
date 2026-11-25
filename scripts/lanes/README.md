@@ -8,6 +8,8 @@
 |---|---|
 | `kp.py` | `extract`／`select [N]`／`sheets`／`elevcheck`／`decide` 各階段 |
 | `judge_prompt_codex.md` | 後備鏈各層共用的判讀提示詞（codex 用 `-i`、copilot 用 `--attachment` 附圖，agy／claude 用讀檔工具開圖；最後回覆只輸出 JSON） |
+| `kp_seg.py` | 主幹道缺口路段點候選（`segextract`／`segcands`、select 路段配額、路段判讀收錄 → `mapillary_ai_segments.csv`） |
+| `judge_prompt_segment.md` | 路段點判讀提示詞（車道數、機慢車道、分隔島；不判箭頭） |
 | `judge_prompt.md` | 舊的 Claude 手動判讀提示詞（寫檔版，排程已不用） |
 | `kp_record.py` | 把判讀批次 JSON 寫進 `work/kp_judgments.json` |
 | `mly.py` | Mapillary API；token 只從 `%USERPROFILE%\.claude\secrets\mapillary-token.txt` 讀，不印、不寫檔 |
@@ -37,6 +39,20 @@
 - 已判過的方向（`work/kp_judgments.json`）只有出現更新的照片才會重選、給新標籤重判（`kp.needs_judge`：紀錄的標籤 ≠ 目前標籤）；`decide` 不把舊判讀套到新照片。
 - 舊版 bug（已修）：重選有新照片的已判方向時，manifest 被整筆覆寫、標籤消失，但 sheets／todo 又以「已判過」排除，所以永遠卡在 ready（2026-11-25 select 的 ready 150 有 16 個是這種）。
 - 撞號稽核（2026-11-25，全量）：`mapillary_ai_lanes.csv` 16 列逐列比對判讀紀錄標籤、manifest 三份快照（15:49／21:57／22:06）、批次檔與拼圖產生時間。4 列的標籤曾被其他方向重用（A118／A125／A135／A146），但重用方向的拼圖（S039–S046，16:35 產生）晚於判讀批次 `kp_batch_20261125b.json`（15:52），判讀只可能看到原方向的拼圖，且 S034 拼圖內容（brg=1、27m／37m 2026-04-05）與 118126010 forward 吻合；重用方向沒有任何判讀紀錄、目前都已重編新標籤待判讀。結論：16 列全部保留，無改掛、無移除。
+
+## 主幹道缺口路段點（2026-11-26 起，`kp_seg.py`）
+
+車道推論 v2 的結論是「整條路都沒標時推論只剩約五成準」，所以主幹道缺口要靠新觀測補，不能只看路口。
+
+- 來源：車道推論輸出的 `gaps_major.csv`（motorway～secondary 只有先驗的 way；本機 WSL `/root/lanesinfer/out2/`，複製到 `work/gaps_major.csv`，或用 `LANES_GAPS` 指定）。比 `work/kp_seg.pkl` 新時 `select` 自動重跑 `segextract` 取幾何。
+- 代表點：每段 1 點（路段中點）；長段每 1 km 一點（n＝ceil(長度/1 km)，取各等分中點）。方位取點前後各 20 m 連線；雙向路兩個方向各一個候選。
+- 照片：Mapillary 覆蓋圖磚（z14 `image` 圖層，一格一次查詢拿到整格照片的座標／方位／時間；快取 `work/mlytiles/`，超過 `LANES_RECHECK_DAYS` 才重抓）。點 30 m 內、拍攝方位與行進方向差 ≤30°、白天、非全景、離目標路線 ≤12 m、非高架（缺口 way＋路口 way 一起判）；≥2 張（盡量不同序列）才進候選。
+- 優先序：騎過（回報包 ride.gpx 30 m 內）→ 道路等級 motorway → trunk → primary → secondary → 缺口長度（長的先）。
+- 配額：`select N` 的 1/3 方向、Mapillary 查詢上限 900 次的 1/3 留給路段（排程 300 → 路段 100 方向／300 次圖磚）；其餘給路口與岔路。`run-weekly-lanes.ps1 -SegmentsOnly`（＝`LANES_SEG_ONLY=1`）只做路段、全部配額給路段（測試用）。
+- 拼圖 `G###.jpg`、標籤 `B###`（裁切保留較多路面），判讀提示詞 `judge_prompt_segment.md`：該方向車道數、`moto`（有無機慢車道）、`median`（有無實體分隔島），不判轉向箭頭；`kp_batch.py check` 檢查 `moto`／`median` 欄位、`tl` 必須空。
+- 收錄（`decide`）：兩張 lanes 相同 → 兩張都 `vis=clear` 為 `medium`，否則 `low`；一張 clear、另一張看不清 → `low`；與 OSM／政府資料衝突不收。同一 way 同方向各點車道數不同就不收。輸出 `data/lanes/mapillary_ai_segments.csv`（欄位與 `mapillary_ai_lanes.csv` 相同，note 記機慢車道／分隔島）。
+- 推論引擎 `scripts/lanes_infer/infer_lanes.py` 讀 `--mly` 時自動一併讀同資料夾的 `mapillary_ai_segments.csv`（只收 medium 以上當錨點；同一 way 同方向以路口判讀為準）。
+- `python scripts/lanes/kp.py segcands [--nofetch]`：只算候選數（全量查圖磚，快取 30 天；`--nofetch` 只用快取），依等級寫 `work/kp_seg_cands.json`。
 
 ## 每週流程
 

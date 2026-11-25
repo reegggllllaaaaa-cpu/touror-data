@@ -19,6 +19,7 @@
 param(
     [switch]$DryRun,
     [switch]$NoCommit,   # 照常判讀、寫紀錄、decide，但不 commit／push（測試用）
+    [switch]$SegmentsOnly,   # 只做主幹道缺口路段點（全部配額給路段，LANES_SEG_ONLY=1）；平常不加，路段固定占 1/3
     [int]$MaxDirections = 300,
     [ValidateSet('auto', 'codex', 'agy', 'copilot', 'claude')][string]$Engine = 'auto',
     [string]$CodexUntil = '2026-11-30',   # 這天以後 auto 鏈不再嘗試 codex（ChatGPT 訂閱到期）
@@ -146,6 +147,7 @@ try {
 
     # 1) select
     Write-Log "步驟 select $MaxDirections"
+    if ($SegmentsOnly) { $env:LANES_SEG_ONLY = '1' } else { Remove-Item Env:LANES_SEG_ONLY -ErrorAction SilentlyContinue }
     $r = Invoke-Logged $py @($kp, 'select', "$MaxDirections")
     if ($r.Code -ne 0) { Write-Log "select 失敗（exit $($r.Code)），結束"; $exitCode = 3; return }
 
@@ -156,13 +158,14 @@ try {
 
     # 3) 待判讀清單
     $r = & $py $kb 'todo' "$MaxDirections" 2>&1
-    $todo = @($r | ForEach-Object { "$_" } | Where-Object { $_ -match '^S\d+\.jpg\t' })
+    $todo = @($r | ForEach-Object { "$_" } | Where-Object { $_ -match '^[SG]\d+\.jpg\t' })
+    if ($SegmentsOnly) { $todo = @($todo | Where-Object { $_ -match '^G' }) }
     $nDir = 0; foreach ($t in $todo) { $nDir += ($t.Split("`t")[1].Split(',')).Count }
     Write-Log "待判讀：$nDir 個方向，$($todo.Count) 張拼圖"
 
     if ($DryRun) {
         if ($todo.Count -gt 0) { $first = $todo[0] } else {
-            $first = (& $py $kb 'sample' 2>&1 | ForEach-Object { "$_" } | Where-Object { $_ -match '^S\d+\.jpg\t' } | Select-Object -First 1)
+            $first = (& $py $kb 'sample' 2>&1 | ForEach-Object { "$_" } | Where-Object { $_ -match '^[SG]\d+\.jpg\t' } | Select-Object -First 1)
             Write-Log '乾跑：沒有新方向，改用最後一個已有拼圖的方向測試格式（結果不寫入判讀紀錄）'
         }
         if (-not $first) { Write-Log '乾跑：找不到任何拼圖可測，結束'; $exitCode = 4; return }
@@ -173,11 +176,15 @@ try {
     }
 
     # 4) 分批呼叫判讀模型（每批是獨立短任務；依鏈順序嘗試，第一個通過格式檢查的層採用）
-    $template = [IO.File]::ReadAllText((Join-Path $LanesDir 'judge_prompt_codex.md'), [Text.Encoding]::UTF8)
+    # 路口拼圖（S###）用 judge_prompt_codex.md；路段拼圖（G###）用 judge_prompt_segment.md；兩種不混在同一批
+    $tplInter = [IO.File]::ReadAllText((Join-Path $LanesDir 'judge_prompt_codex.md'), [Text.Encoding]::UTF8)
+    $tplSeg = [IO.File]::ReadAllText((Join-Path $LanesDir 'judge_prompt_segment.md'), [Text.Encoding]::UTF8)
     $batches = New-Object System.Collections.Generic.List[object]
-    for ($i = 0; $i -lt $todo.Count; $i += $SheetsPerBatch) {
-        $end = [Math]::Min($i + $SheetsPerBatch, $todo.Count) - 1
-        $batches.Add(@($todo[$i..$end]))
+    foreach ($grp in @(@($todo | Where-Object { $_ -match '^S' }), @($todo | Where-Object { $_ -match '^G' }))) {
+        for ($i = 0; $i -lt $grp.Count; $i += $SheetsPerBatch) {
+            $end = [Math]::Min($i + $SheetsPerBatch, $grp.Count) - 1
+            $batches.Add(@($grp[$i..$end]))
+        }
     }
     $fatalRe = '(?i)quota|rate.?limit|usage.?limit|too many requests|\b429\b|\b401\b|\b403\b|unauthori[sz]ed|forbidden|authenticat|not logged in|log ?in|sign ?in|subscription|billing|payment|credit|insufficient|expired|exceeded|resource.?exhausted'
     $dead = @{}; $fails = @{}; $used = @{}
@@ -196,6 +203,7 @@ try {
                 foreach ($l in $p[1].Split(',')) { $labels.Add($l) }
             }
             if ($DryRun) { $out = Join-Path $WorkSub "kp_batch_dryrun_$Stamp.json" } else { $out = Join-Path $WorkSub ('kp_batch_weekly_{0}_{1:00}.json' -f $Stamp, $bi) }
+            if ($b[0] -match '^G') { $template = $tplSeg } else { $template = $tplInter }
             $prompt = $template.Replace('{{SHEETDIR}}', $SheetDir).Replace('{{ITEMS}}', ($items -join "`n")).Replace('{{OUT}}', $out)
             Write-Log "批次 $bi/$($batches.Count)：$($labels.Count) 個方向（$($labels -join ',')）→ $out"
             $ok = $false

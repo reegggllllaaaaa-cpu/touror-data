@@ -7,6 +7,9 @@ Token 只經 mly.py 從檔案讀取，不印、不寫檔。
   python kp.py sheets           # 下載縮圖、裁路面、每 4 個方向拼一張 → 照片/kp/S###.jpg（只做尚未判讀的）
   python kp.py decide           # 讀 work/kp_judgments.json，套保守收錄規則 → CSV、pending、衝突、統計
   python kp.py elevcheck        # 已備妥／已判讀的方向，若照片拍在高架上就作廢、改列 pending（select 內建同一規則）
+  python kp.py segextract       # 主幹道缺口路段（work/gaps_major.csv，車道推論輸出）→ 取幾何 → work/kp_seg.pkl
+  python kp.py segcands [--nofetch]  # 只算路段候選數（全量查 Mapillary 圖磚，快取 30 天；--nofetch 只用快取）→ work/kp_seg_cands.json
+路段中點候選（2026-11-26 起，見 kp_seg.py）：select N 的 1/3 方向與 1/3 查詢留給路段；LANES_SEG_ONLY=1 時只做路段（全部配額）。
 判讀：人或多模態模型看 照片/kp/S###.jpg，逐張照片記 lanes、turn:lanes、可見度，寫入 work/kp_judgments.json。
 
 路徑（皆可用環境變數覆寫）：
@@ -313,7 +316,12 @@ def select(limit=150, max_queries=900):
     inters.sort(key=lambda i: (i["tier"], -i["ride"], i["rank"]))
     print("intersections tier0/1/2:", collections.Counter(i["tier"] for i in inters))
     man = jload(MAN, {"approaches": {}, "runs": []}); A = man["approaches"]; judged = jload(JUD, {})
-    q = 0; ready = sum(1 for k, a in A.items() if needs_judge(k, a, judged))
+    seg_only = os.environ.get("LANES_SEG_ONLY") == "1"
+    from kp_seg import SEG_SHARE, select_segments
+    seg_lim = limit if seg_only else limit // SEG_SHARE; seg_q = max_queries if seg_only else max_queries // SEG_SHARE
+    limit -= seg_lim; max_queries -= seg_q
+    if seg_only: inters = []
+    q = 0; ready = sum(1 for k, a in A.items() if needs_judge(k, a, judged) and a.get("kind") != "segment")
     # 兩階段：先重查到期的 pending／衝突（最久沒查的優先，最多用 1/3 查詢額度），再查從沒查過的新路口。
     # 已在 RECHECK_DAYS 內查過的不再花查詢；accepted 與已備妥的方向不重查。
     rq, newq = [], []
@@ -351,7 +359,9 @@ def select(limit=150, max_queries=900):
                 old["checked"] = today()
             else:
                 base.update(status="pending", newest=newest or old.get("newest", 0)); A[k] = {**old, **base}
-    man["runs"].append({"date": today(), "region": REGION, "queries": q, "ready": ready}); jsave(MAN, man)
+    seg_ready0 = sum(1 for k, a in A.items() if needs_judge(k, a, judged) and a.get("kind") == "segment")
+    sq, sr = select_segments(A, judged, max(0, seg_lim - seg_ready0), seg_q, ways, ride_hits)
+    man["runs"].append({"date": today(), "region": REGION, "queries": q, "ready": ready, "seg_queries": sq, "seg_ready": sr}); jsave(MAN, man)
     print("queries", q, "ready", ready, "pending", sum(1 for a in A.values() if a["status"] == "pending"))
 
 
@@ -380,13 +390,22 @@ def sheets(per=4):
         if needs_judge(k, a, judged) and a.get("label") and len(owners[a["label"]]) > 1:
             a.pop("label"); a.pop("sheet", None); fixed += 1
     if fixed: print("撞號重新編號", fixed)
-    nums = [int(l[1:]) for l in owners if re.fullmatch(r"A\d+", l)]
+    # 路口方向：標籤 A###、拼圖 S###；路段點（kind=segment）：標籤 B###、拼圖 G###，裁切保留較多路面以看分隔島與機慢車道
+    for seg in (False, True):
+        sheets_kind(A, judged, owners, per, seg)
+    jsave(MAN, man)
+
+
+def sheets_kind(A, judged, owners, per, seg):
+    from PIL import Image, ImageDraw
+    LP, SP, top = ("B", "G", .35) if seg else ("A", "S", .45)
+    nums = [int(l[1:]) for l in owners if re.fullmatch(LP + r"\d+", l)]
     nxt = [max(nums, default=0) + 1]
     def new_label():
-        l = f"A{nxt[0]:03d}"; nxt[0] += 1; return l
-    todo = [(k, a) for k, a in A.items() if needs_judge(k, a, judged) and not a.get("sheet")]
+        l = f"{LP}{nxt[0]:03d}"; nxt[0] += 1; return l
+    todo = [(k, a) for k, a in A.items() if needs_judge(k, a, judged) and not a.get("sheet") and (a.get("kind") == "segment") == seg]
     todo.sort(key=lambda t: (t[1]["tier"], -t[1]["ride"], RANK[t[1]["hw"]]))
-    n0 = len(glob.glob(os.path.join(SHEET, "S*.jpg"))); W = 760
+    n0 = len(glob.glob(os.path.join(SHEET, SP + "*.jpg"))); W = 760
     for s in range(0, len(todo), per):
         rows = []
         for k, a in todo[s:s + per]:
@@ -394,7 +413,7 @@ def sheets(per=4):
             tiles = []
             for iid, cap in zip(a["imgs"][:2], a["caps"][:2]):
                 im = Image.open(thumb(iid)).convert("RGB"); w, h = im.size
-                im = im.crop((int(w * .08), int(h * .45), int(w * .92), int(h * .90)))
+                im = im.crop((int(w * .08), int(h * top), int(w * .92), int(h * .90)))
                 im = im.resize((W, int(im.size[1] * W / im.size[0])), Image.LANCZOS); tiles.append((im, cap))
             hh = max(t[0].size[1] for t in tiles) + 20; row = Image.new("RGB", (W * 2 + 8, hh), (40, 40, 40)); d = ImageDraw.Draw(row)
             for i, (t, cap) in enumerate(tiles):
@@ -402,10 +421,9 @@ def sheets(per=4):
             rows.append(row)
         H = sum(r.size[1] for r in rows) + 6 * len(rows); sh = Image.new("RGB", (W * 2 + 8, H), (0, 0, 0)); y = 0
         for r in rows: sh.paste(r, (0, y)); y += r.size[1] + 6
-        name = f"S{n0 + s // per + 1:03d}.jpg"; sh.save(os.path.join(SHEET, name), quality=90)
+        name = f"{SP}{n0 + s // per + 1:03d}.jpg"; sh.save(os.path.join(SHEET, name), quality=90)
         for k, a in todo[s:s + per]: a["sheet"] = name
         print(name, [a["label"] for _, a in todo[s:s + per]])
-    jsave(MAN, man)
 
 
 # ---------------- decide ----------------
@@ -454,12 +472,30 @@ def judge_one(pa, pb):
 def decide():
     man = jload(MAN, {}); A = man["approaches"]; J = jload(JUD, {}); G = gov_dir_lanes()
     WL = {w["id"]: way_len(w) for w in pickle.load(open(PKL, "rb"))["ways"]} if os.path.exists(PKL) else {}
-    rows, conflicts, stats = [], [], collections.Counter()
+    from kp_seg import seg_judge, seg_note, write_segments
+    rows, conflicts, stats = [], [], collections.Counter(); seg_rows = []
     for k, j in J.items():
         a = A.get(k)
         if not a: continue
         if needs_judge(k, a, J): stats["awaiting_rejudge"] += 1; continue  # 新照片已備妥、舊判讀不套用到新照片
         note = j.get("note", "")
+        if a.get("kind") == "segment":   # 路段點：只收車道數（不判箭頭），兩張一致才收，信心見 kp_seg.seg_judge
+            lanes, conf = seg_judge(j["a"], j["b"])
+            if not lanes:
+                a["status"] = "pending"; a["reason"] = "兩張照片車道數不一致或看不清"; stats["seg_pending"] += 1; continue
+            why = []
+            if a["osm_lanes"] and a["oneway"] != "no" and str(a["osm_lanes"]).split(";")[0] != str(lanes): why.append(f"OSM lanes={a['osm_lanes']}")
+            g = G.get(str(a["way"]))
+            if g:
+                gv = g["lanes"] if a["oneway"] != "no" else g.get(f"lanes_{a['dir']}", "")
+                if gv and str(int(float(gv))) != str(lanes): why.append(f"gov {g['source']}={gv}")
+            if why:
+                a["status"] = "conflict"; conflicts.append({"key": k, "label": a.get("label"), "lanes": lanes, "turn_lanes": "", "why": "; ".join(why), "lat": a["lat"], "lon": a["lon"]})
+                stats["seg_conflict"] += 1; continue
+            a["status"] = "accepted"; a.pop("reason", None); stats[f"seg_accepted_{conf}"] += 1
+            seg_rows.append({"osm_way_id": a["way"], "direction": a["dir"], "lanes": lanes, "turn_lanes": "", "confidence": conf,
+                             "image_ids": " ".join(a["imgs"]), "captured_at": " ".join(a["captured"]), "note": seg_note(j)})
+            continue
         lanes, tl, tlc = judge_one(j["a"], j["b"])
         if not lanes:
             a["status"] = "pending"; a["reason"] = "兩張照片車道數不一致或看不清"; stats["pending"] += 1; continue
@@ -495,6 +531,7 @@ def decide():
     os.makedirs(OUTD, exist_ok=True)
     with open(os.path.join(OUTD, "mapillary_ai_lanes.csv"), "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, ["osm_way_id", "direction", "lanes", "turn_lanes", "confidence", "image_ids", "captured_at", "note"]); w.writeheader(); w.writerows(sorted(final, key=lambda r: (int(r["osm_way_id"]), r["direction"])))
+    write_segments(seg_rows, OUTD, stats)
     pend = [a for a in A.values() if a["status"] in ("pending", "ready")]
     with open(os.path.join(OUTD, "mapillary_pending.csv"), "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f); w.writerow(["osm_way_id", "direction", "lat", "lon", "last_checked", "reason"])
@@ -526,6 +563,7 @@ def elevcheck():
     for k, a in A.items():
         if a["status"] not in ("ready", "pending", "judged", "conflict", "lanes_only", "accepted") or not a.get("imgs"): continue
         if a["status"] == "pending" and k not in J: continue
+        if a.get("kind") == "segment": continue   # 路段點在 select 時已用（缺口 way＋路口 way）高架規則篩過；這裡的 pkl 不含缺口 way
         bad = [i for i in a["imgs"] if i in idx and elev.bad(idx[i], a["way"])]
         noted = "高架道路上" in J.get(k, {}).get("note", "")
         if not bad and not noted: continue
@@ -552,3 +590,5 @@ if __name__ == "__main__":
     elif m == "decide": decide()
     elif m == "elevcheck": elevcheck()
     elif m == "forkcands": forkcands()
+    elif m == "segextract": __import__("kp_seg").segextract()
+    elif m == "segcands": __import__("kp_seg").segcands(fetch="--nofetch" not in sys.argv)

@@ -187,16 +187,19 @@ def load_side(gov_path, mly_path, idx, W):
                     t = f + b
             if t:
                 side[i] = ("gov", t, conf)
-    if mly_path and os.path.exists(mly_path):
+    # 路口判讀（mapillary_ai_lanes.csv）之外，同資料夾的路段點判讀 mapillary_ai_segments.csv 也一起讀（2026-11-26 起）；
+    # 同一 way 同方向兩檔都有時以路口判讀為準；同樣只收 medium 以上。
+    mly_paths = [p for p in ([mly_path, os.path.join(os.path.dirname(mly_path), "mapillary_ai_segments.csv")] if mly_path else []) if os.path.exists(p)]
+    if mly_paths:
         acc = defaultdict(dict)
-        for r in csv.DictReader(open(mly_path, encoding="utf-8-sig")):
+        for r in (r for p in mly_paths for r in csv.DictReader(open(p, encoding="utf-8-sig"))):
             conf = (r.get("confidence") or "").strip()
             if conf not in SIDE_CONF:
                 continue
             i = _wid(r, idx)
             n = pint(r.get("lanes"))
             if i is not None and n:
-                acc[i][(r.get("direction") or "").strip()] = (n, conf)
+                acc[i].setdefault((r.get("direction") or "").strip(), (n, conf))
         for i, d in acc.items():
             if i in side:
                 continue
