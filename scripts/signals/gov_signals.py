@@ -158,6 +158,9 @@ def merge(osm_rows, raw_dir, sources=GOV_SIGNAL_SOURCES):
             path = os.path.join(paths.ROOT, src['static_path'], src['file'])
         st = dict(key=src['key'], dataset=src['dataset'], city=src['city'], file=src['file'],
                   rows=0, flashing=0, bad_coord=0, dup_osm=0, dup_gov=0, added=0, missing=False)
+        if src.get('confidence'):
+            st['confidence'] = src['confidence']
+            st['confidence_note'] = src.get('confidence_note', '')
         if not os.path.exists(path):
             st['missing'] = True
             stats.append(st)

@@ -13,11 +13,12 @@
   同一路口多個節點不在這裡合併；App 讀取時以 20 m 去重（SignalIndex）。
 
 檔案格式（little-endian；規格同 說明.md）：
-  標頭 32 bytes：magic "TSIG"、u16 版本 1、u16 標頭長度 32、u32 筆數、u16 每筆長度 9、u16 排序格網（微度，10000＝0.01°）、
+  標頭 32 bytes：magic "TSIG"、u16 版本 2（v1 無高位旗標，App 仍可讀）、u16 標頭長度 32、u32 筆數、u16 每筆長度 9、u16 排序格網（微度，10000＝0.01°）、
   u32 資料 CRC-32、u32 OSM 資料時間（Unix 秒）、8 bytes 保留 0。
   每筆 9 bytes：i32 緯度×1e6、i32 經度×1e6、u8 旗標。依 (緯度格, 經度格, 緯度, 經度) 排序。
 """
 import argparse
+import csv
 import datetime
 import hashlib
 import json
@@ -28,8 +29,10 @@ import sys
 import time
 import zlib
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 MAGIC = b"TSIG"
-VERSION = 1
+VERSION = 2  # v2：旗標高位元（bit4 elevated、bit5 offroad、bit6 atIntersection、bit7 merged），見 snap_signals.py；App 仍可讀 v1
 HEADER_SIZE = 32
 RECORD_SIZE = 9
 CELL_MICRODEG = 10000
@@ -37,6 +40,24 @@ FLAG_SIGNAL = 1
 FLAG_CROSSING = 2
 FLAG_HIGHWAY_CROSSING = 4
 EXCLUDED_KINDS = {"blinker", "blinkers", "blink_mode", "emergency"}
+
+# 臺中市政府交通局號誌燈圖資（清理後的點位 CSV）
+TAICHUNG_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "taichung_signals.csv")
+# 政府／人工補點（臺南 137239、高雄 176561、新竹市 67783、使用者實地確認）：已轉 WGS84、吸附 touror_junctions 路口、30 m 去重
+EXTRA_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gov_signals_extra.csv")
+FLAG_GOV = 8
+
+
+def load_extra_signals(csv_path):
+    """讀 gov_signals_extra.csv（lat,lon,source,...），回傳 (records, 依 source 計數)。旗標 bit0｜bit3。"""
+    records, by = [], {}
+    if not os.path.exists(csv_path):
+        return records, by
+    with open(csv_path, newline="", encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            records.append((int(round(float(row["lat"]) * 1e6)), int(round(float(row["lon"]) * 1e6)), FLAG_SIGNAL | FLAG_GOV))
+            by[row.get("source", "")] = by.get(row.get("source", ""), 0) + 1
+    return records, by
 
 
 def scan(pbf):
@@ -97,10 +118,49 @@ def encode(records, osm_time):
 
 def decode(data):
     magic, ver, hsize, count, rsize, cellsize, crc, ts, _ = struct.unpack("<4sHHIHHII8s", data[:HEADER_SIZE])
-    assert magic == MAGIC and ver == VERSION and rsize == RECORD_SIZE
+    assert magic == MAGIC and ver in (1, 2) and rsize == RECORD_SIZE
     body = data[hsize:hsize + count * rsize]
     assert len(body) == count * rsize and (zlib.crc32(body) & 0xFFFFFFFF) == crc
     return [struct.unpack_from("<iiB", body, i * rsize) for i in range(count)]
+
+
+def load_taichung_signals(csv_path):
+    """讀取臺中市政府交通局號誌燈圖資清理 CSV，回傳 (records, stats)。
+
+    CSV 欄位：lat, lon, layer, kind, comboroad, num, control, light
+    篩選規則：
+      - light == "三色號誌" 且 kind != "行人號誌桿" → flag=1（路口號誌）
+      - light == "閃光號誌" 或 kind 為閃黃/閃紅 → 不輸出（腳本無適合旗標），只計數
+      - kind == "行人號誌桿" 或 light 空白 → 不輸出，只計數
+    """
+    records = []
+    stats = {
+        "taichung_csv_rows": 0,
+        "taichung_flag1": 0,
+        "taichung_flasher": 0,
+        "taichung_pedestrian_or_blank": 0,
+        "taichung_skipped_other": 0,
+    }
+    if not os.path.exists(csv_path):
+        return records, stats
+    with open(csv_path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            stats["taichung_csv_rows"] += 1
+            light = (row.get("light") or "").strip()
+            kind = (row.get("kind") or "").strip()
+            if light == "三色號誌" and kind != "行人號誌桿":
+                lat = int(round(float(row["lat"]) * 1e6))
+                lon = int(round(float(row["lon"]) * 1e6))
+                records.append((lat, lon, FLAG_SIGNAL))
+                stats["taichung_flag1"] += 1
+            elif light == "閃光號誌" or kind in ("閃黃燈號誌", "閃紅燈號誌"):
+                stats["taichung_flasher"] += 1
+            elif kind == "行人號誌桿" or light == "":
+                stats["taichung_pedestrian_or_blank"] += 1
+            else:
+                stats["taichung_skipped_other"] += 1
+    return records, stats
 
 
 def main():
@@ -110,9 +170,26 @@ def main():
     ap.add_argument("--out", default=os.path.join(here, "taiwan-signals.bin"))
     ap.add_argument("--copy-to", default=os.path.join(here, "..", "..", "ios", "App", "Resources", "taiwan-signals.bin"))
     ap.add_argument("--stats", default=os.path.join(here, "build_stats.json"))
+    ap.add_argument("--taichung-csv", default=TAICHUNG_CSV,
+                    help="臺中市政府交通局號誌燈圖資 CSV；檔案不存在則跳過")
+    ap.add_argument("--extra-csv", default=EXTRA_CSV, help="政府／人工補點 CSV；檔案不存在則跳過")
+    ap.add_argument("--no-snap", action="store_true", help="不做吸附／旗標（輸出等同舊內容的 v2）")
+    ap.add_argument("--snap-stats", default=os.path.join(here, "snap_stats.json"))
     a = ap.parse_args()
     t0 = time.time()
     records, stats, osm_time = scan(a.pbf)
+    taichung_records, taichung_stats = load_taichung_signals(a.taichung_csv)
+    records.extend(taichung_records)
+    stats.update(taichung_stats)
+    extra_records, extra_by = load_extra_signals(a.extra_csv)
+    records.extend(extra_records)
+    stats["extra_by_source"] = extra_by
+    if not a.no_snap:
+        import snap_signals
+        records, snap_stats = snap_signals.process(records, a.pbf)
+        stats["snap"] = snap_stats
+        with open(a.snap_stats, "w", encoding="utf-8") as f:
+            json.dump(snap_stats, f, ensure_ascii=False, indent=2)
     data = encode(records, osm_time)
     back = decode(data)
     assert sorted(back) == sorted(records), "往返解碼不一致"

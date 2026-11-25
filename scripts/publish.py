@@ -138,6 +138,32 @@ def find_pbf(arg):
     return None
 
 
+def snap_rows(report, rows, pbf):
+    """OSM＋政府補點合併後，用 vendor 的 snap_signals.process（與本機同一支）吸附並算 v2 高位旗標。
+    政府補點的 bit3 與 user_verified 點都保留（process 只重算高 4 位、不刪點）。"""
+    snap_signals = load_snap_module()
+    snapped, st = snap_signals.process(rows, pbf, log=lambda *a: None)
+    if len(snapped) != len(rows):
+        raise PublishError(2, '紅綠燈吸附後筆數改變 %d → %d' % (len(rows), len(snapped)))
+    st['flag_counts'] = signal_flag_counts(snapped)
+    report['signals_snap'] = st
+    return snapped
+
+
+def load_snap_module():
+    import importlib.util
+    p = os.path.join(paths.VENDOR, '資料', '紅綠燈', 'snap_signals.py')
+    spec = importlib.util.spec_from_file_location('snap_signals', p)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def signal_flag_counts(rows):
+    names = dict(signal=1, crossing=2, highway_crossing=4, gov=8, elevated=16, offroad=32, at_intersection=64, merged=128)
+    return {k: sum(1 for r in rows if r[2] & b) for k, b in names.items()}
+
+
 def group_signals(report, pbf, no_osm):
     if no_osm:
         prev = os.path.join(paths.ROOT, FILES['taiwan-signals'][0])
@@ -151,19 +177,28 @@ def group_signals(report, pbf, no_osm):
         base_rows = osm_rows + existing_gov_rows
         taichung_src = [s for s in GOV_SIGNAL_SOURCES if s.get('static_path')]  # 倉庫內靜態點位（臺中＋前處理補點）
         rows, stats = gov_signals.merge(base_rows, paths.RAW_SIGNALS, sources=taichung_src)
+        if pbf:
+            # 有 PBF 就整份重算吸附旗標；沒有就沿用發布檔既有旗標（新補點暫無高位旗標）
+            rows = snap_rows(report, rows, pbf)
+        else:
+            report['checks']['signals 吸附旗標'] = '沒有 PBF：沿用發布檔既有旗標，新增補點未吸附'
     else:
         if not pbf:
             raise PublishError(4, '缺少 OSM PBF（--pbf 或 raw/osm/taiwan-latest.osm.pbf）')
         os.makedirs(W_SIGNAL, exist_ok=True)
         out = os.path.join(W_SIGNAL, 'taiwan-signals.bin')
+        # 只抽 OSM 節點（--no-snap、不讀本機臺中／補點 CSV）；政府補點由 gov_signals.merge 併入後再整份吸附，
+        # 與本機 資料/紅綠燈/build_signals.py「OSM＋補點 → snap_signals.process」同一順序與規則
         code, log = run([sys.executable, '-I', os.path.join(W_SIGNAL, 'build_signals.py'), '--pbf', pbf, '--out', out,
-                         '--copy-to', os.path.join(W_APPRES, 'taiwan-signals.bin')])
+                         '--copy-to', os.path.join(W_APPRES, 'taiwan-signals.bin'), '--no-snap',
+                         '--taichung-csv', '', '--extra-csv', ''])
         if code != 0:
             raise PublishError(2, '紅綠燈建置失敗：\n' + log[-2000:])
         head, osm_rows = formats.read_signals_bin(open(out, 'rb').read())
         osm_ts = head['osm_ts']
         base_rows = osm_rows
         rows, stats = gov_signals.merge(osm_rows, paths.RAW_SIGNALS)
+        rows = snap_rows(report, rows, pbf)
     report['gov_signals'] = stats
     data = formats.write_signals_bin(rows, osm_ts)
     formats.read_signals_bin(data)

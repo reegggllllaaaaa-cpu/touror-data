@@ -18,6 +18,8 @@ GOV_SIGNAL_SOURCES = [
     # 依 source 欄位分開計數與標示出處（2026-11-25）
     dict(key='tainan_shp', dataset='137239', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='臺南市',
          static_path='data/gov-signals', csv_source='tainan_shp_137239',
+         # SHP 的 SigType 只有「三色或閃光」一類，無法排除閃光號誌（不必停車）→ 標低可信度（報告與統計可見）
+         confidence='low', confidence_note='SigType 不分三色／閃光，可能含閃光號誌',
          title='臺南市公共管線圖資-交通號誌系統號誌（使用中）', lat=('lat',), lon=('lon',), name=('name',)),
     dict(key='kaohsiung_tech', dataset='176561', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='高雄市',
          static_path='data/gov-signals', csv_source='kaohsiung_176561',

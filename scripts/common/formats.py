@@ -6,6 +6,11 @@ import struct
 import zlib
 
 TSIG = b'TSIG'
+# 紅綠燈檔版本：v1＝低 4 位旗標；v2＝再加高位旗標（bit4 elevated、bit5 offroad、bit6 atIntersection、bit7 merged，
+# 由 vendor 的 snap_signals.py 計算）。App（SignalIndex.supportedVersions 1...2）讀 v1 時遮掉高位元。
+SIGNALS_VERSION = 2
+SIGNALS_SUPPORTED = (1, 2)
+SIG_FLAG_ELEVATED, SIG_FLAG_OFFROAD, SIG_FLAG_AT_JUNCTION, SIG_FLAG_MERGED = 16, 32, 64, 128
 TRST = b'TRST'
 TSPL = b'TSPL'
 
@@ -21,7 +26,7 @@ def read_signals_bin(data):
     if data[:4] != TSIG:
         raise FormatError('紅綠燈檔魔術字不符')
     ver, hsize, count, rsize, cell, crc, ts = struct.unpack_from('<HHIHHII', data, 4)
-    if ver != 1 or hsize < 32 or rsize != 9:
+    if ver not in SIGNALS_SUPPORTED or hsize < 32 or rsize != 9:
         raise FormatError('紅綠燈檔標頭錯誤 ver=%d hsize=%d rsize=%d' % (ver, hsize, rsize))
     end = hsize + count * rsize
     if len(data) < end:
@@ -34,17 +39,19 @@ def read_signals_bin(data):
         lat, lon, fl = struct.unpack_from('<iiB', body, i * 9)
         if not (-90e6 <= lat <= 90e6 and -180e6 <= lon <= 180e6):
             raise FormatError('紅綠燈檔第 %d 筆座標超出範圍' % i)
-        rows.append((lat, lon, fl))
+        rows.append((lat, lon, fl if ver >= 2 else fl & 0x0F))
     return dict(version=ver, count=count, osm_ts=ts, cell=cell), rows
 
 
-def write_signals_bin(rows, osm_ts, cell=10000):
-    """rows：[(lat_e6, lon_e6, flags)]；依 (緯度格, 經度格, 緯度, 經度) 排序後寫出（與 build_signals.py 相同）"""
+def write_signals_bin(rows, osm_ts, cell=10000, version=SIGNALS_VERSION):
+    """rows：[(lat_e6, lon_e6, flags)]；依 (緯度格, 經度格, 緯度, 經度) 排序後寫出（與 build_signals.py 相同，預設 v2）"""
+    if version not in SIGNALS_SUPPORTED:
+        raise FormatError('紅綠燈檔版本 %r 不支援' % version)
     def c(v):
         return v // cell
     rows = sorted(rows, key=lambda r: (c(r[0]), c(r[1]), r[0], r[1], r[2]))
-    body = b''.join(struct.pack('<iiB', a, b, f) for a, b, f in rows)
-    head = TSIG + struct.pack('<HHIHHII', 1, 32, len(rows), 9, cell, zlib.crc32(body) & 0xFFFFFFFF, int(osm_ts))
+    body = b''.join(struct.pack('<iiB', a, b, f if version >= 2 else f & 0x0F) for a, b, f in rows)
+    head = TSIG + struct.pack('<HHIHHII', version, 32, len(rows), 9, cell, zlib.crc32(body) & 0xFFFFFFFF, int(osm_ts))
     head += b'\0' * (32 - len(head))
     return head + body
 
