@@ -40,9 +40,9 @@ jobs:
       - name: 下載 Geofabrik 台灣 extract（核對 MD5）
         run: |
           mkdir -p build/pl && cd build/pl
-          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o osm.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+          curl -fsSL --retry 5 --retry-delay 60 --retry-all-errors -A "touror-data-builder" -o osm.pbf https://download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf
           sleep 40
-          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o osm.pbf.md5 https://download.geofabrik.de/asia/taiwan-latest.osm.pbf.md5
+          curl -fsSL --retry 5 --retry-delay 60 --retry-all-errors -A "touror-data-builder" -o osm.pbf.md5 https://download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf.md5
           echo "$(cut -d' ' -f1 osm.pbf.md5)  osm.pbf" | md5sum -c -
       - name: 下載目前線上版店家三庫與門牌包（比對、v2 補分店名、驗證用；核對 sha256）
         run: |
