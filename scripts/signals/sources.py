@@ -30,6 +30,10 @@ GOV_SIGNAL_SOURCES = [
     dict(key='user_verified', dataset='', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='使用者實地確認',
          static_path='data/gov-signals', csv_source='user_verified', url='',
          title='Touror 使用者實地確認新設號誌', lat=('lat',), lon=('lon',), name=('name',)),
+    # 使用者回報候選路口，以 Mapillary 街景照片（CC BY-SA）由 AI 看圖判定有號誌燈頭者；照片 id 見 資料\紅綠燈\人工補點.csv
+    dict(key='mapillary_ai', dataset='', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='Mapillary 照片判讀',
+         static_path='data/gov-signals', csv_source='mapillary-ai', url='https://www.mapillary.com/',
+         title='Touror 候選路口 Mapillary 街景照片 AI 判讀號誌', lat=('lat',), lon=('lon',), name=('name',)),
 ]
 
 # 時制（秒數）：臺北市 145720 三個資源＋澎湖 113153（同一份號誌表內含綠／黃燈秒數）
