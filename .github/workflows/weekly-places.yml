@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: 安裝建置工具
-        run: python -m pip install --disable-pip-version-check osmium==4.3.2 shapely numpy scipy pandas pyarrow duckdb==1.5.6 pypinyin opencc-python-reimplemented
+        run: python -m pip install --disable-pip-version-check osmium==4.3.2 shapely==2.1.2 numpy==2.2.6 scipy==1.15.3 pandas==2.3.3 pyarrow==25.0.1 duckdb==1.5.6 pypinyin==0.55.0 opencc-python-reimplemented  # 與本機驗證版本相同；pandas 3 的缺值是 NaN 會讓建庫腳本出錯
       - name: 下載 Geofabrik 台灣 extract（核對 MD5）
         run: |
           mkdir -p build/pl && cd build/pl
