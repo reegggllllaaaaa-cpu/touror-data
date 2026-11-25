@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-25T04:04:18Z",
+ "generated": "2026-11-25T04:49:32Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -374,11 +374,11 @@
   {
    "name": "taiwan-reststops",
    "path": "data/reststops/taiwan-reststops.bin",
-   "version": "20261123.2",
-   "date": "2026-11-23",
-   "count": 27904,
-   "sha256": "0a59cf2f368681fd67dbf408352dc1ecc9046fcc93441cd64fb04345b37df759",
-   "bytes": 746049,
+   "version": "20261125.1",
+   "date": "2026-11-25",
+   "count": 27908,
+   "sha256": "5a8cdca658a15510eb0c22c9334eaaa2daef13bc9636758e9386e095ec55d140",
+   "bytes": 746238,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors",
@@ -393,11 +393,11 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261125.1",
+   "version": "20261125.2",
    "date": "2026-11-25",
-   "count": 81625,
-   "sha256": "cbdff39bb109fa1da863e189db7b6ba7d2d43c69f41688c7d8542a4d2e1c58e1",
-   "bytes": 734657,
+   "count": 81638,
+   "sha256": "c6c4235001798d3590f49e4401fb6d436d853342864708e00e38c97a7026ed16",
+   "bytes": 734774,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市、高雄市、新竹市政府（政府資料開放授權條款第1版）；使用者實地確認補點",
