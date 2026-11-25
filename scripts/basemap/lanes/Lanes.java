@@ -107,6 +107,9 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       while (it.hasNext()) {
         String[] c = it.next().split(",", head.length);
         if (c.length < 4) continue;
+        // confidence=low 的判讀不採用（不當中信心值，也不計覆蓋）
+        Integer cc = col.get("confidence");
+        if (cc != null && cc < c.length && "low".equals(c[cc].trim())) continue;
         long id = Long.parseLong(c[col.get("osm_way_id")].trim());
         boolean back = "backward".equals(c[col.get("direction")].trim());
         Integer n = parseInt(c[col.get("lanes")]);
@@ -239,10 +242,13 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
     boolean useGov = false;
     String widthStr = sf.getString("width");
     if (g != null && !"low".equals(g.confidence())) {
-      if (!osm && (g.lanes() != null || g.fwd() != null)) {
-        lanesTag = g.lanes();
-        fwdTag = g.fwd();
-        bwdTag = g.bwd();
+      // 政府方向欄位依 OSM 畫線方向：oneway=-1 的行車方向是 backward；雙向缺任一側且沒有總數時不合成（不採用）
+      Integer govDir = oneway ? (reverse ? g.bwd() : g.fwd()) : null;
+      boolean govOk = g.lanes() != null || (oneway ? govDir != null : g.fwd() != null && g.bwd() != null);
+      if (!osm && govOk) {
+        lanesTag = g.lanes() != null ? g.lanes() : oneway ? govDir : Integer.valueOf(g.fwd() + g.bwd());
+        fwdTag = oneway ? null : g.fwd();
+        bwdTag = oneway ? null : g.bwd();
         useGov = true;
       }
       if (widthStr == null) widthStr = g.width();
@@ -280,7 +286,12 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       conf = in.conf();
       method = in.method();
     }
-    boolean infLines = in != null && ("high".equals(conf) || "medium".equals(conf));
+    // 推論值／預設值：雙向沒有方向證據，不給方向欄位也不畫方向性車道線；只有 high／medium 進精確 lanes，其餘只進 lanes_approx
+    boolean evidence = osm || useGov || useMly;
+    boolean medUp = "high".equals(conf) || "medium".equals(conf);
+    boolean noDir = !evidence && !oneway;
+    boolean approx = !evidence && !medUp;
+    boolean infLines = in != null && oneway && medUp;
     int total;
     if (lanesTag != null) total = lanesTag;
     else if (fwdTag != null) total = fwdTag + (bwdTag != null ? bwdTag : oneway ? 0 : 1);
@@ -330,9 +341,10 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
     var f = features.line(LAYER_NAME)
       .setAttr("highway", hw)
       .setAttr("name", sf.getString("name"))
-      .setAttr("lanes", total)
-      .setAttr("lanes_forward", oneway ? null : fwd)
-      .setAttr("lanes_backward", oneway ? null : bwd)
+      .setAttr("lanes", approx ? null : total)
+      .setAttr("lanes_approx", approx ? total : null)
+      .setAttr("lanes_forward", oneway || noDir || approx ? null : fwd)
+      .setAttr("lanes_backward", oneway || noDir || approx ? null : bwd)
       .setAttr("lanes_source", source)
       .setAttr("lanes_conf", conf)
       .setAttr("lanes_method", method)

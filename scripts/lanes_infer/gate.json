@@ -1,16 +1,20 @@
 {
- "_說明": "車道推論閘門：infer_lanes.py 依交叉驗證（OSM 已知車道藏起來推）決定各方法信心；未達 low 門檻的方法不採用（off）。verify_infer.py 再檢查整體門檻，不過就不把推論值放進底圖。",
+ "_說明": "車道推論閘門：infer_lanes.py 依兩種交叉驗證（random 零星缺標、group 整路留出）在每個「方法 × 等級群 × 單雙向 × 錨點距離帶」分層算 Wilson 95% 下限，未達 low 或樣本不足即 off。verify_infer.py 再逐一檢查實際採用的分層與整體門檻（prior 不計入），不過就不把推論值放進底圖。",
  "min_samples": 200,
  "levels": [
   {"level": "high", "exact": 0.90, "pm1": 0.98},
   {"level": "medium", "exact": 0.75, "pm1": 0.95},
   {"level": "low", "exact": 0.55, "pm1": 0.85}
  ],
+ "params": {
+  "junction_both_max_m": 3000,
+  "junction_both_max_ways": 10,
+  "corridor_m": 1500,
+  "corridor_far_m": 5000
+ },
  "require": {
-  "junction_both_min_exact": 0.70,
-  "prior_min_pm1": 0.70,
-  "min_rows": 100000,
-  "focus_min_non_prior_share": 0.95
+  "min_medium_rows": 3500,
+  "focus_min_medium_share": 0.80
  },
  "focus_name": "九如一路"
 }
