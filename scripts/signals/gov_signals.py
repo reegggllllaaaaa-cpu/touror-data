@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""政府號誌位置補點：讀臺北 121890、彰化 37695、澎湖 113153、臺南 79978 的號誌座標，
+"""政府號誌位置補點：讀臺北 121890、彰化 37695、澎湖 113153、臺南 79978、臺中 103743，
+以及 data/gov-signals/gov_signals_extra.csv（臺南 137239、高雄 176561、新竹市 67783、使用者實地確認）的號誌座標，
 與 OSM 號誌（taiwan-signals.bin）去重後，把 OSM 沒有的路口加進同一個檔。
 
 規則：
@@ -159,6 +160,26 @@ def merge(osm_rows, raw_dir, sources=GOV_SIGNAL_SOURCES):
                   rows=0, flashing=0, bad_coord=0, dup_osm=0, dup_gov=0, added=0, missing=False)
         if not os.path.exists(path):
             st['missing'] = True
+            stats.append(st)
+            continue
+        if src.get('fmt') == 'POINTS_CSV':
+            with open(path, newline='', encoding='utf-8-sig') as f:
+                pts = [d for d in csv.DictReader(f) if d.get('source') == src.get('csv_source')]
+            for d in pts:
+                st['rows'] += 1
+                c = coord(src, d)
+                if c is None:
+                    st['bad_coord'] += 1
+                    continue
+                if osm_grid.near(c[0], c[1], OSM_MATCH_M):
+                    st['dup_osm'] += 1
+                    continue
+                if gov_grid.near(c[0], c[1], SELF_DEDUP_M):
+                    st['dup_gov'] += 1
+                    continue
+                gov_grid.add(*c)
+                added_rows.append((int(round(c[0] * 1e6)), int(round(c[1] * 1e6)), FLAG_SIGNAL | FLAG_GOV))
+                st['added'] += 1
             stats.append(st)
             continue
         if src.get('fmt') == 'TAICHUNG_CSV':

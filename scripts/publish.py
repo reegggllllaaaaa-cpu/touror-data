@@ -44,7 +44,7 @@ FILES = {
     'speedcams': ('data/speedcams/speedcams.json', GOV_LICENSE, '資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）'),
     'speedcams-full': ('data/speedcams/speedcams-full.csv', GOV_LICENSE, '資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）'),
     'mobile-hotspots': ('data/speedcams/mobile-hotspots.json', GOV_LICENSE, '資料來源：政府資料開放平臺（高雄市政府警察局、臺中市政府警察局）；參考點 © OpenStreetMap contributors'),
-    'taiwan-signals': ('data/signals/taiwan-signals.bin', ODBL, '© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市政府（政府資料開放授權條款第1版）'),
+    'taiwan-signals': ('data/signals/taiwan-signals.bin', ODBL, '© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市、高雄市、新竹市政府（政府資料開放授權條款第1版）；使用者實地確認補點'),
     'taiwan-reststops': ('data/reststops/taiwan-reststops.bin', ODBL, '© OpenStreetMap contributors'),
     'signal-timing-taipei': ('data/signals/signal-timing-taipei.json', GOV_LICENSE, '資料來源：臺北市政府交通局（臺北市路口號誌時制計畫）'),
     'signal-timing-penghu': ('data/signals/signal-timing-penghu.json', GOV_LICENSE, '資料來源：澎湖縣政府（紅綠燈號誌位置一覽表）'),
@@ -149,7 +149,7 @@ def group_signals(report, pbf, no_osm):
         osm_ts = head['osm_ts']
         report['checks']['signals OSM 來源'] = '沿用目前發布檔的 OSM 部分（%d 點）與既有政府補點（%d 點）' % (len(osm_rows), len(existing_gov_rows))
         base_rows = osm_rows + existing_gov_rows
-        taichung_src = [s for s in GOV_SIGNAL_SOURCES if s['key'] == 'taichung']
+        taichung_src = [s for s in GOV_SIGNAL_SOURCES if s.get('static_path')]  # 倉庫內靜態點位（臺中＋前處理補點）
         rows, stats = gov_signals.merge(base_rows, paths.RAW_SIGNALS, sources=taichung_src)
     else:
         if not pbf:
@@ -258,7 +258,7 @@ def sources_for(name):
                     for s in json.load(open(p, encoding='utf-8')).get('sources', [])]
     if name == 'taiwan-signals':
         return [dict(title='OpenStreetMap（Geofabrik taiwan-latest.osm.pbf）', url='https://download.geofabrik.de/asia/taiwan.html', dataset='')] + \
-               [dict(title=s['title'], url=DATAGOV + s['dataset'], dataset=s['dataset']) for s in GOV_SIGNAL_SOURCES]
+               [dict(title=s['title'], url=s.get('url', DATAGOV + s['dataset']), dataset=s['dataset']) for s in GOV_SIGNAL_SOURCES]
     if name == 'taiwan-reststops':
         return [dict(title='OpenStreetMap（Geofabrik taiwan-latest.osm.pbf）', url='https://download.geofabrik.de/asia/taiwan.html', dataset='')]
     if name == 'signal-timing-taipei':
