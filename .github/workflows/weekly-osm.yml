@@ -34,9 +34,9 @@ jobs:
       - name: 下載 Geofabrik 台灣 extract（核對 MD5）
         run: |
           mkdir -p raw/osm && cd raw/osm
-          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o taiwan-latest.osm.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+          curl -fsSL --retry 5 --retry-delay 60 --retry-all-errors -A "touror-data-builder" -o taiwan-latest.osm.pbf https://download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf
           sleep 40
-          curl -fsSL --retry 3 --retry-delay 60 -A "touror-data-builder" -o taiwan-latest.osm.pbf.md5 https://download.geofabrik.de/asia/taiwan-latest.osm.pbf.md5
+          curl -fsSL --retry 5 --retry-delay 60 --retry-all-errors -A "touror-data-builder" -o taiwan-latest.osm.pbf.md5 https://download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf.md5
           md5sum -c taiwan-latest.osm.pbf.md5
       - name: 下載政府號誌位置（資料集 API；請求間隔 40 秒以上）
         run: python -u -I scripts/fetch.py signals
