@@ -59,6 +59,38 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       gov.clear();
     }
     System.err.println("Touror lanes：政府車道屬性 " + gov.size() + " 筆");
+    loadMapillary(System.getProperty("touror.mapillaryLanes", "data/sources/mapillary_ai_lanes.csv"));
+  }
+
+  /** Mapillary 照片 AI 判讀車道（data/lanes/mapillary_ai_lanes.csv，CC BY-SA 4.0）：以 way id＋方向對應。 */
+  record Mly(Integer fwd, Integer bwd, String turnF, String turnB) {}
+
+  private final Map<Long, Mly> mly = new HashMap<>();
+
+  private void loadMapillary(String path) {
+    var f = java.nio.file.Path.of(path);
+    if (!java.nio.file.Files.exists(f)) return;
+    try (var lines = java.nio.file.Files.lines(f)) {
+      var it = lines.iterator();
+      String[] head = it.next().split(",", -1);
+      Map<String, Integer> col = new HashMap<>();
+      for (int i = 0; i < head.length; i++) col.put(head[i].trim(), i);
+      while (it.hasNext()) {
+        String[] c = it.next().split(",", head.length);
+        if (c.length < 4) continue;
+        long id = Long.parseLong(c[col.get("osm_way_id")].trim());
+        boolean back = "backward".equals(c[col.get("direction")].trim());
+        Integer n = parseInt(c[col.get("lanes")]);
+        String t = c[col.get("turn_lanes")].trim();
+        if (t.isEmpty() || t.split("\\|", -1).length != (n == null ? -1 : n)) t = null;
+        Mly old = mly.getOrDefault(id, new Mly(null, null, null, null));
+        mly.put(id, back ? new Mly(old.fwd(), n, old.turnF(), t) : new Mly(n, old.bwd(), t, old.turnB()));
+      }
+    } catch (Exception e) {
+      System.err.println("mapillary_ai_lanes.csv 讀取失敗，略過：" + e);
+      mly.clear();
+    }
+    System.err.println("Touror lanes：Mapillary AI 判讀車道 " + mly.size() + " 條 way");
   }
 
   @Override
@@ -167,7 +199,27 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       }
       if (widthStr == null) widthStr = g.width();
     }
-    String source = osm ? "osm" : useGov ? "gov" : "inferred";
+    // 優先序 osm > gov > mapillary_ai > inferred；AI 判讀的 turn_lanes 只在 OSM 該方向無值、且車道數相符時採用
+    Mly m = mly.get(sf.id());
+    boolean useMly = false;
+    if (m != null && !osm && !useGov) {
+      if (oneway) {
+        Integer v = reverse ? m.bwd() : m.fwd();
+        if (v != null) {
+          lanesTag = v;
+          fwdTag = null;
+          bwdTag = null;
+          useMly = true;
+        }
+      } else if (m.fwd() != null || m.bwd() != null) {
+        int half = Math.max(1, inferredLanes(hw)[1] / 2);
+        fwdTag = m.fwd() != null ? m.fwd() : half;
+        bwdTag = m.bwd() != null ? m.bwd() : half;
+        lanesTag = fwdTag + bwdTag;
+        useMly = true;
+      }
+    }
+    String source = osm ? "osm" : useGov ? "gov" : useMly ? "mapillary_ai" : "inferred";
     int total;
     if (lanesTag != null) total = lanesTag;
     else if (fwdTag != null) total = fwdTag + (bwdTag != null ? bwdTag : oneway ? 0 : 1);
@@ -193,6 +245,26 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       fwd = total - bwd;
     }
 
+    String turnSource = turn != null || turnF != null || turnB != null ? "osm" : null;
+    if (m != null) {
+      if (oneway && turn == null && turnF == null && turnB == null) {
+        String t = reverse ? m.turnB() : m.turnF();
+        if (t != null && t.split("\\|", -1).length == total) {
+          turn = t;
+          turnSource = "mapillary_ai";
+        }
+      } else if (!oneway) {
+        if (turnF == null && m.turnF() != null && m.turnF().split("\\|", -1).length == fwd) {
+          turnF = m.turnF();
+          turnSource = turnSource == null ? "mapillary_ai" : turnSource;
+        }
+        if (turnB == null && m.turnB() != null && m.turnB().split("\\|", -1).length == bwd) {
+          turnB = m.turnB();
+          turnSource = turnSource == null ? "mapillary_ai" : turnSource;
+        }
+      }
+    }
+
     int minZoom = MAJOR.contains(hw) ? 12 : 14;
     var f = features.line(LAYER_NAME)
       .setAttr("highway", hw)
@@ -205,6 +277,7 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       .setAttr("turn_lanes", turn)
       .setAttr("turn_lanes_forward", turnF)
       .setAttr("turn_lanes_backward", turnB)
+      .setAttr("turn_lanes_source", turnSource)
       .setAttr("change_lanes", sf.getString("change:lanes"))
       .setAttr("width", widthStr)
       .setAttr("moto_priority_lane", g == null ? null : g.motoPriority())
@@ -216,7 +289,7 @@ public class Lanes implements ForwardingProfile.LayerPostProcessor {
       .setMinZoom(minZoom)
       .setPixelTolerance(0);
 
-    if (!osm && !useGov) return; // lane_lines 只給 OSM（或政府資料）有車道數的路
+    if (!osm && !useGov && !useMly) return; // lane_lines 只給 OSM／政府資料／AI 判讀有車道數的路（lanes_source 區分）
     LineString base;
     try {
       base = (LineString) sf.line();

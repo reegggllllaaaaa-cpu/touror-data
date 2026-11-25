@@ -39,6 +39,14 @@ if [ -n "${GOV_LANES_CSV:-}" ] && [ -f "$GOV_LANES_CSV" ]; then
 else
   echo "未提供政府車道屬性 CSV（GOV_LANES_CSV），略過"
 fi
+# Mapillary 照片 AI 判讀車道（可選，CC BY-SA 4.0）：MAPILLARY_LANES_CSV=<data/lanes/mapillary_ai_lanes.csv>
+# 優先序 osm > gov > mapillary_ai > inferred；turn_lanes 只在 OSM 無值時採用
+rm -f data/sources/mapillary_ai_lanes.csv
+if [ -n "${MAPILLARY_LANES_CSV:-}" ] && [ -f "$MAPILLARY_LANES_CSV" ]; then
+  cp "$MAPILLARY_LANES_CSV" data/sources/mapillary_ai_lanes.csv; echo "使用 Mapillary AI 判讀車道：$MAPILLARY_LANES_CSV"
+else
+  echo "未提供 Mapillary AI 判讀車道 CSV（MAPILLARY_LANES_CSV），略過"
+fi
 rm -f "$OUT" data/sources/taiwan.osm.pbf.tmp
 java -Xmx"$XMX" -jar "$JAR" --area=taiwan --download --bounds="$BBOX" --maxzoom="$MAXZOOM" \
   --output="$OUT" --force --nodemap_type=sparsearray --storage=mmap 2>&1 | tail -n 40

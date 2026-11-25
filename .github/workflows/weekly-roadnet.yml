@@ -53,6 +53,7 @@ jobs:
       - name: 建底圖（同一份 final.pbf；Protomaps basemap＋私有路 z14 補丁）
         env:
           GOV_LANES_CSV: ${{ github.workspace }}/data/lanes/gov_lane_attrs.csv
+          MAPILLARY_LANES_CSV: ${{ github.workspace }}/data/lanes/mapillary_ai_lanes.csv
         run: |
           sudo mkdir -p /mnt/bm && sudo chown "$USER" /mnt/bm
           bash scripts/basemap/build_basemap.sh build/rn/final.pbf build/rn/taiwan-z14.pmtiles /mnt/bm
