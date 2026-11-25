@@ -38,10 +38,8 @@
 5. 本機驗證：`wsl -e bash scripts/lanes/wsl_build_basemap.sh`，再 `python scripts/lanes/preview_mly.py <pmtiles> <out.png> <lat> <lon>` 看預覽。
 6. commit `data/lanes/*.csv`；push 後週日的 `weekly-roadnet.yml` 透過 `MAPILLARY_LANES_CSV` 帶入底圖。
 
-## 本機排程（步驟，尚未註冊）
+## 本機排程
 
-用 Windows 工作排程器建立每週一次的工作（例如週六 02:00，週日 weekly-roadnet 之前）：
-
-1. 新增工作 → 觸發程序「每週」→ 動作「啟動程式」：`powershell.exe -NoProfile -File <repo>\scripts\lanes\weekly.ps1`（要自行建立，依序執行上面 2–4 步，並把輸出寫到工作區 `work\weekly.log`）。
-2. 條件：只在接上電源時執行可不勾；「只有在使用者登入時才執行」，因為 `claude -p` 需要使用者的登入狀態。
-3. 第 6 步的 commit／push 由人確認後再做，不放進排程。
+- `run-weekly-lanes.ps1`：依序跑 select 150 → sheets → `claude -p`（提示詞 `judge_prompt.md`，`--model sonnet --allowedTools Read,Write --max-turns 40`，每批 6 張拼圖、獨立短任務）→ `kp_batch.py check` 驗格式 → kp_record → elevcheck → decide；`data/lanes/` 有變動才 commit，`pull --rebase` 後 push origin main。沒有待判讀方向就結束、不呼叫 claude。log：`%USERPROFILE%\資料中心\工作日誌\lanes_weekly.log`（不含 token）。`-DryRun`：只判讀 1 個方向測格式，不寫紀錄、不 commit。
+- `register-weekly-lanes.ps1`：註冊工作排程「Touror 車道判讀」，每週日 02:00（週一 weekly-roadnet 之前），錯過補跑、時限 3 小時、低優先權、只在使用者登入時執行（`claude -p` 需要登入狀態）。由使用者自己執行：`powershell -NoProfile -ExecutionPolicy Bypass -File scripts\lanes\register-weekly-lanes.ps1`。
+- `kp_batch.py`：列待判讀方向（todo）、乾跑取樣（sample）、檢查批次 JSON 格式（check）。
