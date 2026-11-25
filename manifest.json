@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-23T11:12:10Z",
+ "generated": "2026-11-25T04:04:18Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -393,14 +393,14 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261123.3",
-   "date": "2026-11-23",
-   "count": 80413,
-   "sha256": "9158aef8b18d8c4b95cc03afe3345139a1bc61db9d968a5a6875d5b9450da452",
-   "bytes": 723749,
+   "version": "20261125.1",
+   "date": "2026-11-25",
+   "count": 81625,
+   "sha256": "cbdff39bb109fa1da863e189db7b6ba7d2d43c69f41688c7d8542a4d2e1c58e1",
+   "bytes": 734657,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
-   "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市政府（政府資料開放授權條款第1版）",
+   "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市、高雄市、新竹市政府（政府資料開放授權條款第1版）；使用者實地確認補點",
    "sources": [
     {
      "title": "OpenStreetMap（Geofabrik taiwan-latest.osm.pbf）",
@@ -431,6 +431,26 @@
      "title": "臺中市號誌燈圖資",
      "url": "https://data.gov.tw/dataset/103743",
      "dataset": "103743"
+    },
+    {
+     "title": "臺南市公共管線圖資-交通號誌系統號誌（使用中）",
+     "url": "https://data.gov.tw/dataset/137239",
+     "dataset": "137239"
+    },
+    {
+     "title": "高雄市115年路口科技執法監測系統設置地點（取締項目含闖紅燈）",
+     "url": "https://data.gov.tw/dataset/176561",
+     "dataset": "176561"
+    },
+    {
+     "title": "新竹市號誌化路口（路名交叉點地理編碼）",
+     "url": "https://data.gov.tw/dataset/67783",
+     "dataset": "67783"
+    },
+    {
+     "title": "Touror 使用者實地確認新設號誌",
+     "url": "",
+     "dataset": ""
     }
    ]
   },

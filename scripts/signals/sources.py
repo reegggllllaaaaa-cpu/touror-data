@@ -14,6 +14,20 @@ GOV_SIGNAL_SOURCES = [
     dict(key='taichung', dataset='103743', file='taichung_signals.csv', fmt='TAICHUNG_CSV', city='臺中市',
          static_path='data/gov-signals',
          title='臺中市號誌燈圖資', lat=('lat',), lon=('lon',), name=('comboroad',)),
+    # 以下四個來源由 資料/紅綠燈 的前處理（座標轉換、吸附 touror_junctions 路口、30 m 去重）產生同一個點位 CSV，
+    # 依 source 欄位分開計數與標示出處（2026-11-25）
+    dict(key='tainan_shp', dataset='137239', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='臺南市',
+         static_path='data/gov-signals', csv_source='tainan_shp_137239',
+         title='臺南市公共管線圖資-交通號誌系統號誌（使用中）', lat=('lat',), lon=('lon',), name=('name',)),
+    dict(key='kaohsiung_tech', dataset='176561', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='高雄市',
+         static_path='data/gov-signals', csv_source='kaohsiung_176561',
+         title='高雄市115年路口科技執法監測系統設置地點（取締項目含闖紅燈）', lat=('lat',), lon=('lon',), name=('name',)),
+    dict(key='hsinchu', dataset='67783', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='新竹市',
+         static_path='data/gov-signals', csv_source='hsinchu_67783',
+         title='新竹市號誌化路口（路名交叉點地理編碼）', lat=('lat',), lon=('lon',), name=('name',)),
+    dict(key='user_verified', dataset='', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='使用者實地確認',
+         static_path='data/gov-signals', csv_source='user_verified', url='',
+         title='Touror 使用者實地確認新設號誌', lat=('lat',), lon=('lon',), name=('name',)),
 ]
 
 # 時制（秒數）：臺北市 145720 三個資源＋澎湖 113153（同一份號誌表內含綠／黃燈秒數）
