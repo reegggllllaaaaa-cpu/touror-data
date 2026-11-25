@@ -1,12 +1,14 @@
 # 車道 AI 判讀管線（Mapillary 照片 → `data/lanes/mapillary_ai_lanes.csv`）
 
-高雄＋屏東號誌路口：用 Mapillary 街景照片，經多模態模型判讀車道數與轉向箭頭，產生自家資料集（CC BY-SA 4.0，見 `data/lanes/LICENSE-mapillary-ai.md`）。底圖建置透過 `MAPILLARY_LANES_CSV` 帶入，優先序 osm > gov > mapillary_ai > inferred。
+全台號誌路口（2026-11-25 起；`LANES_REGION=kp` 可回到舊範圍高雄＋屏東）：用 Mapillary 街景照片，經多模態模型（預設 Codex CLI，走 ChatGPT 訂閱額度，不花 Claude）判讀車道數與轉向箭頭，產生自家資料集（CC BY-SA 4.0，見 `data/lanes/LICENSE-mapillary-ai.md`）。底圖建置透過 `MAPILLARY_LANES_CSV` 帶入，優先序 osm > gov > mapillary_ai > inferred。
 
 ## 檔案
 
 | 檔案 | 用途 |
 |---|---|
 | `kp.py` | `extract`／`select [N]`／`sheets`／`elevcheck`／`decide` 各階段 |
+| `judge_prompt_codex.md` | Codex 判讀提示詞（拼圖用 `-i` 直接附上，最後回覆只輸出 JSON） |
+| `judge_prompt.md` | Claude 備援判讀提示詞（`-Engine claude`） |
 | `kp_record.py` | 把判讀批次 JSON 寫進 `work/kp_judgments.json` |
 | `mly.py` | Mapillary API；token 只從 `%USERPROFILE%\.claude\secrets\mapillary-token.txt` 讀，不印、不寫檔 |
 | `wsl_build_basemap.sh` | 本機 WSL 重建底圖並驗證（對線上舊底圖與上一版） |
@@ -25,11 +27,18 @@
 - 雙向道路只判讀一個方向時，底圖（`Lanes.java`）不以推定值補另一方向，該 way 維持原來源。
 - 其他 → `data/lanes/mapillary_pending.csv`（每週重查）。
 
+## 範圍、每週上限與不重複判讀
+
+- `extract` 收全台號誌（81,641 筆），只保留號誌附近（約 300–600 m 格網）的道路，避免整島路網進記憶體；改範圍或 OSM／號誌更新後重跑 `extract`。
+- `select N`：N＝本週最多備妥幾個待判讀方向（排程預設 300）。Mapillary 查詢上限 900 次：先重查到期（`LANES_RECHECK_DAYS`，預設 7 天）的 pending／衝突方向，最多用 1/3；其餘給從沒查過的新路口（騎過的路口 → 兩條主幹道 → 主次幹道）。
+- 已判過的方向（`work/kp_judgments.json`）只有出現更新的照片才會重選、給新標籤重判（`kp.needs_judge`：紀錄的標籤 ≠ 目前標籤）；`decide` 不把舊判讀套到新照片。
+- 舊版 bug（已修）：重選有新照片的已判方向時，manifest 被整筆覆寫、標籤消失，但 sheets／todo 又以「已判過」排除，所以永遠卡在 ready（2026-11-25 select 的 ready 150 有 16 個是這種）。
+
 ## 每週流程
 
 1. `python scripts/lanes/kp.py extract`（OSM 或號誌更新後才需要）
-2. `python scripts/lanes/kp.py select 150` → `python scripts/lanes/kp.py sheets`
-3. 判讀（需要多模態，所以在本機用 Claude Code 非互動模式）：
+2. `python scripts/lanes/kp.py select 300` → `python scripts/lanes/kp.py sheets`
+3. 判讀（需要多模態；排程預設用 Codex：`codex exec --skip-git-repo-check --ephemeral -s read-only -c model_reasoning_effort=high -i <拼圖>... -o <批次.json> -`，提示詞 `judge_prompt_codex.md`。推理強度不要用 none／low：實測會把平面道路誤判成高架。以下是舊的 Claude 手動做法，只在 Codex 不能用時備援）：
    ```
    claude -p "讀 <工作區>/照片/kp/ 中尚未判讀的 S###.jpg（標籤見 work/kp_manifest.json 的 sheet 欄位）。每個方向 a、b 兩張照片各記 lanes（看不清填 null）、tl（OSM turn:lanes 格式，只記看得到的箭頭，看不到留空、不推測；右側車道往左上斜的箭頭是透視造成的直行）、vis（none／partial／clear，clear＝所有車道箭頭都看得到）。照片若拍在高架道路上，note 寫「照片在高架道路上」。輸出 JSON 到 <工作區>/work/kp_batch_<日期>.json，格式見 scripts/lanes/kp_record.py。" --allowedTools Read,Write
    ```
@@ -40,6 +49,6 @@
 
 ## 本機排程
 
-- `run-weekly-lanes.ps1`：依序跑 select 150 → sheets → `claude -p`（提示詞 `judge_prompt.md`，`--model sonnet --allowedTools Read,Write --max-turns 40`，每批 6 張拼圖、獨立短任務）→ `kp_batch.py check` 驗格式 → kp_record → elevcheck → decide；`data/lanes/` 有變動才 commit，`pull --rebase` 後 push origin main。沒有待判讀方向就結束、不呼叫 claude。log：`%USERPROFILE%\資料中心\工作日誌\lanes_weekly.log`（不含 token）。`-DryRun`：只判讀 1 個方向測格式，不寫紀錄、不 commit。
-- `register-weekly-lanes.ps1`：註冊工作排程「Touror 車道判讀」，每週日 02:00（週一 weekly-roadnet 之前），錯過補跑、時限 3 小時、低優先權、只在使用者登入時執行（`claude -p` 需要登入狀態）。由使用者自己執行：`powershell -NoProfile -ExecutionPolicy Bypass -File scripts\lanes\register-weekly-lanes.ps1`。
+- `run-weekly-lanes.ps1`：依序跑 select 300 → sheets → 判讀（`-Engine codex` 預設：`codex exec -i` 每批 6 張拼圖、唯讀沙箱、`-CodexEffort high`；`-Engine claude -Model haiku` 為備援，會用 Claude 額度）→ `kp_batch.py check` 驗格式 → kp_record → elevcheck → decide；`data/lanes/` 有變動才 commit，`pull --rebase` 後 push origin main。沒有待判讀方向就結束、不呼叫模型。`-NoCommit`：照常判讀與 decide，但不 commit／push。log：`%USERPROFILE%\資料中心\工作日誌\lanes_weekly.log`（不含 token）。`-DryRun`：只判讀 1 個方向測格式，不寫紀錄、不 commit。
+- `register-weekly-lanes.ps1`：註冊工作排程「Touror 車道判讀」，每週日 02:00（週一 weekly-roadnet 之前），錯過補跑、時限 3 小時、低優先權、只在使用者登入時執行（`codex` 用使用者的 ChatGPT 登入）。由使用者自己執行：`powershell -NoProfile -ExecutionPolicy Bypass -File scripts\lanes\register-weekly-lanes.ps1`。
 - `kp_batch.py`：列待判讀方向（todo）、乾跑取樣（sample）、檢查批次 JSON 格式（check）。

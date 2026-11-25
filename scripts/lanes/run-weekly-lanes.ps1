@@ -1,14 +1,21 @@
 ﻿# 每週 Mapillary 車道 AI 判讀（本機排程用，Windows PowerShell 5.1 相容）
-# 流程：kp.py select → kp.py sheets → claude -p 分批判讀 → kp_record.py → kp.py elevcheck → kp.py decide
+# 流程：kp.py select → kp.py sheets → 外部模型分批判讀 → kp_record.py → kp.py elevcheck → kp.py decide
 #       → data/lanes/ 有變動才 commit，pull --rebase 後 push origin main。
-# 沒有待判讀的新方向就直接結束，不呼叫 claude。
+# 判讀引擎 -Engine：codex（預設，Codex CLI `codex exec -i <拼圖>`，走 ChatGPT 訂閱額度，不花 Claude／Anthropic API）
+#                   claude（備援，claude -p，會用 Claude 額度；只在 codex 不能用時手動指定，建議 -Model haiku）
+# 範圍：全台號誌路口（kp.py 的 LANES_REGION，預設 taiwan）；每週最多備妥 -MaxDirections 個方向，已判過的只在有新照片時重判。
+# 沒有待判讀的新方向就直接結束，不呼叫模型。
 # -DryRun：照常跑 select／sheets，claude 只判讀 1 個方向測試格式（寫到 kp_batch_dryrun_*.json），
 #          不寫判讀紀錄、不跑 decide、不 commit／push。
 # Mapillary token 只由 mly.py 自己讀檔，本腳本不碰 token；log 另外再過濾一次以防萬一。
 [CmdletBinding()]
 param(
     [switch]$DryRun,
-    [int]$MaxDirections = 150,
+    [switch]$NoCommit,   # 照常判讀、寫紀錄、decide，但不 commit／push（測試用）
+    [int]$MaxDirections = 300,
+    [ValidateSet('codex', 'claude')][string]$Engine = 'codex',
+    [string]$CodexModel = '',
+    [string]$CodexEffort = 'high',
     [int]$SheetsPerBatch = 6,
     [int]$MaxTurns = 40,
     [string]$Model = 'sonnet',
@@ -83,9 +90,12 @@ $exitCode = 0
 try {
     Write-Log "===== 開始 每週車道判讀（repo=$Repo，上限 $MaxDirections 個方向）====="
     $py = Find-Exe 'python' @()
-    $claude = Find-Exe 'claude' @((Join-Path $env:USERPROFILE '.local\bin\claude.exe'))
+    if ($Engine -eq 'codex') {
+        $judgeExe = Find-Exe 'codex.cmd' @((Join-Path $env:USERPROFILE 'tools\node\codex.cmd'))
+    } else { $judgeExe = Find-Exe 'claude' @((Join-Path $env:USERPROFILE '.local\bin\claude.exe')) }
     $git = Find-Exe 'git' @('C:\Program Files\Git\cmd\git.exe')
-    if (-not $py -or -not $claude -or -not $git) { Write-Log "找不到必要程式 python=$py claude=$claude git=$git"; $exitCode = 2; return }
+    if (-not $py -or -not $judgeExe -or -not $git) { Write-Log "找不到必要程式 python=$py $Engine=$judgeExe git=$git"; $exitCode = 2; return }
+    Write-Log "判讀引擎：$Engine（$judgeExe）"
     $kp = Join-Path $LanesDir 'kp.py'
     $kb = Join-Path $LanesDir 'kp_batch.py'
 
@@ -113,12 +123,13 @@ try {
         if (-not $first) { Write-Log '乾跑：找不到任何拼圖可測，結束'; $exitCode = 4; return }
         $p = $first.Split("`t"); $todo = @("$($p[0])`t$($p[1].Split(',')[0])")
     } elseif ($todo.Count -eq 0) {
-        Write-Log '沒有新照片／待判讀方向，不呼叫 claude，結束'
+        Write-Log '沒有新照片／待判讀方向，不呼叫模型，結束'
         return
     }
 
-    # 4) 分批呼叫 claude -p（每批是獨立短任務）
-    $template = [IO.File]::ReadAllText((Join-Path $LanesDir 'judge_prompt.md'), [Text.Encoding]::UTF8)
+    # 4) 分批呼叫判讀模型（每批是獨立短任務）
+    $promptFile = if ($Engine -eq 'codex') { 'judge_prompt_codex.md' } else { 'judge_prompt.md' }
+    $template = [IO.File]::ReadAllText((Join-Path $LanesDir $promptFile), [Text.Encoding]::UTF8)
     $batches = New-Object System.Collections.Generic.List[object]
     for ($i = 0; $i -lt $todo.Count; $i += $SheetsPerBatch) {
         $end = [Math]::Min($i + $SheetsPerBatch, $todo.Count) - 1
@@ -140,10 +151,18 @@ try {
             if (Test-Path -LiteralPath $out) { Remove-Item -LiteralPath $out -Force }
             $prompt = $template.Replace('{{SHEETDIR}}', $SheetDir).Replace('{{ITEMS}}', ($items -join "`n")).Replace('{{OUT}}', $out)
             Write-Log "批次 $bi/$($batches.Count)：$($labels.Count) 個方向（$($labels -join ',')）→ $out"
-            $argv = @('-p', '--model', $Model, '--allowedTools', 'Read,Write', '--max-turns', "$MaxTurns",
-                      '--strict-mcp-config', '--no-session-persistence', '--add-dir', $WorkDir)
-            $r = Invoke-Logged $claude $argv $prompt
-            if ($r.Code -ne 0) { Write-Log "批次 $bi claude 結束碼 $($r.Code)" }
+            if ($Engine -eq 'codex') {
+                # 拼圖直接用 -i 附上；唯讀沙箱、不存 session；最後一則回覆（JSON）由 -o 寫到 $out
+                $argv = @('exec', '--skip-git-repo-check', '--ephemeral', '-s', 'read-only', '-c', "model_reasoning_effort=$CodexEffort")
+                if ($CodexModel) { $argv += @('-m', $CodexModel) }
+                foreach ($t in $b) { $argv += @('-i', (Join-Path $SheetDir $t.Split("`t")[0])) }
+                $argv += @('-o', $out, '-')
+            } else {
+                $argv = @('-p', '--model', $Model, '--allowedTools', 'Read,Write', '--max-turns', "$MaxTurns",
+                          '--strict-mcp-config', '--no-session-persistence', '--add-dir', $WorkDir)
+            }
+            $r = Invoke-Logged $judgeExe $argv $prompt
+            if ($r.Code -ne 0) { Write-Log "批次 $bi $Engine 結束碼 $($r.Code)" }
             if (-not (Test-Path -LiteralPath $out)) { Write-Log "批次 $bi 沒有產生輸出檔，略過"; continue }
             $c = Invoke-Logged $py @($kb, 'check', $out, ($labels -join ','))
             if ($c.Code -ne 0) { Write-Log "批次 $bi 格式檢查不通過，不寫入（檔案保留供人工檢查）"; continue }
@@ -170,6 +189,7 @@ try {
         if ($r.Code -ne 0) { Write-Log "$step 失敗（exit $($r.Code)），結束"; $exitCode = 6; return }
     }
 
+    if ($NoCommit) { Write-Log '-NoCommit：不 commit／push，結束'; return }
     # 6) data/lanes/ 有變動才 commit＋push
     $st = & $git -C $Repo status --porcelain -- 'data/lanes' 2>&1 | ForEach-Object { "$_" }
     if (-not ($st | Where-Object { $_.Trim() })) { Write-Log 'data/lanes/ 沒有變動，不 commit'; return }

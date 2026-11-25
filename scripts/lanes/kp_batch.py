@@ -5,7 +5,7 @@
 """
 import sys, os, json, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from kp import MAN, JUD, jload
+from kp import MAN, JUD, jload, needs_judge
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -16,7 +16,7 @@ except Exception:
 def todo(limit):
     man = jload(MAN, {"approaches": {}}); J = jload(JUD, {})
     by = collections.OrderedDict(); n = 0
-    items = [a for k, a in man["approaches"].items() if a.get("status") == "ready" and k not in J and a.get("sheet") and a.get("label")]
+    items = [a for k, a in man["approaches"].items() if needs_judge(k, a, J) and a.get("sheet") and a.get("label")]
     items.sort(key=lambda a: (a["sheet"], a["label"]))
     for a in items:
         if n >= limit: break
@@ -34,10 +34,18 @@ def sample():
 
 def check(path, labels):
     want = [x for x in labels.split(",") if x]; errs = []
+    raw = open(path, encoding="utf-8-sig").read()
     try:
-        d = json.load(open(path, encoding="utf-8"))
+        d = json.loads(raw)
     except Exception as e:
-        print("JSON 無法解析:", e); sys.exit(1)
+        # 外部模型（codex -o）可能包 markdown 或前後加說明：取第一個 { 到最後一個 }，成功就改寫成乾淨 JSON
+        i, j = raw.find("{"), raw.rfind("}")
+        try:
+            d = json.loads(raw[i:j + 1]) if 0 <= i < j else None
+        except Exception:
+            d = None
+        if d is None: print("JSON 無法解析:", e); sys.exit(1)
+        json.dump(d, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1); print("已清掉 JSON 外的文字")
     if not isinstance(d, dict): print("頂層不是物件"); sys.exit(1)
     for lab in want:
         if lab not in d: errs.append(f"{lab} 缺漏")

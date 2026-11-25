@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from kp import MAN, JUD, jload, jsave
 man = jload(MAN, {"approaches": {}})
 lab2key = {a["label"]: k for k, a in man["approaches"].items() if a.get("label")}
+lab2key.update({a["label"]: k for k, a in man["approaches"].items() if a.get("label") and a.get("status") == "ready"})  # 標籤重複時以待判讀方向為準
 J = jload(JUD, {}); n = 0
 for lab, v in json.load(open(sys.argv[1], encoding="utf-8")).items():
     k = lab2key.get(lab)

@@ -1,4 +1,4 @@
-"""高雄＋屏東號誌路口：Mapillary 照片多模態判讀車道 → 自家資料集（CC BY-SA 4.0）。可重跑、可續跑。
+"""全台號誌路口（LANES_REGION=kp 時只做高雄＋屏東）：Mapillary 照片多模態判讀車道 → 自家資料集（CC BY-SA 4.0）。可重跑、可續跑。
 Token 只經 mly.py 從檔案讀取，不印、不寫檔。
 
 階段：
@@ -14,6 +14,10 @@ Token 只經 mly.py 從檔案讀取，不印、不寫檔。
   LANES_PBF       taiwan-latest.osm.pbf，預設 <repo>/../資料/搜尋/路網來源/osm/taiwan-latest.osm.pbf
   LANES_SIGNALS   taiwan-signals.bin，預設 <repo>/../資料/紅綠燈/taiwan-signals.bin
   LANES_RIDES     騎行軌跡回報包資料夾（找 */**/ride.gpx），預設 ~/資料中心/工作日誌/回報包
+  LANES_REGION    taiwan（預設，全台）或 kp（舊範圍：高雄＋屏東）；改了要重跑 extract
+  LANES_RECHECK_DAYS  pending／衝突方向多久重查一次 Mapillary（預設 7 天）
+每週上限：select N 的 N＝本週最多備妥幾個待判讀方向；Mapillary 查詢上限 900 次，其中 1/3 留給重查、其餘給從沒查過的路口。
+已判過的方向只有出現更新的照片才會重判（見 needs_judge）。
 輸出一律寫到 <repo>/data/lanes/。Mapillary token 只由 mly.py 從檔案讀取。
 """
 import sys, os, json, csv, math, glob, re, pickle, datetime, hashlib, collections
@@ -76,8 +80,13 @@ HW_JUDGE = {"trunk", "primary", "secondary", "tertiary"}
 RANK = {"trunk": 0, "primary": 0, "secondary": 1, "tertiary": 2}
 
 
+REGION = os.environ.get("LANES_REGION", "taiwan")
+RECHECK_DAYS = int(os.environ.get("LANES_RECHECK_DAYS", "7"))
+
+
 def in_region(la, lo):
-    """高雄市＋屏東縣（近似框；排除台南與台東）。"""
+    """預設全台（含離島）；LANES_REGION=kp 時為高雄市＋屏東縣（近似框；排除台南與台東）。"""
+    if REGION != "kp": return 21.8 <= la <= 26.5 and 118.0 <= lo <= 122.2
     if not (21.88 <= la <= 23.15 and 120.15 <= lo <= 120.92): return False
     if la > 22.90 and lo < 120.47: return False          # 台南（湖內／茄萣以北）
     if la > 23.0 and lo < 120.55: return False           # 台南南化/玉井一帶
@@ -91,6 +100,16 @@ def bearing(a, b): x, y = xy(b[0], b[1], a[0], a[1]); return math.degrees(math.a
 def adiff(a, b): return abs((a - b + 180) % 360 - 180)
 def ymd(ms): return datetime.datetime.utcfromtimestamp(ms / 1000).strftime("%Y-%m-%d") if ms else ""
 def today(): return datetime.date.today().isoformat()
+
+
+def days_since(d):
+    try: return (datetime.date.today() - datetime.date.fromisoformat(d)).days
+    except Exception: return 99999
+
+
+def needs_judge(k, a, J):
+    """ready 且（沒判過，或判讀紀錄的標籤不是目前標籤＝有新照片重選過、要重判）。"""
+    return a.get("status") == "ready" and (k not in J or J[k].get("label") != a.get("label"))
 
 
 def jload(p, d):
@@ -110,6 +129,11 @@ def extract():
         la, lo, fl = struct.unpack_from("<iiB", data, 32 + i * rs)
         la /= 1e6; lo /= 1e6
         if in_region(la, lo): sigs.append((la, lo, fl))
+    near = set()
+    for la, lo, _ in sigs:
+        k = (round(la / 0.003), round(lo / 0.003))
+        for a in (-1, 0, 1):
+            for b in (-1, 0, 1): near.add((k[0] + a, k[1] + b))
 
     class H(osmium.SimpleHandler):
         def __init__(s): super().__init__(); s.ways = []
@@ -117,7 +141,7 @@ def extract():
             if w.tags.get("highway") not in HW_KEEP: return
             try: nodes = [(nd.ref, nd.location.lat, nd.location.lon) for nd in w.nodes]
             except osmium.InvalidLocationError: return
-            if any(in_region(la, lo) for _, la, lo in nodes):
+            if any((round(la / 0.003), round(lo / 0.003)) in near for _, la, lo in nodes):
                 s.ways.append({"id": w.id, "tags": dict(w.tags), "nodes": nodes})
     h = H(); h.apply_file(PBF, locations=True, idx="flex_mem")
     pickle.dump({"ways": h.ways, "signals": sigs, "sig_ts": ts}, open(PKL, "wb"))
@@ -248,19 +272,26 @@ def select(limit=150, max_queries=900):
     inters.sort(key=lambda i: (i["tier"], -i["ride"], i["rank"]))
     print("intersections tier0/1/2:", collections.Counter(i["tier"] for i in inters))
     man = jload(MAN, {"approaches": {}, "runs": []}); A = man["approaches"]; judged = jload(JUD, {})
-    q = 0; ready = sum(1 for k, a in A.items() if a.get("status") == "ready")
+    q = 0; ready = sum(1 for k, a in A.items() if needs_judge(k, a, judged))
+    # 兩階段：先重查到期的 pending／衝突（最久沒查的優先，最多用 1/3 查詢額度），再查從沒查過的新路口。
+    # 已在 RECHECK_DAYS 內查過的不再花查詢；accepted 與已備妥的方向不重查。
+    rq, newq = [], []
     for it in inters:
-        if ready >= limit or q >= max_queries: break
-        c = it["c"]; d = 0.0007
         keys = [f'{a["way"]}:{a["dir"]}' for a in it["aps"]]
-        todo = []
-        for a, k in zip(it["aps"], keys):
-            old = A.get(k)
-            if old and old.get("status") in ("ready",): continue
-            if old and old.get("status") == "accepted": continue
-            todo.append((a, k))
+        todo = [(a, k) for a, k in zip(it["aps"], keys) if A.get(k, {}).get("status") not in ("ready", "accepted")]
         if not todo: continue
-        fresh = any(A.get(k, {}).get("status") == "pending" and A[k].get("checked") != today() for _, k in todo)
+        if any(k not in A for _, k in todo): newq.append((it, todo))
+        else:
+            age = min(days_since(A[k].get("checked", "")) for _, k in todo)
+            if age >= RECHECK_DAYS: rq.append((age, it, todo))
+    rq.sort(key=lambda t: -t[0])
+    plan = [(it, todo, max_queries // 3) for _, it, todo in rq] + [(it, todo, max_queries) for it, todo in newq]
+    print("recheck due", len(rq), "new intersections", len(newq))
+    for it, todo, qcap in plan:
+        if ready >= limit or q >= max_queries: break
+        if q >= qcap: continue
+        c = it["c"]; d = 0.0007
+        fresh = any(k in A and A[k].get("checked") != today() for _, k in todo)
         r = cg("images", bbox=f"{c[1]-d},{c[0]-d},{c[1]+d},{c[0]+d}", fields="id,captured_at,is_pano,compass_angle,computed_compass_angle,computed_geometry,geometry,sequence", limit=2000, **({"_fresh": True} if fresh else {}))
         q += 1; ims = r.get("data", [])
         for a, k in todo:
@@ -270,6 +301,7 @@ def select(limit=150, max_queries=900):
                     "lat": round(a["stop"][0], 6), "lon": round(a["stop"][1], 6), "ends_here": a["ends_here"], "osm_tl": a["osm_tl"],
                     "osm_lanes": a["osm_lanes"], "tier": it["tier"], "ride": it["ride"], "checked": today(), "n_cand": nc}
             if len(ps) >= 2 and (k not in judged or newest > old.get("newest", 0)):
+                if k in judged: base["prev_label"] = judged[k].get("label")  # 有新照片 → 重判（新標籤）
                 base.update(status="ready", imgs=[im["id"] for _, im in ps], caps=[f"{round(al)}m {ymd(im.get('captured_at'))}" for al, im in ps],
                             captured=[ymd(im.get("captured_at")) for _, im in ps], newest=newest)
                 A[k] = base; ready += 1
@@ -278,7 +310,7 @@ def select(limit=150, max_queries=900):
                 old["checked"] = today()
             else:
                 base.update(status="pending", newest=newest or old.get("newest", 0)); A[k] = {**old, **base}
-    man["runs"].append({"date": today(), "queries": q, "ready": ready}); jsave(MAN, man)
+    man["runs"].append({"date": today(), "region": REGION, "queries": q, "ready": ready}); jsave(MAN, man)
     print("queries", q, "ready", ready, "pending", sum(1 for a in A.values() if a["status"] == "pending"))
 
 
@@ -294,13 +326,30 @@ def thumb(iid):
 def sheets(per=4):
     from PIL import Image, ImageDraw
     man = jload(MAN, {}); judged = jload(JUD, {})
-    todo = [(k, a) for k, a in man["approaches"].items() if a["status"] == "ready" and k not in judged]
+    A = man["approaches"]
+    # 修復舊版編號 bug（標籤用「已編號數＋1」，重選時標籤被清掉就會撞號）：待判讀方向的標籤若與其他方向或其他方向的判讀紀錄重複，
+    # 清掉標籤與拼圖，下面重新編號、重拼。新標籤一律取「manifest 與判讀紀錄中最大編號＋1」。
+    owners = collections.defaultdict(set)
+    for k, a in A.items():
+        if a.get("label"): owners[a["label"]].add(k)
+    for k, j in judged.items():
+        if j.get("label"): owners[j["label"]].add(k)
+    fixed = 0
+    for k, a in A.items():
+        if needs_judge(k, a, judged) and a.get("label") and len(owners[a["label"]]) > 1:
+            a.pop("label"); a.pop("sheet", None); fixed += 1
+    if fixed: print("撞號重新編號", fixed)
+    nums = [int(l[1:]) for l in owners if re.fullmatch(r"A\d+", l)]
+    nxt = [max(nums, default=0) + 1]
+    def new_label():
+        l = f"A{nxt[0]:03d}"; nxt[0] += 1; return l
+    todo = [(k, a) for k, a in A.items() if needs_judge(k, a, judged) and not a.get("sheet")]
     todo.sort(key=lambda t: (t[1]["tier"], -t[1]["ride"], RANK[t[1]["hw"]]))
     n0 = len(glob.glob(os.path.join(SHEET, "S*.jpg"))); W = 760
     for s in range(0, len(todo), per):
         rows = []
         for k, a in todo[s:s + per]:
-            lab = a.get("label") or f"A{len([x for x in man['approaches'].values() if x.get('label')]) + 1:03d}"; a["label"] = lab
+            lab = a.get("label") or new_label(); a["label"] = lab
             tiles = []
             for iid, cap in zip(a["imgs"][:2], a["caps"][:2]):
                 im = Image.open(thumb(iid)).convert("RGB"); w, h = im.size
@@ -368,6 +417,7 @@ def decide():
     for k, j in J.items():
         a = A.get(k)
         if not a: continue
+        if needs_judge(k, a, J): stats["awaiting_rejudge"] += 1; continue  # 新照片已備妥、舊判讀不套用到新照片
         note = j.get("note", "")
         lanes, tl, tlc = judge_one(j["a"], j["b"])
         if not lanes:
