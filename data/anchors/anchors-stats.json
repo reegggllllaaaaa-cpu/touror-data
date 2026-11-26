@@ -1,0 +1,263 @@
+{
+ "built_at": "2026-11-26T01:13:06Z",
+ "anchors": 250581,
+ "clusters": 177548,
+ "landmarks": 26818,
+ "landmark_candidates": 66990,
+ "bytes": 17006592,
+ "groups": {
+  "全部地面路口群": {
+   "n": 177548,
+   "named2_pct": 56.5,
+   "named2_main_pct": 35.2,
+   "any_name_pct": 83.5,
+   "lm30_raw_pct": 8.9,
+   "lm30_pct": 2.8,
+   "lm30_usable_pct": 1.2,
+   "anchor_any_pct": 56.7,
+   "conf_high_pct": 3.5
+  },
+  "號誌路口群": {
+   "n": 35290,
+   "named2_pct": 74.5,
+   "named2_main_pct": 64.1,
+   "any_name_pct": 96.6,
+   "lm30_raw_pct": 21.1,
+   "lm30_pct": 8.0,
+   "lm30_usable_pct": 3.6,
+   "anchor_any_pct": 75.1,
+   "conf_high_pct": 17.7
+  },
+  "號誌路口群:南投縣": {
+   "n": 565,
+   "named2_pct": 74.7,
+   "named2_main_pct": 65.7,
+   "any_name_pct": 98.4,
+   "lm30_raw_pct": 18.9,
+   "lm30_pct": 8.7,
+   "lm30_usable_pct": 5.7,
+   "anchor_any_pct": 75.4,
+   "conf_high_pct": 0.2
+  },
+  "號誌路口群:台中市": {
+   "n": 5674,
+   "named2_pct": 84.1,
+   "named2_main_pct": 73.8,
+   "any_name_pct": 99.3,
+   "lm30_raw_pct": 19.3,
+   "lm30_pct": 7.0,
+   "lm30_usable_pct": 3.0,
+   "anchor_any_pct": 84.4,
+   "conf_high_pct": 7.2
+  },
+  "號誌路口群:台北市": {
+   "n": 2840,
+   "named2_pct": 74.0,
+   "named2_main_pct": 41.8,
+   "any_name_pct": 98.8,
+   "lm30_raw_pct": 32.6,
+   "lm30_pct": 11.8,
+   "lm30_usable_pct": 3.1,
+   "anchor_any_pct": 74.8,
+   "conf_high_pct": 87.5
+  },
+  "號誌路口群:台南市": {
+   "n": 5313,
+   "named2_pct": 69.1,
+   "named2_main_pct": 60.2,
+   "any_name_pct": 91.0,
+   "lm30_raw_pct": 15.2,
+   "lm30_pct": 5.7,
+   "lm30_usable_pct": 3.2,
+   "anchor_any_pct": 69.8,
+   "conf_high_pct": 30.6
+  },
+  "號誌路口群:台東縣": {
+   "n": 278,
+   "named2_pct": 82.7,
+   "named2_main_pct": 70.9,
+   "any_name_pct": 98.6,
+   "lm30_raw_pct": 18.7,
+   "lm30_pct": 8.6,
+   "lm30_usable_pct": 5.0,
+   "anchor_any_pct": 82.7,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:嘉義市": {
+   "n": 589,
+   "named2_pct": 82.2,
+   "named2_main_pct": 75.0,
+   "any_name_pct": 99.5,
+   "lm30_raw_pct": 17.0,
+   "lm30_pct": 5.9,
+   "lm30_usable_pct": 3.1,
+   "anchor_any_pct": 82.9,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:嘉義縣": {
+   "n": 701,
+   "named2_pct": 45.4,
+   "named2_main_pct": 42.2,
+   "any_name_pct": 81.7,
+   "lm30_raw_pct": 13.8,
+   "lm30_pct": 5.3,
+   "lm30_usable_pct": 3.7,
+   "anchor_any_pct": 46.9,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:基隆市": {
+   "n": 281,
+   "named2_pct": 70.5,
+   "named2_main_pct": 62.3,
+   "any_name_pct": 98.9,
+   "lm30_raw_pct": 28.5,
+   "lm30_pct": 11.7,
+   "lm30_usable_pct": 5.7,
+   "anchor_any_pct": 71.5,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:宜蘭縣": {
+   "n": 846,
+   "named2_pct": 71.2,
+   "named2_main_pct": 64.4,
+   "any_name_pct": 95.4,
+   "lm30_raw_pct": 15.0,
+   "lm30_pct": 6.7,
+   "lm30_usable_pct": 4.8,
+   "anchor_any_pct": 72.1,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:屏東縣": {
+   "n": 1265,
+   "named2_pct": 78.7,
+   "named2_main_pct": 70.0,
+   "any_name_pct": 99.4,
+   "lm30_raw_pct": 19.3,
+   "lm30_pct": 6.8,
+   "lm30_usable_pct": 4.7,
+   "anchor_any_pct": 79.2,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:彰化縣": {
+   "n": 2539,
+   "named2_pct": 71.4,
+   "named2_main_pct": 60.4,
+   "any_name_pct": 97.3,
+   "lm30_raw_pct": 15.5,
+   "lm30_pct": 5.5,
+   "lm30_usable_pct": 3.8,
+   "anchor_any_pct": 72.0,
+   "conf_high_pct": 63.1
+  },
+  "號誌路口群:新北市": {
+   "n": 2795,
+   "named2_pct": 74.8,
+   "named2_main_pct": 62.4,
+   "any_name_pct": 99.1,
+   "lm30_raw_pct": 32.4,
+   "lm30_pct": 13.8,
+   "lm30_usable_pct": 4.2,
+   "anchor_any_pct": 75.6,
+   "conf_high_pct": 0.1
+  },
+  "號誌路口群:新竹市": {
+   "n": 551,
+   "named2_pct": 71.3,
+   "named2_main_pct": 64.2,
+   "any_name_pct": 98.4,
+   "lm30_raw_pct": 29.2,
+   "lm30_pct": 13.4,
+   "lm30_usable_pct": 4.9,
+   "anchor_any_pct": 72.4,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:新竹縣": {
+   "n": 855,
+   "named2_pct": 76.8,
+   "named2_main_pct": 73.8,
+   "any_name_pct": 98.1,
+   "lm30_raw_pct": 23.6,
+   "lm30_pct": 9.8,
+   "lm30_usable_pct": 4.6,
+   "anchor_any_pct": 77.5,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:桃園市": {
+   "n": 2927,
+   "named2_pct": 74.1,
+   "named2_main_pct": 63.7,
+   "any_name_pct": 98.5,
+   "lm30_raw_pct": 26.4,
+   "lm30_pct": 10.1,
+   "lm30_usable_pct": 3.9,
+   "anchor_any_pct": 74.9,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:澎湖縣": {
+   "n": 188,
+   "named2_pct": 47.9,
+   "named2_main_pct": 46.8,
+   "any_name_pct": 60.1,
+   "lm30_raw_pct": 12.8,
+   "lm30_pct": 4.3,
+   "lm30_usable_pct": 2.7,
+   "anchor_any_pct": 48.9,
+   "conf_high_pct": 66.0
+  },
+  "號誌路口群:花蓮縣": {
+   "n": 504,
+   "named2_pct": 79.0,
+   "named2_main_pct": 73.4,
+   "any_name_pct": 99.6,
+   "lm30_raw_pct": 18.3,
+   "lm30_pct": 6.7,
+   "lm30_usable_pct": 4.6,
+   "anchor_any_pct": 79.4,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:苗栗縣": {
+   "n": 927,
+   "named2_pct": 62.5,
+   "named2_main_pct": 58.5,
+   "any_name_pct": 92.3,
+   "lm30_raw_pct": 17.7,
+   "lm30_pct": 6.8,
+   "lm30_usable_pct": 3.7,
+   "anchor_any_pct": 63.1,
+   "conf_high_pct": 0.1
+  },
+  "號誌路口群:金門縣": {
+   "n": 24,
+   "named2_pct": 83.3,
+   "named2_main_pct": 83.3,
+   "any_name_pct": 100.0,
+   "lm30_raw_pct": 0.0,
+   "lm30_pct": 0.0,
+   "lm30_usable_pct": 0.0,
+   "anchor_any_pct": 83.3,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:雲林縣": {
+   "n": 1117,
+   "named2_pct": 66.3,
+   "named2_main_pct": 62.4,
+   "any_name_pct": 89.3,
+   "lm30_raw_pct": 15.6,
+   "lm30_pct": 6.3,
+   "lm30_usable_pct": 3.5,
+   "anchor_any_pct": 67.1,
+   "conf_high_pct": 0.0
+  },
+  "號誌路口群:高雄市": {
+   "n": 4511,
+   "named2_pct": 78.5,
+   "named2_main_pct": 72.7,
+   "any_name_pct": 99.2,
+   "lm30_raw_pct": 20.3,
+   "lm30_pct": 6.9,
+   "lm30_usable_pct": 3.2,
+   "anchor_any_pct": 79.0,
+   "conf_high_pct": 0.1
+  }
+ }
+}

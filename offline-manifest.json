@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "version": "20261210",
- "generated": "2026-11-25T17:40:22Z",
+ "generated": "2026-11-26T01:13:55Z",
  "files": [
   {
    "name": "valhalla_tiles.tar",
@@ -72,6 +72,16 @@
    "version": "20261124",
    "minAppVersion": "0.0.1",
    "description": "路口與交流道圖層（選用）：© OpenStreetMap contributors，ODbL 1.0"
+  },
+  {
+   "name": "touror_junction_anchors.sqlite",
+   "kind": "junction_anchors",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261126-anchors/touror_junction_anchors.sqlite",
+   "bytes": 17006592,
+   "sha256": "9dd32a0d913ca0c56ce5cccd0862ee5999482c9b135ed8860167b299a97cd15e",
+   "version": "20261126",
+   "minAppVersion": "0.0.1",
+   "description": "路口播報錨點（選用）：路名、號誌信心、轉角地標；© OpenStreetMap contributors，ODbL 1.0；Overture Maps；政府開放資料"
   }
  ],
  "attribution": [

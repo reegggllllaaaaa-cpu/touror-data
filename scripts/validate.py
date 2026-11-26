@@ -35,7 +35,7 @@ def check_speedcams(doc):
     return p
 
 
-OFFLINE_KINDS = ('tiles', 'basemap', 'places', 'places_overture', 'places_gov', 'junctions', 'addr', 'restrictions')
+OFFLINE_KINDS = ('tiles', 'basemap', 'places', 'places_overture', 'places_gov', 'junctions', 'addr', 'restrictions', 'junction_anchors')
 
 
 def offline_manifest_problems(doc):
