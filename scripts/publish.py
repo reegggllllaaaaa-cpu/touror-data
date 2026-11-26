@@ -45,6 +45,7 @@ FILES = {
     'speedcams-full': ('data/speedcams/speedcams-full.csv', GOV_LICENSE, '資料來源：政府資料開放平臺（內政部警政署及各縣市警察局）'),
     'mobile-hotspots': ('data/speedcams/mobile-hotspots.json', GOV_LICENSE, '資料來源：政府資料開放平臺（高雄市政府警察局、臺中市政府警察局）；參考點 © OpenStreetMap contributors'),
     'taiwan-signals': ('data/signals/taiwan-signals.bin', ODBL, '© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市、高雄市、新竹市政府（政府資料開放授權條款第1版）；使用者實地確認補點'),
+    'taiwan-signals-quality': ('data/signals/taiwan-signals-quality.bin', ODBL, '© OpenStreetMap contributors；政府號誌位置（政府資料開放授權條款第1版）；Mapillary 地圖物件偵測（CC BY-SA 4.0）'),
     'taiwan-reststops': ('data/reststops/taiwan-reststops.bin', ODBL, '© OpenStreetMap contributors'),
     'signal-timing-taipei': ('data/signals/signal-timing-taipei.json', GOV_LICENSE, '資料來源：臺北市政府交通局（臺北市路口號誌時制計畫）'),
     'signal-timing-penghu': ('data/signals/signal-timing-penghu.json', GOV_LICENSE, '資料來源：澎湖縣政府（紅綠燈號誌位置一覽表）'),
@@ -52,7 +53,7 @@ FILES = {
 }
 GROUPS = {
     'speedcams': ['speedcams', 'speedcams-full', 'mobile-hotspots'],
-    'signals': ['taiwan-signals'],
+    'signals': ['taiwan-signals', 'taiwan-signals-quality'],
     'reststops': ['taiwan-reststops'],
     'timing': ['signal-timing-taipei', 'signal-timing-penghu'],
     'speedlimits': ['speed-limits-national'],
@@ -201,9 +202,16 @@ def group_signals(report, pbf, no_osm):
         rows = snap_rows(report, rows, pbf)
     report['gov_signals'] = stats
     data = formats.write_signals_bin(rows, osm_ts)
-    formats.read_signals_bin(data)
+    _, final_rows = formats.read_signals_bin(data)
+    # 逐筆信心＋疑似漏燈路口旁檔（與 taiwan-signals.bin 排序後的筆序對齊）
+    from signals import signal_quality
+    qdata, qst = signal_quality.build(final_rows, pbf, signals_crc=formats.signals_header_crc(data))
+    formats.read_signal_quality_bin(qdata)
+    qst['coverage'] = signal_quality.coverage(final_rows)
+    report['signals_quality'] = qst
     floor = datetime.datetime.fromtimestamp(osm_ts, manifest.TAIPEI).strftime('%Y%m%d') if osm_ts else None
-    return {'taiwan-signals': (data, floor, dict(count=len(rows), osm=len(osm_rows), gov_added=len(rows) - len(base_rows), gov_existing=len(existing_gov_rows) if no_osm else 0))}
+    return {'taiwan-signals': (data, floor, dict(count=len(rows), osm=len(osm_rows), gov_added=len(rows) - len(base_rows), gov_existing=len(existing_gov_rows) if no_osm else 0)),
+            'taiwan-signals-quality': (qdata, floor, dict(count=len(final_rows), suspects=qst['suspects'], **qst['levels']))}
 
 
 def group_reststops(report, pbf):

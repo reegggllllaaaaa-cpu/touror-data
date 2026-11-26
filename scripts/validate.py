@@ -107,6 +107,16 @@ def main():
                     problems += build_speed_limits.validate(full)
         except Exception as ex:  # noqa: BLE001
             problems.append('%s 讀取失敗：%s' % (name, ex))
+    sq = os.path.join(paths.ROOT, 'data', 'signals', 'taiwan-signals-quality.bin')
+    sb = os.path.join(paths.ROOT, 'data', 'signals', 'taiwan-signals.bin')
+    if os.path.exists(sq) and os.path.exists(sb):
+        try:
+            sdata = open(sb, 'rb').read()
+            qh, _, _ = formats.read_signal_quality_bin(open(sq, 'rb').read())
+            if qh['count'] != len(formats.read_signals_bin(sdata)[1]) or qh['signals_crc'] != formats.signals_header_crc(sdata):
+                problems.append('taiwan-signals-quality 與 taiwan-signals 筆數或 crc 不對齊')
+        except Exception as ex:  # noqa: BLE001
+            problems.append('taiwan-signals-quality 讀取失敗：%s' % ex)
     _, cp = curated.load_all(paths.CURATED)
     problems += cp
     for p in problems:

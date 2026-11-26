@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-25T14:18:40Z",
+ "generated": "2026-11-26T00:27:32Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -393,10 +393,10 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261125.5",
-   "date": "2026-11-25",
+   "version": "20261126.1",
+   "date": "2026-11-26",
    "count": 81642,
-   "sha256": "e17bae5d96206ff3ff70258fea32801496c958ed040849e5884187bb0bc79e2f",
+   "sha256": "41fe3e62adaf34a701406b43a7c5e267e453098959ef4074175dcddb986a8278",
    "bytes": 734810,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
@@ -456,8 +456,26 @@
      "title": "Touror 候選路口 Mapillary 街景照片 AI 判讀號誌",
      "url": "https://www.mapillary.com/",
      "dataset": ""
+    },
+    {
+     "title": "Mapillary 地圖物件：號誌燈頭偵測（object--traffic-light--*）",
+     "url": "https://www.mapillary.com/",
+     "dataset": ""
     }
    ]
+  },
+  {
+   "name": "taiwan-signals-quality",
+   "path": "data/signals/taiwan-signals-quality.bin",
+   "version": "20261126.1",
+   "date": "2026-11-26",
+   "count": 81642,
+   "sha256": "b83758e83ef1d935a7501b751e8dc490cc75c29e6eb568b7db15bf75278525d3",
+   "bytes": 99845,
+   "minAppVersion": "0.0.1",
+   "license": "Open Database License（ODbL）1.0",
+   "attribution": "© OpenStreetMap contributors；政府號誌位置（政府資料開放授權條款第1版）；Mapillary 地圖物件偵測（CC BY-SA 4.0）",
+   "sources": []
   },
   {
    "name": "taiwan-speedlimits",

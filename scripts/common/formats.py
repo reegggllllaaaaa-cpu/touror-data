@@ -114,6 +114,42 @@ def read_speedlimits_bin(data):
     return dict(version=ver, count=n, ts=ts, routes=len(routes)), out
 
 
+# taiwan-signals-quality.bin（TSGQ v1，2026-11-26）：與 taiwan-signals.bin 逐筆對齊的信心旁檔，App 不讀也不影響 TSIG。
+# 檔頭 32 bytes：'TSGQ', <H 版本=1, <H 檔頭長=32, <I 號誌筆數 n, <I 疑似漏燈點數 m, <I 對應 TSIG 檔頭的 crc32,
+#   <I 本檔內容 crc32, 8 bytes 保留（0）。
+# 內容：n bytes（第 i byte 對應 taiwan-signals.bin 第 i 筆）：
+#   bit0-1 信心 1=low 2=medium 3=high；bit2 OSM；bit3 政府清單 40 m 內；bit4 Mapillary（偵測≥2 照片或照片判讀）；
+#   bit5 使用者實地確認；bit6 與相鄰號誌（80–1000 m 最近 4 盞）之間有疑似未收錄號誌路口；bit7 保留。
+# 接著 m 筆疑似未收錄號誌路口，各 9 bytes：<i lat_e6, <i lon_e6, <B 線索（1 OSM 號誌／號誌行人穿越節點、
+#   2 Mapillary 燈頭偵測、4 主幹道（trunk/primary/secondary 不同路名）交會）。
+TSGQ = b'TSGQ'
+
+
+def write_signal_quality_bin(q, suspects, signals_crc=0):
+    body = bytes(q) + b''.join(struct.pack('<iiB', a, b, c) for a, b, c in sorted(suspects))
+    return TSGQ + struct.pack('<HHIIII8x', 1, 32, len(q), len(suspects), signals_crc or 0, zlib.crc32(body) & 0xFFFFFFFF) + body
+
+
+def read_signal_quality_bin(data):
+    if data[:4] != TSGQ or len(data) < 32:
+        raise FormatError('號誌信心檔開頭不是 TSGQ')
+    ver, hs, n, m, scrc, crc = struct.unpack_from('<HHIIII', data, 4)
+    if ver != 1 or hs != 32 or len(data) != 32 + n + 9 * m:
+        raise FormatError('號誌信心檔長度或版本不符')
+    body = data[32:]
+    if zlib.crc32(body) & 0xFFFFFFFF != crc:
+        raise FormatError('號誌信心檔 crc 不符')
+    q = body[:n]
+    if any(b & 3 == 0 for b in q):
+        raise FormatError('號誌信心檔有未定信心的紀錄')
+    sus = [struct.unpack_from('<iiB', body, n + 9 * i) for i in range(m)]
+    return dict(version=ver, count=n, suspects=m, signals_crc=scrc), q, sus
+
+
+def signals_header_crc(data):
+    return struct.unpack_from('<I', data, 16)[0]
+
+
 def load_json(data):
     return json.loads(data.decode('utf-8-sig'))
 
@@ -126,6 +162,9 @@ def record_keys(name, data):
     if name == 'taiwan-reststops':
         _, rows = read_reststops_bin(data)
         return {(r[0], r[1], r[2]): r[3:] for r in rows}
+    if name == 'taiwan-signals-quality':
+        _, q, sus = read_signal_quality_bin(data)
+        return {('s', a, b): c for a, b, c in sus}
     doc = load_json(data)
     if name == 'speedcams':
         return {c['i']: json.dumps(c, sort_keys=True, ensure_ascii=False) for c in doc['cameras']}
@@ -142,6 +181,8 @@ def count_records(name, data):
     """筆數（二進位檔是紀錄數，同座標的重複節點也算；JSON 是陣列長度）"""
     if name == 'taiwan-signals':
         return len(read_signals_bin(data)[1])
+    if name == 'taiwan-signals-quality':
+        return read_signal_quality_bin(data)[0]['count']
     if name == 'taiwan-reststops':
         return len(read_reststops_bin(data)[1])
     if name == 'taiwan-speedlimits':

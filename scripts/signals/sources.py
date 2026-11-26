@@ -34,6 +34,11 @@ GOV_SIGNAL_SOURCES = [
     dict(key='mapillary_ai', dataset='', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='Mapillary 照片判讀',
          static_path='data/gov-signals', csv_source='mapillary-ai', url='https://www.mapillary.com/',
          title='Touror 候選路口 Mapillary 街景照片 AI 判讀號誌', lat=('lat',), lon=('lon',), name=('name',)),
+    # Mapillary map_features 號誌燈頭偵測（全台，fetch_mly_signals.py；照片≥2、25 m 內有平面路口、原本無號誌；座標取路口）
+    dict(key='mapillary_detect', dataset='', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='Mapillary 號誌偵測',
+         static_path='data/gov-signals', csv_source='mapillary-detect', url='https://www.mapillary.com/',
+         confidence='medium', confidence_note='單一來源（Mapillary 物件偵測）',
+         title='Mapillary 地圖物件：號誌燈頭偵測（object--traffic-light--*）', lat=('lat',), lon=('lon',), name=('name',)),
 ]
 
 # 時制（秒數）：臺北市 145720 三個資源＋澎湖 113153（同一份號誌表內含綠／黃燈秒數）
