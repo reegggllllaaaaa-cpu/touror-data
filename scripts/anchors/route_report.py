@@ -81,7 +81,7 @@ def main():
     import valhalla
     cfg = valhalla.get_config(tile_extract=TD + '/valhalla_tiles.tar', tile_dir=TD, verbose=False)
     actor = valhalla.Actor(cfg)
-    out = ['', '| # | 動作 | 轉入 | 錨點（號誌信心／路名／地標／幾何） | 遠層句 | 近層句 | 採用錨 |', '|---|---|---|---|---|---|---|']
+    out = ['', '| # | 動作 | 轉入 | 錨點（號誌信心／交會路(等級)／幾何） | 地標 | 遠層句 | 近層句 | 採用錨 |', '|---|---|---|---|---|---|---|---|']
     md = []
     for title, o, d in ROUTES:
         O, D = resolve(o), resolve(d)
@@ -92,7 +92,7 @@ def main():
         for i in range(1, len(pts)):
             a, b = xy(*pts[i - 1], lat0), xy(*pts[i], lat0); cum.append(cum[-1] + math.hypot(a[0] - b[0], a[1] - b[1]))
         la = [p[0] for p in pts]; lo = [p[1] for p in pts]
-        rows = db.execute('SELECT junction_id, lat_e7, lon_e7, spoken_a, spoken_b, signal_conf, geom, best_lm, name_a FROM anchor WHERE lat_e7 BETWEEN ? AND ? AND lon_e7 BETWEEN ? AND ?',
+        rows = db.execute('SELECT junction_id, lat_e7, lon_e7, spoken_a, spoken_b, signal_conf, geom, best_lm, name_a, cluster_id, same_name_ambiguous FROM anchor WHERE lat_e7 BETWEEN ? AND ? AND lon_e7 BETWEEN ? AND ?',
                           (int((min(la) - .001) * 1e7), int((max(la) + .001) * 1e7), int((min(lo) - .001) * 1e7), int((max(lo) + .001) * 1e7))).fetchall()
         on = []
         for r in rows:
@@ -120,13 +120,21 @@ def main():
             mid = [g for g in groups if prev_s + 20 < g[0] < st - 20]
             sig_mid = [g for g in mid if g[1][5] >= 1]
             tconf = tj[1][5] if tj else 0
-            names = [n for n in (tj[1][3], tj[1][4]) if n and '橋' not in n] if tj else []
             cur = base((mans[mans.index(m) - 1].get('street_names') or [''])[0]) if mans.index(m) else ''
+            ids = [r[0] for s, r in on if abs(s - tj[0]) < 30] if tj else []
+            cids = sorted({r[9] for s, r in on if abs(s - tj[0]) < 30}) if tj else []
+            roads = db.execute('SELECT spoken, hw, alley, name FROM road WHERE cluster_id IN (%s) ORDER BY alley, CASE hw WHEN 0 THEN 9 ELSE hw END' % ','.join('?' * len(cids)), cids).fetchall() if cids else []
+            names = []
+            for sp, h, al, nm in roads:
+                sp = nm if al else sp
+                if sp and '橋' not in sp and sp not in [x[0] for x in names]: names.append((sp, h, al))
             raw = None
             if tj:
-                ids = [r[0] for s, r in on if abs(s - tj[0]) < 30]
-                raw = db.execute('SELECT name_spoken, score, same_brand_400, dist_dm FROM landmark WHERE junction_id IN (%s) ORDER BY score DESC LIMIT 1' % ','.join('?' * len(ids)), ids).fetchone() if ids else None
-            cross = road if road and road in names else (next((n for n in names if n != road), '') if names else '')
+                raw = db.execute('SELECT name_spoken, score, same_brand_near, dist_dm FROM landmark WHERE junction_id IN (%s) ORDER BY score DESC LIMIT 1' % ','.join('?' * len(cids)), cids).fetchone() if cids else None
+            # 交會路：排除目前行駛道路（同名路口，例：沿九如一路在九如一路路口）；轉入路在群內就用它，否則取非巷弄、等級高者，全部同名時用巷名（例：九如一路239巷）
+            cands_x = [n for n, h, al in names if n != cur]
+            cross = road if road in cands_x else (cands_x[0] if cands_x else '')
+            amb = bool(tj and tj[1][10])
             lm = None
             if tj:
                 for jid in [tj[1][0]] + [r[0] for s, r in on if abs(s - tj[0]) < 30]:
@@ -145,11 +153,14 @@ def main():
             after_bridge = bridge and not [g for g in mid if g[0] > bridge[-1][0] + 30]
             reliable = all(g[1][5] >= 2 and not g[2] & 16 for g in sig_mid)
             n = len(sig_mid)
-            anchors = f"號誌{tconf}／{'、'.join(names) or '無路名'}／{(lm[0] + '(' + corner + ',分' + str(lm[4]) + ')') if lm else '無地標'}" + (f'（候選未達門檻：{raw[0]} 分{raw[1]} 同品牌{raw[2]}）' if raw and not lm else '') + ('／橋後第一路口' if after_bridge else '') + (f'／中間燈{n}(可信)' if reliable else f'／中間燈{n}(有低信心)')
+            HWN = {0: '?', 1: '國道', 2: '快速', 3: '主要', 4: '次要', 5: '三級', 6: '一般', 7: '住宅', 8: '巷'}
+            anchors = f"號誌{tconf}／{'、'.join(n + '(' + HWN[h] + ')' for n, h, al in names) or '無路名'}" + ('／同名路口' if amb else '')
+            lmcell = (f'{lm[0]}（{corner}，{CAT[lm[1]]}）' if lm else ('無' + (f'（候選 {raw[0]} 未達門檻）' if raw else '')))
+            anchors += '' + ('／橋後第一路口' if after_bridge else '') + (f'／中間燈{n}(可信)' if reliable else f'／中間燈{n}(有低信心)')
             tgt = road or cross
             if tconf >= 1 and lm:
-                far, near_, used = f'在有{lm[0]}的紅綠燈{dirw}，{tgt}', f'{lm[0]}那個紅綠燈{dirw}', 'B'
-                if n and n <= 3: far = f'過{CN[n]}個紅綠燈，' + far; used = 'A+B'
+                far, near_, used = f'下個紅綠燈，在{lm[0]}{dirw}{tgt}', f'在{lm[0]}{dirw}', 'B'
+                if n and n <= 3: far = f'過{CN[n]}個紅綠燈，在{lm[0]}{dirw}{tgt}'; used = 'A+B'
             elif tconf >= 1 and n <= 3 and reliable:
                 far = (f'過{CN[n]}個紅綠燈，{dirw}{tgt}' if n else f'下個紅綠燈{dirw}{tgt}'); near_ = f'下個紅綠燈{dirw}'; used = 'A'
             elif tconf >= 1 and n <= 3 and cross:
@@ -168,7 +179,7 @@ def main():
             else:
                 far, near_, used = f'準備{dirw}{tgt}', f'這裡{dirw}', '最後手段'
             assert not re.search(r'公尺|公里|秒|分鐘|\d+ ?(m|km)\b', far + near_), far + near_
-            md.append(f"| {k} | {dirw} | {tgt or '（無名）'} | {anchors} | {far} | {near_} | {used} |")
+            md.append(f"| {k} | {dirw} | {tgt or '（無名）'} | {anchors} | {lmcell} | {far} | {near_} | {used} |")
             prev_s = st
     print('\n'.join(md))
 

@@ -76,12 +76,12 @@
   {
    "name": "touror_junction_anchors.sqlite",
    "kind": "junction_anchors",
-   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261126-anchors/touror_junction_anchors.sqlite",
-   "bytes": 17006592,
-   "sha256": "9dd32a0d913ca0c56ce5cccd0862ee5999482c9b135ed8860167b299a97cd15e",
+   "url": "https://github.com/reegggllllaaaaa-cpu/touror-data/releases/download/offline-20261126-anchors-v2/touror_junction_anchors.sqlite",
+   "bytes": 30859264,
+   "sha256": "d3c196a4ec86ba2b14ec5e4984f6aec3eb9e966a87be014c83a0ae8c7daa64cd",
    "version": "20261126",
    "minAppVersion": "0.0.1",
-   "description": "路口播報錨點（選用）：路名、號誌信心、轉角地標；© OpenStreetMap contributors，ODbL 1.0；Overture Maps；政府開放資料"
+   "description": "路口播報錨點（選用，schema 2）：路名與道路等級、號誌信心、轉角地標、同名路口旗標；© OpenStreetMap contributors，ODbL 1.0；Overture Maps；政府開放資料"
   }
  ],
  "attribution": [

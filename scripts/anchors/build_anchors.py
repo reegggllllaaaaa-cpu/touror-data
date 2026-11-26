@@ -17,7 +17,8 @@ Schema（見 SCHEMA 常數）：
     name_a/name_b：交會兩條路全名（路口庫 name 以「／」拆）；spoken_*：去掉「X段」後的念法；同一條路不同段 → spoken_b 空。
     signal_conf：0 無號誌、1 低（單一來源／只有路口庫標記）、2 中、3 高（taiwan-signals-quality 等級，40 m 內取最高）。
     geom 位元：1 T字（可能「路底」）、2 橋進出口、4 隧道進出口、8 圓環、16 附近有疑似漏燈、32 交會路含巷／弄、64 兩條可念路名。
-    best_lm：landmark.id（可用：≤30 m、score≥50、400 m 內無同品牌）；沒有則 NULL。
+    best_lm：landmark.id（v2 依類別門檻，見 LM_RULE；加油站 ≤30 m／300 m、便利商店與速食 ≤20 m／150 m 且少見品牌優先、
+      學校醫院廟宇捷運郵局銀行 ≤40 m／300 m）；沒有則 NULL。dist 取同一家多來源點中離路口最近者。
     同一實際路口（路口庫 25 m 內的點連成「路口群」，雙向分隔道路常有 2-4 點）共用路名、號誌、地標；landmark 掛在群的第一個點。
     geom 64＝兩條不同路名（含巷名牌）；geom 32＝其中一條是巷／弄。
   landmark(id PK, junction_id, name_spoken, brand, cat, bearing, dist_dm, score, same_brand_400, src)
@@ -39,18 +40,66 @@ PROJ = os.path.dirname(paths.ROOT)
 SEARCH = os.path.join(PROJ, '資料', '搜尋')
 SIG_BIN = os.path.join(paths.DATA, 'signals', 'taiwan-signals.bin')
 SIGQ_BIN = os.path.join(paths.DATA, 'signals', 'taiwan-signals-quality.bin')
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 SKIP_KINDS = {1, 3, 4, 11}  # 交流道、匝道分流／合流／未知：高速公路另用交流道錨
+PBF = os.path.join(PROJ, 'osm-source', 'taiwan-latest.osm.pbf')
 
+# schema v2（2026-11-26 主管決定）：
+#  anchor 加 cluster_id（路口群代表點＝landmark／road 的 junction_id）、hw_a／hw_b（name_a／name_b 的 OSM highway 等級）、
+#    same_name_ambiguous（群內有兩條同主幹名的路，例：九如一路／九如一路239巷、光明路二段／三段）、alley_name（群內第一個巷弄全名）。
+#  road：群內每條交會路分開列（App 以「轉入路」排除後取交會路念；全部同名時用巷名）。
+#  landmark：same_brand_400 改 same_brand_near（依類別的混淆半徑）、加 usable（依類別門檻）。
+#  hw 等級：1 motorway 2 trunk 3 primary 4 secondary 5 tertiary 6 unclassified 7 residential 8 living_street／service 0 未知。
+#    主要道路以上（hw 1-3）號誌桿路名牌較可靠。
 SCHEMA = """
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
 CREATE TABLE anchor(junction_id INTEGER PRIMARY KEY, lat_e7 INTEGER NOT NULL, lon_e7 INTEGER NOT NULL,
   name_a TEXT NOT NULL, name_b TEXT NOT NULL, spoken_a TEXT NOT NULL, spoken_b TEXT NOT NULL,
-  signal_conf INTEGER NOT NULL, geom INTEGER NOT NULL, best_lm INTEGER);
+  signal_conf INTEGER NOT NULL, geom INTEGER NOT NULL, best_lm INTEGER,
+  cluster_id INTEGER NOT NULL, hw_a INTEGER NOT NULL, hw_b INTEGER NOT NULL,
+  same_name_ambiguous INTEGER NOT NULL, alley_name TEXT NOT NULL);
+CREATE TABLE road(cluster_id INTEGER NOT NULL, name TEXT NOT NULL, spoken TEXT NOT NULL, hw INTEGER NOT NULL,
+  alley INTEGER NOT NULL, PRIMARY KEY(cluster_id, name)) WITHOUT ROWID;
 CREATE TABLE landmark(id INTEGER PRIMARY KEY, junction_id INTEGER NOT NULL, name_spoken TEXT NOT NULL,
   brand TEXT NOT NULL, cat INTEGER NOT NULL, bearing INTEGER NOT NULL, dist_dm INTEGER NOT NULL,
-  score INTEGER NOT NULL, same_brand_400 INTEGER NOT NULL, src INTEGER NOT NULL);
+  score INTEGER NOT NULL, same_brand_near INTEGER NOT NULL, src INTEGER NOT NULL, usable INTEGER NOT NULL);
 """
+HW_RANK = {'motorway': 1, 'motorway_link': 1, 'trunk': 2, 'trunk_link': 2, 'primary': 3, 'primary_link': 3,
+           'secondary': 4, 'secondary_link': 4, 'tertiary': 5, 'tertiary_link': 5, 'unclassified': 6,
+           'residential': 7, 'living_street': 8, 'service': 8}
+# 地標類別門檻（主管 2026-11-26）：cat → (最遠 m, 同品牌混淆半徑 m, 優先序小者先, 需 score≥50)
+LM_RULE = {1: (30, 300, 0, False),                     # 加油站：高顯著
+           10: (40, 300, 1, False),                    # 捷運／車站
+           3: (20, 150, 2, False), 2: (20, 150, 3, False),  # 速食、便利商店：騎士只看到最近那家
+           7: (40, 300, 4, False), 8: (40, 300, 4, False), 9: (40, 300, 4, False),  # 學校、醫院、廟宇
+           6: (40, 300, 5, False), 5: (40, 300, 5, False),  # 郵局、銀行
+           4: (30, 400, 3, True), 11: (30, 400, 6, True)}  # 賣場、派出所：沿用 v1 規則
+STEM = re.compile(r'(?:[一二三四五六七八九十]+段)?(?:\d+巷)?(?:\d+弄)?$')
+
+
+def load_highway(cells, names):
+    """OSM 具名道路 → {(群索引, 路名): 最高等級(數字小)}；只看群中心 40 m 內的節點、且路名屬於該群。"""
+    import osmium
+    found = {}
+
+    class H(osmium.SimpleHandler):
+        def way(self, w):
+            r = HW_RANK.get(w.tags.get('highway'))
+            nm = w.tags.get('name')
+            if not r or not nm or nm not in names:
+                return
+            for n in w.nodes:
+                loc = n.location
+                if not loc.valid():
+                    continue
+                la, lo = loc.lat, loc.lon
+                for cla, clo, ci, cn in cells.get(key(la, lo), ()):
+                    if nm in cn and dist_m(la, lo, cla, clo) <= 40:
+                        k = (ci, nm)
+                        if r < found.get(k, 99):
+                            found[k] = r
+    H().apply_file(PBF, locations=True)
+    return found
 
 EXCLUDE = re.compile(r'ATM|提款|停車|充電|洗車|出口|入口|宿舍|辦事處|服務處|服務中心|總公司|總部|倉庫|物流|加盟|籌備|預定地|舊址|附設|幼兒園|幼稚園|補習|安親|托嬰')
 CHAINS = [  # (regex, cat, brand, spoken, S_sem, 需要 fuel 類)
@@ -185,13 +234,17 @@ def load_landmarks():
             cat, brand, spoken, sem = c
             hit = None
             for d, p in near(grid, lat, lon, 50):
-                if p[3] == brand:
+                # 同品牌 50 m 內＝同一家；加油站：無品牌「加油站」與有品牌的同站合併，保留品牌（念「中油加油站」）
+                if p[3] == brand or (cat == 1 and p[2] == 1 and '加油站' in (brand, p[3])):
                     hit = p
                     break
             if hit:
                 hit[6] |= bit
+                hit[7].append((lat, lon))  # 同一家的其他來源點（站體／店面範圍）
+                if hit[3] == '加油站' and brand != '加油站':
+                    hit[3], hit[4], hit[5] = brand, spoken, sem
                 continue
-            p = [lat, lon, cat, brand, spoken, sem, bit]
+            p = [lat, lon, cat, brand, spoken, sem, bit, [(lat, lon)]]
             grid.setdefault(key(lat, lon), []).append(p)
             out.append(p)
         db.close()
@@ -310,6 +363,29 @@ def main(argv=None):
     clusters = defaultdict(list)
     for i in range(len(js)):
         clusters[find(i)].append(i)
+    # 每群全部路名（去高架等）＋中心；OSM 取 highway 等級
+    cinfo, cells, all_names = [], {}, set()
+    for ci, members in enumerate(clusters.values()):
+        mj = [js[i] for i in members]
+        lat = sum(j[3] for j in mj) / len(mj)
+        lon = sum(j[4] for j in mj) / len(mj)
+        full = []
+        for j in mj:
+            for p in (j[7].split('／') if j[7] else []):
+                p = p.strip()
+                if p and p not in full and not NOSIGN.search(p):
+                    full.append(p)
+        cinfo.append((mj, lat, lon, full))
+        all_names.update(full)
+        ki, kj = key(lat, lon)
+        for di in (-1, 0, 1):
+            for dj in (-1, 0, 1):
+                cells.setdefault((ki + di, kj + dj), []).append((lat, lon, ci, frozenset(full)))
+    hw = load_highway(cells, all_names)
+    del cells
+    brand_count = defaultdict(int)
+    for p in lms:
+        brand_count[p[3]] += 1
 
     out_path = os.path.join(args.out, 'touror_junction_anchors.sqlite')
     tmp = out_path + '.tmp'
@@ -320,10 +396,8 @@ def main(argv=None):
     anchors, lmrows = [], []
     st = defaultdict(lambda: defaultdict(int))
     lm_id = 0
-    for members in clusters.values():
-        mj = [js[i] for i in members]
-        lat = sum(j[3] for j in mj) / len(mj)
-        lon = sum(j[4] for j in mj) / len(mj)
+    roadrows = []
+    for ci, (mj, lat, lon, full) in enumerate(cinfo):
         bits = 0
         for j in mj:
             bits |= j[5]
@@ -344,28 +418,42 @@ def main(argv=None):
         named2 = bool(sa and sb)
         if named2: geom |= 64
         cands = []
-        for d, p in near(lm_grid, lat, lon, 60):
+        for d0, p in near(lm_grid, lat, lon, 80):
+            d = min(dist_m(lat, lon, q[0], q[1]) for q in p[7])  # 多來源合併的店取最近的點（加油站站體大）
+            if d > 60:
+                continue
             s_str = 1.0 if d <= 15 else 0.7 if d <= 30 else 0.5
             fresh = 1.0 if (p[6] & 4 or (p[6] & 3) == 3) else 0.7
             score = int(round(100 * p[5] * s_str * fresh))
-            if score < 30:
+            maxd, rad, prio, need = LM_RULE[p[2]]
+            if score < 30 and d > maxd:
                 continue
-            same = sum(1 for dd, q in near(brand_grid[p[3]], lat, lon, 400) if q is not p)
-            cands.append((score, d, p, same))
-        cands.sort(key=lambda t: (-t[0], t[1]))
-        best, best_s, rows = None, -1, []
-        for score, d, p, same in cands[:4]:
+            same = sum(1 for dd, q in near(brand_grid[p[3]], lat, lon, rad) if q is not p)
+            ok = d <= maxd and same == 0 and (score >= 50 or not need)
+            rare = brand_count[p[3]] if p[2] in (2, 3) else 0  # 同路口兩家不同品牌：較少見的優先
+            cands.append((not ok, prio, rare, -score, d, p, same, score, ok))
+        cands.sort(key=lambda t: t[:5])
+        best, rows = None, []
+        for _, _, _, _, d, p, same, score, ok in cands[:4]:
             lm_id += 1
-            rows.append((lm_id, p, int(round(d * 10)), score, same))
-            if d <= 30 and score >= 50 and same == 0 and score > best_s:
-                best, best_s = lm_id, score
-        # 每個成員點都寫一列（App 以路口庫 junction.id 查）；地標掛在群的第一個點，其他點的 best_lm 指同一筆
+            rows.append((lm_id, p, int(round(d * 10)), score, same, int(ok)))
+            if ok and best is None:
+                best = lm_id
+                st_cat = p[2]
         first = mj[0][0]
-        for lid, p, ddm, score, same in rows:
-            lmrows.append((lid, first, p[4], p[3], p[2], bearing(lat, lon, p[0], p[1]), ddm, score, same, p[6]))
+        # 交會路分開列：hw＝OSM 等級；same_name_ambiguous＝兩條路主幹同名（去段、巷、弄後相同）
+        stems = [STEM.sub('', x) for x in full]
+        ambiguous = int(len(stems) != len(set(stems)))
+        alley_name = next((x for x in full if re.search(r'[巷弄]', x)), '')
+        for x in full:
+            roadrows.append((first, x, re.sub(r'[一二三四五六七八九十]+段$', '', x), hw.get((ci, x), 0), int(bool(re.search(r'[巷弄]', x)))))
+        hw_a, hw_b = hw.get((ci, a), 0), hw.get((ci, b), 0)
+        # 每個成員點都寫一列（App 以路口庫 junction.id 查）；地標、road 掛在群的第一個點（cluster_id），其他點的 best_lm 指同一筆
+        for lid, p, ddm, score, same, ok in rows:
+            lmrows.append((lid, first, p[4], p[3], p[2], bearing(lat, lon, p[0], p[1]), ddm, score, same, p[6], ok))
         for j in mj:
-            anchors.append((j[0], j[1], j[2], a, b, sa, sb, conf, geom, best))
-        has30 = any(d <= 30 and score >= 50 for score, d, p, same in cands)
+            anchors.append((j[0], j[1], j[2], a, b, sa, sb, conf, geom, best, first, hw_a, hw_b, ambiguous, alley_name))
+        has30 = any(t[4] <= 30 and t[7] >= 50 for t in cands)
         raw30 = any(True for _ in near(lm_grid, lat, lon, 30))
         cty = county_of(cg, lat, lon) if conf >= 1 else None
         for g in ['全部地面路口群'] + (['號誌路口群', '號誌路口群:' + cty] if conf >= 1 else []):
@@ -378,8 +466,14 @@ def main(argv=None):
             st[g]['lm30_usable'] += best is not None
             st[g]['conf_high'] += conf == 3
             st[g]['anchor_any'] += bool(named2 or best is not None)
-    db.executemany('INSERT INTO anchor VALUES (?,?,?,?,?,?,?,?,?,?)', anchors)
-    db.executemany('INSERT INTO landmark VALUES (?,?,?,?,?,?,?,?,?,?)', lmrows)
+            st[g]['hw_known'] += bool(hw_a)
+            st[g]['main_sign'] += bool(named2 and 0 < min(hw_a or 9, hw_b or 9) <= 3)
+            st[g]['ambiguous'] += ambiguous
+            if best is not None:
+                st[g]['cat_%d' % st_cat] += 1
+    db.executemany('INSERT INTO anchor VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', anchors)
+    db.executemany('INSERT INTO landmark VALUES (?,?,?,?,?,?,?,?,?,?,?)', lmrows)
+    db.executemany('INSERT INTO road VALUES (?,?,?,?,?)', roadrows)
     db.execute('CREATE INDEX landmark_junction ON landmark(junction_id)')
     built = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     meta = dict(schema_version=str(SCHEMA_VERSION), built_at=built, junctions_data_version=jmeta.get('data_version', ''),
@@ -395,7 +489,8 @@ def main(argv=None):
 
     def pct(g, k):
         return round(100.0 * st[g][k] / st[g]['n'], 1) if st[g]['n'] else 0.0
-    keys = ('named2', 'named2_main', 'any_name', 'lm30_raw', 'lm30', 'lm30_usable', 'anchor_any', 'conf_high')
+    keys = ('named2', 'named2_main', 'any_name', 'lm30_raw', 'lm30', 'lm30_usable', 'anchor_any', 'conf_high',
+            'hw_known', 'main_sign', 'ambiguous') + tuple('cat_%d' % c for c in sorted(LM_RULE))
     stats = dict(built_at=built, anchors=len(anchors), clusters=len(clusters), landmarks=len(lmrows),
                  landmark_candidates=len(lms), bytes=os.path.getsize(out_path),
                  groups={g: dict(n=st[g]['n'], **{k + '_pct': pct(g, k) for k in keys}) for g in sorted(st)})
