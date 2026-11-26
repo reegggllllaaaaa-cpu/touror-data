@@ -133,8 +133,8 @@ class RoadAttrsSourceTests(unittest.TestCase):
     def test_shared_count_includes_non_road_ways(self):
         # Furen-max 審查：與鐵路、建物等非道路 way 共用的節點也要計入共用數 → 固定不動
         src = _read("smooth_display.py")
-        way_handler = src[src.index("def way(self, w):"):]
-        way_handler = way_handler[:way_handler.index("\n\n")]
+        i = src.index("self.uses[r.ref]")  # 計共用數的那個 way handler
+        way_handler = src[src.rindex("def way(self, w):", 0, i):i]
         self.assertNotIn('"highway" not in w.tags', way_handler)
 
 
