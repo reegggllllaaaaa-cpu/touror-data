@@ -123,6 +123,20 @@ class RoadAttrsSourceTests(unittest.TestCase):
         self.assertRegex(java, r"return bridge \? 1 : tunnel \? -1 : 0;")
         self.assertIsNone(re.search(r"setAttr\(\"layer\"", java))
 
+    def test_layer_tag_decimal_and_multi(self):
+        # Furen-max 審查：layer='1;2'、'-1.5' 不可落回橋／隧道規則；取分號前、小數向零截斷
+        java = _read("roads", "TourorRoadAttrs.java")
+        self.assertIn('(int) Double.parseDouble(layerTag.trim().split(";")[0].trim())', java)
+        for tag, want in (("1;2", 1), ("-1.5", -1), ("2.3", 2)):
+            self.assertEqual(int(float(tag.split(";")[0])), want)
+
+    def test_shared_count_includes_non_road_ways(self):
+        # Furen-max 審查：與鐵路、建物等非道路 way 共用的節點也要計入共用數 → 固定不動
+        src = _read("smooth_display.py")
+        way_handler = src[src.index("def way(self, w):"):]
+        way_handler = way_handler[:way_handler.index("\n\n")]
+        self.assertNotIn('"highway" not in w.tags', way_handler)
+
 
 if __name__ == "__main__":
     unittest.main()

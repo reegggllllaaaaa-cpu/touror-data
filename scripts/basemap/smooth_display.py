@@ -197,8 +197,6 @@ def main(argv):
                 self.tagged.add(n.id)
 
         def way(self, w):
-            if "highway" not in w.tags:
-                return
             for r in w.nodes:
                 if r.ref in self.cand_nodes:
                     self.uses[r.ref] = self.uses.get(r.ref, 0) + 1

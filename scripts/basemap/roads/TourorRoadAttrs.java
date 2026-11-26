@@ -20,7 +20,7 @@ public final class TourorRoadAttrs {
   public static Integer layerOf(String layerTag, boolean bridge, boolean tunnel) {
     if (layerTag != null) {
       try {
-        int v = Integer.parseInt(layerTag.trim().split(";")[0].trim());
+        int v = (int) Double.parseDouble(layerTag.trim().split(";")[0].trim());  // 小數向零截斷：-1.5→-1、2.3→2
         if (v >= -5 && v <= 5) return v;
       } catch (NumberFormatException e) {
         // 非整數 layer：照橋／隧道推

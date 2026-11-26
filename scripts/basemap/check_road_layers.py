@@ -66,9 +66,12 @@ def main():
         if tags.get("bridge") in (None, "no") or tags.get("area") == "yes"                 or tags.get("highway") in NON_VEHICLE:  # 短人行橋 Protomaps 在 z14 會略去，只驗車行道路
             continue
         try:
-            want = int(tags.get("layer", "1").split(";")[0])
+            layer_val = tags.get("layer", "1")
+            first = layer_val.split(";")[0]
+            f = float(first)
+            want = int(f)  # truncate toward zero
         except ValueError:
-            want = 1
+            want = 1  # bridge fallback (we are processing bridges only)
         mid = pts[len(pts) // 2] if len(pts) > 2 else (0, (pts[0][1] + pts[1][1]) / 2, (pts[0][2] + pts[1][2]) / 2)
         lon, lat = mid[1], mid[2]
         if not (bbox[0] <= lon <= bbox[2] and bbox[1] <= lat <= bbox[3]):
