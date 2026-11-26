@@ -1,13 +1,13 @@
 {
- "generated": "2026-11-26 09:29",
+ "generated": "2026-11-26 09:54",
  "pbf": "taiwan-latest.osm.pbf",
  "signal_nodes": 56095,
  "approaches": 133998,
  "by_county": {
   "全台": {
-   "direct": 2918,
-   "two_stage": 5354,
-   "unknown": 125726
+   "direct": 2928,
+   "two_stage": 5343,
+   "unknown": 125727
   },
   "南投縣": {
    "unknown": 2318,
@@ -38,8 +38,8 @@
    "two_stage": 21
   },
   "新北市": {
-   "unknown": 10401,
-   "two_stage": 594,
+   "unknown": 10402,
+   "two_stage": 593,
    "direct": 2
   },
   "新竹市": {
@@ -63,8 +63,8 @@
    "two_stage": 943
   },
   "臺北市": {
-   "direct": 2916,
-   "two_stage": 1914,
+   "direct": 2926,
+   "two_stage": 1904,
    "unknown": 5354
   },
   "臺南市": {
@@ -96,20 +96,20 @@
   }
  },
  "by_basis": {
-  "no_evidence": 124476,
-  "oneway_3plus_osm": 3067,
-  "taipei_rule_2lane": 2779,
+  "no_evidence": 124477,
+  "taipei_rule_2lane": 2789,
+  "oneway_3plus_osm": 2357,
   "approach_moto_banned": 1250,
   "oneway_3plus_inferred_v2": 1038,
+  "taipei_rule_3lane": 783,
   "taipei_lane3_inner_ban": 532,
-  "mly_sign_no_moto": 277,
+  "mly_sign_no_moto": 276,
   "oneway_3plus_gov": 239,
   "taipei_exception_direct": 139,
-  "taipei_rule_3lane": 71,
   "osm_inner_lane_moto_no": 47,
   "taipei_exception_two_stage": 42,
-  "mly_sign_zun20": 22,
   "kaohsiung_2016_enforce": 12,
+  "mly_sign_zun20": 10,
   "penghu_list": 7
  },
  "taipei_exceptions": {
@@ -124,10 +124,10 @@
   "kaohsiung_2016_enforce|對到": 2
  },
  "mapillary_signs": {
-  "no_moto|未對到號誌": 417,
-  "no_moto|對到": 460,
+  "no_moto|未對到號誌": 432,
+  "no_moto|對到": 462,
   "no_moto|方向對不上": 196,
-  "zun20|對到": 28,
+  "zun20|對到": 27,
   "zun20|未對到號誌": 2,
   "zun20|方向對不上": 5
  },

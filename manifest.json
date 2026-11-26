@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-26T00:27:32Z",
+ "generated": "2026-11-26T01:53:06Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -393,11 +393,11 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261126.1",
+   "version": "20261126.2",
    "date": "2026-11-26",
-   "count": 81642,
-   "sha256": "41fe3e62adaf34a701406b43a7c5e267e453098959ef4074175dcddb986a8278",
-   "bytes": 734810,
+   "count": 83018,
+   "sha256": "b336731da1e3eab9edb9c889f46b5a451653bc9571908424e0abb2e70bfe1f16",
+   "bytes": 747194,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市、高雄市、新竹市政府（政府資料開放授權條款第1版）；使用者實地確認補點",
@@ -467,11 +467,11 @@
   {
    "name": "taiwan-signals-quality",
    "path": "data/signals/taiwan-signals-quality.bin",
-   "version": "20261126.1",
+   "version": "20261126.2",
    "date": "2026-11-26",
-   "count": 81642,
-   "sha256": "b83758e83ef1d935a7501b751e8dc490cc75c29e6eb568b7db15bf75278525d3",
-   "bytes": 99845,
+   "count": 83018,
+   "sha256": "0aa86c3198b0219dfdf8774762ca276754ae86c9e1efa505103ef42924a55ad6",
+   "bytes": 104101,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors；政府號誌位置（政府資料開放授權條款第1版）；Mapillary 地圖物件偵測（CC BY-SA 4.0）",

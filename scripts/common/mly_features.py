@@ -7,7 +7,7 @@
   python -I scripts/common/mly_features.py export                    # 由快取輸出 raw/signals/mly_traffic_lights.csv 與 data/rules/mapillary_moto_signs.csv
   python -I scripts/common/mly_features.py all                       # 依序做上面三步
 
-分塊：路口庫（資料/搜尋/touror_junctions.sqlite）有路口的 z13 圖磚；單塊回傳達上限 2000 就自動四分成 z+1 再查（佇列內平行跑，
+分塊：路口庫（資料/搜尋/touror_junctions.sqlite）有路口的 z13 圖磚；單塊回傳 ≥500 就自動四分（API 未達 2000 就會悄悄截斷）成 z+1 再查（佇列內平行跑，
       切過的塊寫 .split 標記，續跑時直接跳到子塊）。失敗以指數退避重試，仍失敗的塊不寫快取，下次重跑會補。
 快取：raw/mly_cache/tiles/{z}_{x}_{y}.json、raw/mly_cache/images.json（feature_id → 照片數）。
 本行程自動降為低優先權（Windows BELOW_NORMAL）。
@@ -36,6 +36,9 @@ VALUES = SIGNAL_VALUES + list(MOTO_KIND)
 VEHICLE = ('general-upright', 'general-horizontal', 'general-single', 'other')
 GOOD_KINDS = {2, 7, 8, 9, 10}
 LIMIT, Z0, ZMAX = 2000, 13, 19
+# API 在 limit=2000 前就會悄悄截斷（2026-11-26 實測：z13 回 1938 筆，四個 z14 子塊合計 2685）；
+# 803 筆的塊與其 z15 子塊一致；保守起見回傳 ≥ SPLIT_AT（500）就四分。
+SPLIT_AT = 500
 
 
 def low_priority():
@@ -133,6 +136,12 @@ def download(workers):
         if os.path.exists(tile_path(x, y, z, 'split')):
             return children(x, y, z)
         if os.path.exists(tile_path(x, y, z)):
+            if z < ZMAX and len(json.load(open(tile_path(x, y, z), encoding='utf-8'))) >= SPLIT_AT:
+                open(tile_path(x, y, z, 'split'), 'w').close()   # 舊快取（舊門檻）過大 → 改查子塊
+                os.remove(tile_path(x, y, z))
+                with lock:
+                    st['split'] += 1
+                return children(x, y, z)
             with lock:
                 st['cached'] += 1; st['leaf'] += 1
             return []
@@ -143,7 +152,7 @@ def download(workers):
             with lock:
                 st['fail'] += 1
             return []
-        if len(out) >= LIMIT and z < ZMAX:
+        if len(out) >= SPLIT_AT and z < ZMAX:
             open(tile_path(x, y, z, 'split'), 'w').close()
             with lock:
                 st['split'] += 1

@@ -8,7 +8,8 @@
 法規（道路交通安全規則 §99 第2項、§102 第1項第5款）：機車左轉預設換入內側車道直接左轉；
 只有三種情況要兩段式：①內側車道禁行機車 ②三快車道以上單行道 ③設有遵20（兩段式左轉標誌）。
 
-規則判定順序（先中先贏），沒有證據一律 unknown，不猜：
+規則判定（decide()）：收集全部證據，衝突時信心高者勝、同信心依下列順序先中先贏；
+進入路段禁行機車一律 unknown；沒有證據一律 unknown，不猜：
   0 approach_moto_banned      進入路段本身禁行機車（OSM motorcycle=no／政府禁行機車）→ unknown（機車不會從這裡來）
   1 taipei_exception_direct   臺北市「三車道以上例外開放機車直接左轉」路口＋方向 → direct  high
     taipei_exception_two_stage臺北市「二車道路段例外實施兩段式左轉」路口＋方向 → two_stage high
@@ -206,6 +207,22 @@ def parse_pair(text):
     return (ka, kb) if ka and kb else None
 
 
+# ---------------- 判定 ----------------
+CONF_RANK = {"none": 0, "low": 1, "medium": 2, "high": 3}
+
+
+def decide(cands, approach_banned=False):
+    """證據衝突時信心高者勝；同信心取判定順序在前者。進入路段禁行機車一律 unknown。
+    cands：[(rule, basis, conf)]，依模組說明的判定順序排列。"""
+    if approach_banned:
+        return "unknown", "approach_moto_banned", "none"
+    best = None
+    for c in cands:
+        if best is None or CONF_RANK[c[2]] > CONF_RANK[best[2]]:
+            best = c
+    return tuple(best) if best else ("unknown", "no_evidence", "none")
+
+
 # ---------------- 主流程 ----------------
 SIDE = {"北": 0, "東": 90, "南": 180, "西": 270}
 
@@ -397,40 +414,41 @@ def main():
         lat, lon = signals[nid]
         county = county_of(lat, lon)
         nl, nsrc, ow = lanes_dir(wid, d, tags)
-        rule, basis, conf = "unknown", "no_evidence", "none"
         mlanes = tags.get(f"motorcycle:lanes:{d}") or (tags.get("motorcycle:lanes") if ow else None)
         gmr = (gov.get(wid) or {}).get("motorcycle_restriction", "")
         exc = None
         for sd in (0, 90, 180, 270):
             if (nid, sd) in tp_exc and min(abs(ap_["brg"] - sd), 360 - abs(ap_["brg"] - sd)) <= 45:
                 exc = tp_exc[(nid, sd)]
-        if tags.get("motorcycle") == "no" or tags.get("access") == "no" or d in banned.get(wid, ()) or \
-                (gmr.startswith("禁行機車") and (f"({d})" in gmr or "(both)" in gmr)):
-            rule, basis, conf = "unknown", "approach_moto_banned", "none"
-        elif exc:
-            rule, basis, conf = exc[0], ("taipei_exception_direct" if exc[0] == "direct" else "taipei_exception_two_stage") + ":" + exc[1], "high"
-        elif nid in sign_nodes or ZUN20.search(tags.get("traffic_sign", "") + tags.get(f"traffic_sign:{d}", "")):
-            rule, basis, conf = "two_stage", "osm_sign_zun20", "high"
-        elif mlanes and mlanes.split("|")[0].strip() == "no":
-            rule, basis, conf = "two_stage", "osm_inner_lane_moto_no", "high"
-        elif gmr.startswith("例外:開放機車行駛第3車道") and (f"({d})" in gmr or "(both)" in gmr):
-            rule, basis, conf = "two_stage", "taipei_lane3_inner_ban", "medium"
-        elif ai_flag(nid, wid, d):
-            rule, basis, conf = "two_stage", "mly_ai_" + ai_flag(nid, wid, d), "medium"
-        elif (nid, wid, d) in mly_sign and mly_sign[(nid, wid, d)][0] == "zun20":
-            s = mly_sign[(nid, wid, d)]
-            rule, basis, conf = "two_stage", f"mly_sign_zun20:{s[2]}", s[1]
-        elif ow and nl and nl >= 3:
+        cands = []  # (rule, basis, conf)，依原判定順序；最後取信心最高者（同信心取先列者）
+        banned_here = tags.get("motorcycle") == "no" or tags.get("access") == "no" or d in banned.get(wid, ()) or \
+            (gmr.startswith("禁行機車") and (f"({d})" in gmr or "(both)" in gmr))
+        if exc:
+            cands.append((exc[0], ("taipei_exception_direct" if exc[0] == "direct" else "taipei_exception_two_stage") + ":" + exc[1], "high"))
+        if nid in sign_nodes or ZUN20.search(tags.get("traffic_sign", "") + tags.get(f"traffic_sign:{d}", "")):
+            cands.append(("two_stage", "osm_sign_zun20", "high"))
+        if mlanes and mlanes.split("|")[0].strip() == "no":
+            cands.append(("two_stage", "osm_inner_lane_moto_no", "high"))
+        if gmr.startswith("例外:開放機車行駛第3車道") and (f"({d})" in gmr or "(both)" in gmr):
+            cands.append(("two_stage", "taipei_lane3_inner_ban", "medium"))
+        af = ai_flag(nid, wid, d)
+        if af:
+            cands.append(("two_stage", "mly_ai_" + af, "medium"))
+        ms = mly_sign.get((nid, wid, d))
+        if ms and ms[0] == "zun20":
+            cands.append(("two_stage", f"mly_sign_zun20:{ms[2]}", ms[1]))
+        if ow and nl and nl >= 3:
             # trunk/primary/secondary 的 oneway 多半是分隔島雙線化道路（法律上未必是「單行道」）→ low
             dual = tags.get("highway", "").split("_")[0] in ("trunk", "primary", "secondary")
-            rule, basis, conf = "two_stage", f"oneway_3plus_{nsrc}", "low" if dual else "medium"
-        elif nid in list_nodes:
+            cands.append(("two_stage", f"oneway_3plus_{nsrc}", "low" if dual else "medium"))
+        if nid in list_nodes:
             b, c, t = list_nodes[nid]
-            rule, basis, conf = "two_stage", f"{b}:{t}", c
-        elif county == "臺北市" and nl and nsrc != "inferred_v2":
-            rule, basis, conf = ("two_stage", "taipei_rule_3lane", "medium") if nl >= 3 else ("direct", "taipei_rule_2lane", "medium")
-        elif (nid, wid, d) in mly_sign:   # 禁行機車標誌：多半是「禁內側車道」副牌，但也可能全路段禁行 → low
-            rule, basis, conf = "two_stage", f"mly_sign_no_moto:{mly_sign[(nid, wid, d)][2]}", "low"
+            cands.append(("two_stage", f"{b}:{t}", c))
+        if county == "臺北市" and nl and nsrc != "inferred_v2":
+            cands.append(("two_stage", "taipei_rule_3lane", "medium") if nl >= 3 else ("direct", "taipei_rule_2lane", "medium"))
+        if ms and ms[0] != "zun20":   # 禁行機車標誌：多半是「禁內側車道」副牌，但也可能全路段禁行 → 固定 low
+            cands.append(("two_stage", f"mly_sign_no_moto:{ms[2]}", "low"))
+        rule, basis, conf = decide(cands, banned_here)
         rows.append([nid, f"{lat:.7f}", f"{lon:.7f}", county, wid, d, round(ap_["brg"]), tags.get("name", ""),
                      tags.get("highway", ""), "yes" if ow else "no", nl or "", nsrc, rule, basis, conf])
 
