@@ -52,7 +52,7 @@
 | 臺北市平面道路禁行機車、開放機車行駛第3車道（同上，`moto_restrictions_for_routing.csv`、`data/lanes/gov_lane_attrs.csv`） | 政府資料開放授權條款第1版 | 同上 |
 | 澎湖縣設有機車兩段式左轉路口（data.gov.tw 157480，28 處） | 政府資料開放授權條款第1版 | 腳本自動下載（`--no-download` 可略過） |
 | 高雄市105年度取締未依規定兩段式左轉前十大路口（data.gov.tw 47188） | 政府資料開放授權條款第1版 | 同上（2016 年資料，僅 low） |
-| Mapillary 地圖要素（`mapillary_moto_signs.csv`，`scripts/rules/fetch_mly_moto_signs.py` 以號誌所在 z14 圖磚分塊查 Graph API map_features） | CC BY-SA 4.0，© Mapillary | 手動重跑 fetch（約 10 分鐘），再重跑 builder |
+| Mapillary 地圖要素（`mapillary_moto_signs.csv`，`scripts/common/mly_features.py` 與號誌燈頭一起下載：路口所在 z13 圖磚、達 2000 上限自動四分、可續跑） | CC BY-SA 4.0，© Mapillary | 手動重跑 `mly_features.py all`，再重跑 builder |
 | 街景判讀新欄位（`data/lanes/mapillary_ai_moto_left.csv`，`kp.py decide` 產生） | 衍生自 Mapillary（CC BY-SA 4.0） | 每週車道判讀批次自動累積（2026-11-26 起的新批次才有） |
 | 車道推論 v2（WSL `/root/lanesinfer/out/inferred_lanes.csv`，只用 medium↑） | 衍生自 OSM＋政府資料 | 先跑 `scripts/lanes_infer/wsl_run.sh`；`--inferred` 可指定檔案 |
 

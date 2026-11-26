@@ -6,3 +6,4 @@ raw/timing/
 __pycache__/
 *.pyc
 *.part
+raw/mly_cache/

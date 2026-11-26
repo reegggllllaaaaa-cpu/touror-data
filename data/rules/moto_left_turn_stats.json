@@ -1,87 +1,87 @@
 {
- "generated": "2026-11-26 06:10",
+ "generated": "2026-11-26 09:29",
  "pbf": "taiwan-latest.osm.pbf",
  "signal_nodes": 56095,
  "approaches": 133998,
  "by_county": {
   "全台": {
-   "direct": 2938,
-   "two_stage": 5057,
-   "unknown": 126003
+   "direct": 2918,
+   "two_stage": 5354,
+   "unknown": 125726
   },
   "南投縣": {
-   "unknown": 2320,
-   "two_stage": 55
+   "unknown": 2318,
+   "two_stage": 57
   },
   "嘉義市": {
-   "unknown": 2529,
-   "two_stage": 126
+   "unknown": 2527,
+   "two_stage": 128
   },
   "嘉義縣": {
-   "unknown": 2845,
-   "two_stage": 78
+   "unknown": 2832,
+   "two_stage": 91
   },
   "基隆市": {
    "unknown": 1032,
    "two_stage": 28
   },
   "宜蘭縣": {
-   "unknown": 3676,
-   "two_stage": 1
-  },
-  "屏東縣": {
-   "unknown": 5259,
-   "two_stage": 18
-  },
-  "彰化縣": {
-   "unknown": 8625,
+   "unknown": 3658,
    "two_stage": 19
   },
+  "屏東縣": {
+   "unknown": 5254,
+   "two_stage": 23
+  },
+  "彰化縣": {
+   "unknown": 8623,
+   "two_stage": 21
+  },
   "新北市": {
-   "unknown": 10487,
-   "two_stage": 508,
+   "unknown": 10401,
+   "two_stage": 594,
    "direct": 2
   },
   "新竹市": {
-   "unknown": 2049,
-   "two_stage": 177
+   "unknown": 2045,
+   "two_stage": 181
   },
   "新竹縣": {
-   "unknown": 3512,
-   "two_stage": 169
+   "unknown": 3502,
+   "two_stage": 179
   },
   "桃園市": {
-   "unknown": 10822,
-   "two_stage": 377
+   "unknown": 10795,
+   "two_stage": 404
   },
   "澎湖縣": {
    "unknown": 585,
    "two_stage": 7
   },
   "臺中市": {
-   "unknown": 18932,
-   "two_stage": 899
+   "unknown": 18888,
+   "two_stage": 943
   },
   "臺北市": {
-   "direct": 2936,
-   "two_stage": 1876,
-   "unknown": 5372
+   "direct": 2916,
+   "two_stage": 1914,
+   "unknown": 5354
   },
   "臺南市": {
-   "unknown": 16466,
-   "two_stage": 306
+   "unknown": 16453,
+   "two_stage": 319
   },
   "臺東縣": {
-   "unknown": 1326,
-   "two_stage": 1
+   "unknown": 1320,
+   "two_stage": 7
   },
   "花蓮縣": {
-   "unknown": 2186,
-   "two_stage": 11
+   "unknown": 2185,
+   "two_stage": 12
   },
   "苗栗縣": {
-   "unknown": 3684,
-   "two_stage": 38
+   "unknown": 3667,
+   "two_stage": 55
   },
   "金門縣": {
    "unknown": 98
@@ -91,22 +91,24 @@
    "two_stage": 33
   },
   "高雄市": {
-   "unknown": 19555,
-   "two_stage": 330
+   "unknown": 19546,
+   "two_stage": 339
   }
  },
  "by_basis": {
-  "no_evidence": 124753,
-  "oneway_3plus_osm": 3069,
-  "taipei_rule_2lane": 2799,
+  "no_evidence": 124476,
+  "oneway_3plus_osm": 3067,
+  "taipei_rule_2lane": 2779,
   "approach_moto_banned": 1250,
   "oneway_3plus_inferred_v2": 1038,
   "taipei_lane3_inner_ban": 532,
+  "mly_sign_no_moto": 277,
   "oneway_3plus_gov": 239,
   "taipei_exception_direct": 139,
   "taipei_rule_3lane": 71,
   "osm_inner_lane_moto_no": 47,
   "taipei_exception_two_stage": 42,
+  "mly_sign_zun20": 22,
   "kaohsiung_2016_enforce": 12,
   "penghu_list": 7
  },
@@ -121,5 +123,14 @@
   "kaohsiung_2016_enforce|未對到": 8,
   "kaohsiung_2016_enforce|對到": 2
  },
+ "mapillary_signs": {
+  "no_moto|未對到號誌": 417,
+  "no_moto|對到": 460,
+  "no_moto|方向對不上": 196,
+  "zun20|對到": 28,
+  "zun20|未對到號誌": 2,
+  "zun20|方向對不上": 5
+ },
+ "mapillary_ai_flags": 0,
  "datagov": {}
 }

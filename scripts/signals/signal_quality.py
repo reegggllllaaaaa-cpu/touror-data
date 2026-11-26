@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """紅綠燈信心等級、疑似漏燈路口、Mapillary 偵測補點（2026-11-26）。
 
-1. candidates：Mapillary map_features 號誌燈頭偵測（fetch_mly_signals.py 產出）→ 補點候選，
+1. candidates：Mapillary map_features 號誌燈頭偵測（common/mly_features.py 產出；照片數只對候選補抓）→ 補點候選，
    寫進 data/gov-signals/gov_signals_extra.csv（source=mapillary-detect；舊的同來源列先刪再重算）。
    採用條件：車輛號誌類（general-upright／horizontal／single／other）、照片數 ≥2、
    偵測點 25 m 內有路口庫平面路口（三岔以上、非交流道／匝道）、該路口 40 m 內原本沒有任何號誌點。
