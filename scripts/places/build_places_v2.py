@@ -245,7 +245,13 @@ def poly_rep(geom):
         c = geom.representative_point()
     return c.y, c.x
 
-def scan(pbf, work, log, branch_labels=False):
+def scan(pbf, work, log, branch_labels=False, name_ov=None):
+    """name_ov：curated 路名覆蓋 {way_id: ...}；None＝讀 curated/路名覆蓋.csv（common.curated_names）。"""
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from common.curated_names import load_names, way_tags
+    if name_ov is None:
+        name_ov = load_names()
+    if name_ov: log('curated 路名覆蓋 %d 條 way' % len(name_ov))
     import osmium
     from shapely.geometry import Polygon, MultiPolygon
     import shapely
@@ -273,6 +279,7 @@ def scan(pbf, work, log, branch_labels=False):
             t = o.tags
             hw = t.get('highway')
             if hw in HW_RANK:
+                if o.id in name_ov: t = way_tags(o.id, t, name_ov)  # curated 路名覆蓋（原名移到 old_name）
                 nm, ref = t.get('name'), t.get('ref')
                 if not nm and not ref: continue
                 nds = o.nodes

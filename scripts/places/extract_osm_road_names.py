@@ -5,8 +5,10 @@
 英文名取 name:en、old_name:en、alt_name:en、official_name:en、name:zh-Latn-pinyin、name:zh_pinyin。
 用法（系統 python，需 osmium）：python -I extract_osm_road_names.py taiwan-latest.osm.pbf osm_road_names.pkl
 """
-import math, pickle, re, sys
+import math, os, pickle, re, sys
 import osmium
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common.curated_names import load_names, way_tags  # noqa: E402  curated 路名覆蓋
 
 EN_KEYS = ('name:en', 'old_name:en', 'alt_name:en', 'official_name:en', 'short_name:en',
            'name:zh-Latn-pinyin', 'name:zh_pinyin', 'name:zh-Latn-tongyong', 'name:zh-Latn-wadegiles')
@@ -14,14 +16,15 @@ CJK = re.compile(r'[一-鿿]')
 
 
 class H(osmium.SimpleHandler):
-    def __init__(self):
+    def __init__(self, name_ov=None):
         super().__init__()
+        self.name_ov = load_names() if name_ov is None else name_ov
         self.roads, self.rid, self.pts = [], {}, []
 
     def way(self, w):
-        t = w.tags
-        if 'highway' not in t:
+        if 'highway' not in w.tags:
             return
+        t = way_tags(w.id, w.tags, self.name_ov) if w.id in self.name_ov else w.tags
         nm = t.get('name')
         if not nm or not CJK.search(nm):
             return

@@ -35,6 +35,7 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 from common import formats, paths  # noqa: E402
+from common.curated_names import load_names  # noqa: E402  curated 路名覆蓋（與路網共用）
 
 PROJ = os.path.dirname(paths.ROOT)
 SEARCH = os.path.join(PROJ, '資料', '搜尋')
@@ -77,29 +78,54 @@ LM_RULE = {1: (30, 300, 0, False),                     # 加油站：高顯著
 STEM = re.compile(r'(?:[一二三四五六七八九十]+段)?(?:\d+巷)?(?:\d+弄)?$')
 
 
-def load_highway(cells, names):
-    """OSM 具名道路 → {(群索引, 路名): 最高等級(數字小)}；只看群中心 40 m 內的節點、且路名屬於該群。"""
+def load_highway(cells, names, name_ov=None, pbf=None):
+    """OSM 具名道路 → ({(群索引, 路名): 最高等級(數字小)}, {群索引: {舊名: 新名}})；只看群中心 40 m 內的節點、且路名屬於該群。
+    name_ov：curated 路名覆蓋（common.curated_names.load_names）。路口庫的路名來自原始 OSM，被覆蓋的 way 若是群內某路名的
+    唯一來源（40 m 內沒有其他同名、未覆蓋的 way），該群的舊名改成新名；等級記在新名下。"""
     import osmium
-    found = {}
+    name_ov = name_ov or {}
+    found, ren, keep = {}, defaultdict(dict), set()
 
     class H(osmium.SimpleHandler):
         def way(self, w):
             r = HW_RANK.get(w.tags.get('highway'))
             nm = w.tags.get('name')
-            if not r or not nm or nm not in names:
+            ov = name_ov.get(w.id)
+            if not r or not nm or (nm not in names and ov is None):
                 return
+            new = ov[0] if ov else nm
             for n in w.nodes:
                 loc = n.location
                 if not loc.valid():
                     continue
                 la, lo = loc.lat, loc.lon
                 for cla, clo, ci, cn in cells.get(key(la, lo), ()):
-                    if nm in cn and dist_m(la, lo, cla, clo) <= 40:
-                        k = (ci, nm)
+                    if (nm in cn or new in cn) and dist_m(la, lo, cla, clo) <= 40:
+                        if ov is not None and nm != new and nm in cn:
+                            ren[ci][nm] = new
+                        elif ov is None:
+                            keep.add((ci, nm))
+                        k = (ci, new)
                         if r < found.get(k, 99):
                             found[k] = r
-    H().apply_file(PBF, locations=True)
-    return found
+    H().apply_file(pbf or PBF, locations=True)
+    renames = {}
+    for ci, m in ren.items():
+        m = {o: n for o, n in m.items() if (ci, o) not in keep}
+        if m:
+            renames[ci] = m
+    return found, renames
+
+
+def rename_joined(name, m):
+    """路口庫「甲／乙」字串套用 {舊名: 新名}，去重後照原順序接回。"""
+    out = []
+    for p in (name.split('／') if name else []):
+        p = m.get(p.strip(), p.strip())
+        if p and p not in out:
+            out.append(p)
+    return '／'.join(out)
+
 
 EXCLUDE = re.compile(r'ATM|提款|停車|充電|洗車|出口|入口|宿舍|辦事處|服務處|服務中心|總公司|總部|倉庫|物流|加盟|籌備|預定地|舊址|附設|幼兒園|幼稚園|補習|安親|托嬰')
 CHAINS = [  # (regex, cat, brand, spoken, S_sem, 需要 fuel 類)
@@ -381,8 +407,22 @@ def main(argv=None):
         for di in (-1, 0, 1):
             for dj in (-1, 0, 1):
                 cells.setdefault((ki + di, kj + dj), []).append((lat, lon, ci, frozenset(full)))
-    hw = load_highway(cells, all_names)
+    name_ov = load_names()
+    hw, renames = load_highway(cells, all_names, name_ov)
     del cells
+    # curated 路名覆蓋：改路口庫原名（路口成員的 j[7] 與群路名清單 full）
+    for ci, m in renames.items():
+        mj, la_, lo_, full = cinfo[ci]
+        for j in mj:
+            j[7] = rename_joined(j[7], m)
+        nf = []
+        for x in full:
+            x = m.get(x, x)
+            if x not in nf:
+                nf.append(x)
+        cinfo[ci] = (mj, la_, lo_, nf)
+    print('curated 路名覆蓋：%d 條 way，改了 %d 個路口群 %s' % (len(name_ov), len(renames),
+          [(cinfo[ci][0][0][0], m) for ci, m in list(renames.items())[:10]]), flush=True)
     brand_count = defaultdict(int)
     for p in lms:
         brand_count[p[3]] += 1

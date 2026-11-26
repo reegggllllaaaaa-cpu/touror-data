@@ -14,6 +14,8 @@
     改標 touror:moto_ban（Valhalla 不讀）並輸出 禁行機車走廊.json（rules_with_plate 格式＋corridor），由 App 依牌照事後排除重算。
   每列都寫進 禁行機車對應清單.csv（成功／對不到＋原因），不默默丟掉；統計寫 禁行機車統計.json。"""
 import csv, sys, time, os, math, re, json, osmium
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common.curated_names import load_names, name_fix  # 路名覆蓋：與錨點庫、地名庫共用
 
 RESTRICT = {"private", "no", "permit", "customers", "destination", "delivery"}
 
@@ -42,25 +44,6 @@ def load_lanes(csvp):
                 if r["採用"].strip() == "是" and r["lanes"].strip().isdigit():
                     out[int(r["way_id"])] = (r["lanes"].strip(), r.get("turn_lanes", "").strip(), r.get("來源", "").strip() or "curated")
     return out
-
-def load_names(csvp):
-    out = {}
-    if csvp and os.path.exists(csvp):
-        with open(csvp, encoding="utf-8-sig") as f:
-            for r in csv.DictReader(f):
-                if r["採用"].strip() == "是" and r["name"].strip():
-                    keep = r.get("原名放入", "").strip() or "old_name"
-                    if keep not in ("old_name", "alt_name"): keep = "old_name"
-                    out[int(r["way_id"])] = (r["name"].strip(), keep, r.get("來源", "").strip() or "curated")
-    return out
-
-def name_fix(t, ov):
-    new, keep, src = ov
-    old = t.get("name")
-    if old and old != new:
-        t[keep] = old if not t.get(keep) else (t[keep] if old in t[keep].split(";") else t[keep] + ";" + old)
-    t["name"] = new; t["touror:name_override"] = src
-    return t
 
 def lanes_fix(tags, ov):
     t = {k: v for k, v in tags}
