@@ -6,6 +6,8 @@
   檢查路線是否經過（use）或繞開（avoid）指定規則的走廊；走廊檔由 apply_curated.py --moto-bans 每週產生。
 ⑤分岔案例（case 帶 expect_via）：路線形狀必須經過（want=true）或不經過（want=false）指定點 tol_m 公尺內，
   用來確認並排分岔（例：九如一路右轉後上橋 vs 平面迴轉道，相距約 8 m）算得出正確那一支。leg 可帶 from_opts／to_opts（heading 等）。
+⑥路段案例（case 帶 expect_edges）：只對新版，用 trace_attributes（edge_walk）取路線經過的 edge，
+  檢查指定 OSM way 有被經過、路名含 name／不含 not_names、lane_count 等於指定值（curated 路名覆蓋與車道覆蓋確實進了 tiles）。
 結束碼：0 通過、1 不通過（原因寫在報告 failures）。"""
 import json, math, os, sys
 import valhalla
@@ -65,7 +67,7 @@ def route_all(tar, cfgj, tag, rules=None):
     actor = valhalla.Actor(valhalla.get_config(tile_extract=tar, tile_dir=work, verbose=False))
     res = {}
     for case in cfgj["cases"]:
-        tot, km, err, shapes = 0.0, 0.0, None, []
+        tot, km, err, shapes, edges = 0.0, 0.0, None, [], []
         for leg in case["legs"]:
             req = {"locations": [{"lat": leg["from"][0], "lon": leg["from"][1], **leg.get("from_opts", {})},
                                  {"lat": leg["to"][0], "lon": leg["to"][1], **leg.get("to_opts", {})}],
@@ -82,6 +84,11 @@ def route_all(tar, cfgj, tag, rules=None):
                     if not new: break
                     hit |= new; req["exclude_locations"] = plate_excludes(rules, plate, hit)[:50]
                     r = json.loads(actor.route(json.dumps(req)))
+                if case.get("expect_edges") and tag == "new":
+                    tr = json.loads(actor.trace_attributes(json.dumps({
+                        "encoded_polyline": r["trip"]["legs"][0]["shape"], "shape_match": "edge_walk", "costing": cfgj["costing"],
+                        "filters": {"attributes": ["edge.way_id", "edge.names", "edge.lane_count"], "action": "include"}})))
+                    edges.extend(tr.get("edges", []))
                 s = r["trip"]["summary"]; tot += s["time"]; km += s["length"]; shapes.append(decode6(r["trip"]["legs"][0]["shape"]))
                 if plate and exp:
                     rule = next((x for x in rules if x["id"] == exp["rule"]), None)
@@ -91,7 +98,8 @@ def route_all(tar, cfgj, tag, rules=None):
                 err = str(e)[:200]; break
         res[case["id"]] = {"name": case["name"], "sec": None if err else round(tot, 1), "km": None if err else round(km, 2), "err": err,
                            "plate": case.get("plate"), "expect": case.get("expect"), "share": None if err else share,
-                           "via": None if err else [(v, round(min(shape_dist(sh, v["at"]) for sh in shapes), 1)) for v in case.get("expect_via", [])]}
+                           "via": None if err else [(v, round(min(shape_dist(sh, v["at"]) for sh in shapes), 1)) for v in case.get("expect_via", [])],
+                           "edge_exp": None if err or tag != "new" else case.get("expect_edges"), "edges": edges}
     return res
 
 def main():
@@ -128,6 +136,20 @@ def main():
                 out["failures"].append(f"分岔案例 {n['name']} 應經過 {v.get('label', v['at'])}，路線最近 {d} m")
             if not v.get("want", True) and d <= v.get("tol_m", 3):
                 out["failures"].append(f"分岔案例 {n['name']} 不應經過 {v.get('label', v['at'])}，路線卻在 {d} m 內")
+        for e in (n.get("edge_exp") or []):
+            got = [x for x in n["edges"] if x.get("way_id") == e["way"]]
+            lab = e.get("label", e["way"])
+            if not got:
+                out["failures"].append(f"路段案例 {n['name']}：路線沒有經過 way {e['way']}（{lab}）"); continue
+            names = sorted({nm for x in got for nm in x.get("names", [])})
+            lcs = sorted({x.get("lane_count") for x in got})
+            row.setdefault("edges", {})[str(e["way"])] = {"names": names, "lane_count": lcs}
+            if "name" in e and e["name"] not in names:
+                out["failures"].append(f"路段案例 {n['name']}：way {e['way']}（{lab}）路名應含 {e['name']}，實際 {names}")
+            for bad in e.get("not_names", []):
+                if bad in names: out["failures"].append(f"路段案例 {n['name']}：way {e['way']}（{lab}）路名不應是 {bad}，實際 {names}")
+            if "lane_count" in e and lcs != [e["lane_count"]]:
+                out["failures"].append(f"路段案例 {n['name']}：way {e['way']}（{lab}）車道數應為 {e['lane_count']}，實際 {lcs}")
         if n["err"]: out["failures"].append(f"案例 {n['name']} 新版算不出路線：{n['err']}")
         elif o and o["sec"]:
             row["ratio"] = round(n["sec"] / o["sec"] - 1, 4)

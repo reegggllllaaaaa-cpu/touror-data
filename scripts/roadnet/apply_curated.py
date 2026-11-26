@@ -2,6 +2,8 @@
 """套用 curated/way覆蓋.csv（採用=是）到 OSM PBF，輸出新 PBF；不改原檔。
 用法：python -I apply_curated.py <in.pbf> <out.pbf> [way覆蓋.csv] [類型覆蓋.csv]
 車道覆蓋.csv（同資料夾，沒有就略過）：依 way_id 改 lanes（turn_lanes 有值且段數相符才改 turn:lanes），原值存 touror:orig_lanes，標 touror:lanes_override=<來源>；路網與底圖吃同一份 final.pbf。
+路名覆蓋.csv（同資料夾，沒有就略過）：依 way_id 改 name，原名放進「原名放入」欄指定的標籤（old_name／alt_name，已有值則以 ; 串接），
+  標 touror:name_override=<來源>；tiles（播報路名）與底圖標籤都吃 final.pbf，故一處修正兩邊生效。
 類型覆蓋.csv（預設取 way覆蓋.csv 同資料夾的 類型覆蓋.csv，沒有就略過）：依條件（ref＋原 highway）把整類 way 改 highway，
 保留其他標籤並加 touror:override；例如國3甲（ref=3甲、highway=motorway）改 trunk，使黃紅牌的 exclude_highways 不再排除它。輸出被改 way 清單（id、長度）。
 動作：解除private＝移除 access 並標 touror:override=rode；捷西路升級＝highway=tertiary、maxspeed=50、touror:override=jiexi。
@@ -40,6 +42,25 @@ def load_lanes(csvp):
                 if r["採用"].strip() == "是" and r["lanes"].strip().isdigit():
                     out[int(r["way_id"])] = (r["lanes"].strip(), r.get("turn_lanes", "").strip(), r.get("來源", "").strip() or "curated")
     return out
+
+def load_names(csvp):
+    out = {}
+    if csvp and os.path.exists(csvp):
+        with open(csvp, encoding="utf-8-sig") as f:
+            for r in csv.DictReader(f):
+                if r["採用"].strip() == "是" and r["name"].strip():
+                    keep = r.get("原名放入", "").strip() or "old_name"
+                    if keep not in ("old_name", "alt_name"): keep = "old_name"
+                    out[int(r["way_id"])] = (r["name"].strip(), keep, r.get("來源", "").strip() or "curated")
+    return out
+
+def name_fix(t, ov):
+    new, keep, src = ov
+    old = t.get("name")
+    if old and old != new:
+        t[keep] = old if not t.get(keep) else (t[keep] if old in t[keep].split(";") else t[keep] + ";" + old)
+    t["name"] = new; t["touror:name_override"] = src
+    return t
 
 def lanes_fix(tags, ov):
     t = {k: v for k, v in tags}
@@ -106,6 +127,7 @@ def main():
     tcsv = argv[4] if len(argv) > 4 else os.path.join(os.path.dirname(os.path.abspath(csvp)), "類型覆蓋.csv")
     trules = load_type_rules(tcsv)
     lov = load_lanes(os.path.join(os.path.dirname(os.path.abspath(csvp)), "車道覆蓋.csv")); ldone = []
+    nov = load_names(os.path.join(os.path.dirname(os.path.abspath(csvp)), "路名覆蓋.csv")); ndone = []
     t0 = time.time(); done = {}
     if os.path.exists(dst): os.remove(dst)
     # 預掃：解除private 的 way 上的節點（閘門/車擋 barrier 的 access=private 會讓 Valhalla 加 private_access_penalty，一併解除）
@@ -136,7 +158,10 @@ def main():
     nodefix = []
     w = osmium.SimpleWriter(dst)
     _add_way = w.add_way
-    def add_way(o):  # 車道覆蓋最後套用（其他覆蓋已改好的標籤保留）
+    def add_way(o):  # 路名、車道覆蓋最後套用（其他覆蓋已改好的標籤保留）
+        nv = nov.get(o.id)
+        if nv is not None:
+            ndone.append((o.id, o.tags.get("name"), nv[0])); o = o.replace(tags=name_fix({k: v for k, v in o.tags}, nv))
         ov = lov.get(o.id)
         if ov is None: return _add_way(o)
         ldone.append((o.id, o.tags.get("lanes"), ov[0])); _add_way(o.replace(tags=lanes_fix(o.tags, ov)))
@@ -191,6 +216,8 @@ def main():
         for i, _, l in L: print("類型覆蓋way", rid, i, f"{l:.0f}m")
     if lov: print(f"車道覆蓋：套用 {len(ldone)}/{len(lov)} 條；缺：{sorted(set(lov) - {x[0] for x in ldone})}")
     for i, a, b in ldone: print("車道覆蓋way", i, a, "->", b)
+    if nov: print(f"路名覆蓋：套用 {len(ndone)}/{len(nov)} 條；缺：{sorted(set(nov) - {x[0] for x in ndone})}")
+    for i, a, b in ndone: print("路名覆蓋way", i, a, "->", b)
     if trules and not tdone: print("警示：類型覆蓋規則沒有命中任何 way")
     if "--moto-bans" in opt: write_bans(judged, ban_nodes, bcoords, opt.get("--moto-out", os.path.dirname(os.path.abspath(dst))))
     for i, (b, t) in done.items():
