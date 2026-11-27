@@ -38,6 +38,20 @@ def load_mod(name, rel):
     return m
 
 
+def have_modules(*names):
+    try:
+        for n in names:
+            __import__(n)
+        return True
+    except ImportError:
+        return False
+
+
+# 驗證工作流程沒裝 osmium／shapely（weekly 工作流程有裝）：沒裝就跳過
+NEED_OSMIUM = unittest.skipUnless(have_modules('osmium'), '需要 osmium')
+NEED_OSMIUM_SHAPELY = unittest.skipUnless(have_modules('osmium', 'shapely'), '需要 osmium＋shapely')
+
+
 class CuratedNamesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -56,6 +70,7 @@ class CuratedNamesTest(unittest.TestCase):
         t = curated_names.way_tags(957963591, {'name': '澄清巷', 'highway': 'tertiary'}, self.ov)
         self.assertEqual((t['name'], t['old_name']), ('文前路', '澄清巷'))
 
+    @NEED_OSMIUM
     def test_anchor_library_uses_curated_name(self):
         ba = load_mod('build_anchors_t', 'anchors/build_anchors.py')
         # 群 0：接大全一巷那端（n3），路口庫名「澄清巷／大全一巷」，附近的澄清巷只有被覆蓋的 way → 改文前路
@@ -78,6 +93,7 @@ class CuratedNamesTest(unittest.TestCase):
         self.assertEqual({a, b}, {'文前路', '大全一巷'})
         self.assertNotIn('澄清巷', joined)
 
+    @NEED_OSMIUM_SHAPELY
     def test_place_library_uses_curated_name(self):
         v2 = load_mod('build_places_v2_t', 'places/build_places_v2.py')
         work = os.path.join(self.tmp, 'work')
@@ -89,6 +105,7 @@ class CuratedNamesTest(unittest.TestCase):
         # 真正的澄清巷 service 小路不受影響
         self.assertEqual([r[0] for r in raw['roads'] if r[1] == '' and r[0] == '澄清巷'], ['澄清巷'])
 
+    @NEED_OSMIUM
     def test_osm_road_names_for_address_uses_curated_name(self):
         ex = load_mod('extract_osm_road_names_t', 'places/extract_osm_road_names.py')
         h = ex.H(self.ov)
