@@ -84,10 +84,14 @@ class UpgradeTests(unittest.TestCase):
 
     def test_two_clues_upgraded_including_accident(self):
         sus = [(22630000, 120300000, sq.R_MAJOR | sq.R_MLY), (22640000, 120300000, sq.R_MAJOR)]
-        clusters = [(22.64 + 10 * M_LAT, 120.30, 1)]
+        clusters = [(22.64 + 10 * M_LAT, 120.30, 2)]
         up, combos = acc.upgrade(acc.suspect_clues(sus, clusters))
         self.assertEqual(len(up), 2)
         self.assertEqual(combos, {'mly+major': 1, 'major+accident': 1})
+        # 只有 1 件事故不算一類線索（CLUE_MIN_ACCIDENTS=2，主管 11-28 裁示）
+        up1, combos1 = acc.upgrade(acc.suspect_clues(sus, [(22.64 + 10 * M_LAT, 120.30, 1)]))
+        self.assertEqual(len(up1), 1)
+        self.assertEqual(combos1, {'mly+major': 1})
 
     def test_accident_clue_needs_30m(self):
         sus = [(22640000, 120300000, sq.R_MAJOR)]
