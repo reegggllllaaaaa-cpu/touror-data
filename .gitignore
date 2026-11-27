@@ -7,3 +7,4 @@ __pycache__/
 *.pyc
 *.part
 raw/mly_cache/
+raw/junctions/

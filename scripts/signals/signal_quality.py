@@ -21,7 +21,8 @@ from common import formats, paths  # noqa: E402
 from signals import gov_signals as g  # noqa: E402
 from signals.sources import GOV_SIGNAL_SOURCES  # noqa: E402
 
-JUNCTIONS = os.path.join(os.path.dirname(paths.ROOT), '資料', '搜尋', 'touror_junctions.sqlite')
+# 路口庫：本機預設讀 重機導航\資料\搜尋；CI（weekly-osm）從 offline-manifest 的 Release 資產下載後以環境變數指定
+JUNCTIONS = os.environ.get('TOUROR_JUNCTIONS') or os.path.join(os.path.dirname(paths.ROOT), '資料', '搜尋', 'touror_junctions.sqlite')
 EXTRA_CSV = os.path.join(paths.ROOT, 'data', 'gov-signals', 'gov_signals_extra.csv')
 MLY_CSV = os.path.join(paths.RAW_SIGNALS, 'mly_traffic_lights.csv')
 VEHICLE = ('general-upright', 'general-horizontal', 'general-single', 'other')
@@ -58,7 +59,12 @@ def near_list(gr, lat, lon, r):
     return out
 
 
-def junctions():
+def junctions(required=True):
+    """平面路口 [(lat, lon, jid, name)]。required=False 時路口庫不存在回傳 None（呼叫端略過疑似點偵測）"""
+    if not os.path.isfile(JUNCTIONS):
+        if required:
+            raise FileNotFoundError('找不到路口庫：%s' % JUNCTIONS)
+        return None
     con = sqlite3.connect(JUNCTIONS)
     return [(la / 1e7, lo / 1e7, jid, name) for jid, la, lo, kind, arms, name in
             con.execute('select id, lat, lon, kind, arms, name from junction') if kind in GOOD_KINDS and arms >= 3]
@@ -207,7 +213,13 @@ def build(rows, pbf, signals_crc=0):
     # 疑似未收錄號誌路口：平面路口、40 m 內沒有號誌點、且有任一線索
     osg, mlg, mjg = grid_of(osm_sig), grid_of(mly), grid_of(major)
     suspects, reasons = [], dict(osm_node=0, mly=0, major=0)
-    for la, lo, jid, name in junctions():
+    jl = junctions(required=False)
+    junctions_ok = jl is not None
+    if not junctions_ok:
+        # 號誌主檔與逐筆信心照常發布，只有疑似點清單留空
+        print('::warning::找不到路口庫 %s，略過疑似未收錄號誌路口偵測（疑似點清單留空）' % JUNCTIONS, flush=True)
+        jl = []
+    for la, lo, jid, name in jl:
         if allg.near(la, lo, MATCH_M):
             continue
         rb = (R_OSM_NODE if osg.near(la, lo, 30) else 0) | (R_MLY if mlg.near(la, lo, 30) else 0) | (R_MAJOR if mjg.near(la, lo, 30) else 0)
@@ -248,7 +260,8 @@ def build(rows, pbf, signals_crc=0):
     data = formats.write_signal_quality_bin(q, suspects, signals_crc=signals_crc)
     st = dict(levels=levels, sources=combo, suspects=len(suspects), suspect_reasons=reasons,
               pairs=len(pairs), gap_pairs=gap_pairs, gap_pair_ratio=round(gap_pairs / max(len(pairs), 1), 4),
-              gap_signals=sum(1 for b in q if b & B_GAP), mly_detections=len(mly))
+              gap_signals=sum(1 for b in q if b & B_GAP), mly_detections=len(mly),
+              junctions_available=junctions_ok)
     return bytes(data), st
 
 
