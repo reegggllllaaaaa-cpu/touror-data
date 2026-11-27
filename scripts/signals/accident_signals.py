@@ -44,7 +44,7 @@ MIN_ACCIDENTS = 3      # 一群至少幾件才採用
 SNAP_M = 30.0          # 群心吸附路口的最大距離
 EXISTING_M = 40.0      # 路口 40 m 內已有號誌就不加
 CLUE_M = 30.0          # 疑似點與事故群的命中距離（工作 2）
-CLUE_MIN_ACCIDENTS = 1  # 事故線索至少幾件（工作 2）
+CLUE_MIN_ACCIDENTS = 2  # 事故線索至少幾件（工作 2）
 R_ACC = 8              # 工作 2 內部用的事故線索位元（不寫進 TSGQ）
 CLUE_NAMES = ((sq.R_OSM_NODE, 'osm'), (sq.R_MLY, 'mly'), (sq.R_MAJOR, 'major'), (R_ACC, 'accident'))
 
