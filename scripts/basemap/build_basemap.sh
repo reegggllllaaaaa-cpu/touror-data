@@ -27,11 +27,22 @@ grep -q 'import com.protomaps.basemap.layers.Roads;' "$B" && grep -q '    if (cl
 sed -i 's/^import com.protomaps.basemap.layers.Roads;/import com.protomaps.basemap.layers.Roads;\nimport com.protomaps.basemap.layers.Lanes;/' "$B"
 sed -i 's/^    if (clip != null) {/    if (layer.isEmpty()) {\n      var lanes = new Lanes();\n      registerHandler(lanes);\n      registerSourceHandler("osm", lanes::processOsm);\n    }\n\n    if (clip != null) {/' "$B"
 grep -q 'lanes::processOsm' "$B" || { echo "補丁失敗：Lanes 註冊"; exit 3; }
+# Touror roads 立體分層屬性（layer／lanes／隱含 oneway）：插在官方 OSM 道路處理的 setSortKey 前；layer 不同就不會被合併
+cp "$SCRIPT_DIR/roads/TourorRoadAttrs.java" basemaps/tiles/src/main/java/com/protomaps/basemap/layers/TourorRoadAttrs.java
+[ "$(grep -c '^    feat.setSortKey(minZoom);$' "$R")" = 1 ] || { echo "補丁失敗：Roads.java setSortKey 錨點已變"; exit 3; }
+sed -i 's/^    feat.setSortKey(minZoom);$/    TourorRoadAttrs.apply(feat, sf);\n    feat.setSortKey(minZoom);/' "$R"
+grep -q 'TourorRoadAttrs.apply(feat, sf);' "$R" || { echo "補丁失敗：TourorRoadAttrs"; exit 3; }
 ( cd basemaps/tiles && mvn -q -B -DskipTests package )
 JAR=$(ls basemaps/tiles/target/*-with-deps.jar | head -1)
 mkdir -p data/sources
 # 政府補入路段用 9e12 起的合成 ID，planetiler 節點索引吃不下，先改號（只給底圖用）
 "${PYTHON:-python3}" -I "$SCRIPT_DIR/renumber_synthetic.py" "$PBF" data/sources/taiwan.osm.pbf
+# 高架／匝道／國道快速道路顯示平滑（3 m 重取樣＋輕平滑，接點不動，偏移 ≤1.5 m）；BASEMAP_SMOOTH=0 可關閉
+if [ "${BASEMAP_SMOOTH:-1}" != 0 ]; then
+  "${PYTHON:-python3}" -I "$SCRIPT_DIR/smooth_display.py" data/sources/taiwan.osm.pbf data/sources/smoothed.osm.pbf \
+    --report "$(dirname "$OUT")/smooth_report.json"
+  mv -f data/sources/smoothed.osm.pbf data/sources/taiwan.osm.pbf
+fi
 # 政府車道屬性（可選）：GOV_LANES_CSV=<資料/車道/gov_lane_attrs.csv>；不存在就跳過，lanes 只用 OSM＋推定
 rm -f data/sources/gov_lane_attrs.csv
 if [ -n "${GOV_LANES_CSV:-}" ] && [ -f "$GOV_LANES_CSV" ]; then
