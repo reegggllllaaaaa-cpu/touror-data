@@ -39,6 +39,17 @@ GOV_SIGNAL_SOURCES = [
          static_path='data/gov-signals', csv_source='mapillary-detect', url='https://www.mapillary.com/',
          confidence='medium', confidence_note='單一來源（Mapillary 物件偵測）',
          title='Mapillary 地圖物件：號誌燈頭偵測（object--traffic-light--*）', lat=('lat',), lon=('lon',), name=('name',)),
+    # 警政署交通事故（13139 當年度 A2 即時＋158865 A1／A2 逐案；accident_signals.py candidates）：號誌種類＝行車管制號誌
+    # （排除閃光）、道路型態＝交岔路；30 m 聚群 ≥3 件；群心 30 m 內吸附路口庫平面路口；路口 40 m 內已有號誌不加；座標取路口
+    dict(key='npa_accident', dataset='13139', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='警政署交通事故資料',
+         static_path='data/gov-signals', csv_source='npa-accident',
+         confidence='medium', confidence_note='間接證據（事故筆錄記載號誌化路口，座標為報案地點）',
+         title='警政署交通事故資料（A1／A2）號誌化交岔路口事故 ≥3 件', lat=('lat',), lon=('lon',), name=('name',)),
+    # 疑似未收錄號誌路口（taiwan-signals-quality.bin）中獨立線索 ≥2 類者升級（accident_signals.py upgrade）
+    dict(key='suspect_multi', dataset='', file='gov_signals_extra.csv', fmt='POINTS_CSV', city='疑似漏燈多線索升級',
+         static_path='data/gov-signals', csv_source='suspect-multi', url='',
+         confidence='medium', confidence_note='OSM 號誌節點／Mapillary 燈頭／主幹道交會／事故資料 兩類以上同時命中',
+         title='疑似未收錄號誌路口：兩類以上獨立線索升級', lat=('lat',), lon=('lon',), name=('name',)),
 ]
 
 # 時制（秒數）：臺北市 145720 三個資源＋澎湖 113153（同一份號誌表內含綠／黃燈秒數）

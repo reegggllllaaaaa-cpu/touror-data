@@ -29,6 +29,7 @@ GOOD_KINDS = {2, 7, 8, 9, 10}           # 圓環、Y、多岔、十字、T（排
 STRONG_GOV = {'taipei', 'changhua', 'penghu', 'tainan', 'taichung', 'kaohsiung_tech'}
 WEAK_GOV = {'tainan_shp', 'hsinchu'}     # 可能含閃光／路名地理編碼推得 → 單獨存在只算 low
 MLY_SRC = {'mapillary_ai', 'mapillary_detect'}
+MEDIUM_SRC = {'npa_accident', 'suspect_multi'}  # 間接／多線索推得 → 單獨存在算 medium（2026-11-28）
 MATCH_M = 40.0
 
 # quality 位元
@@ -190,16 +191,17 @@ def build(rows, pbf, signals_crc=0):
         weak = bool(src & WEAK_GOV)
         user = 'user_verified' in src
         m = bool(src & MLY_SRC) or mly2.near(la, lo, MATCH_M)
+        mid = bool(src & MEDIUM_SRC)
         if user or (strong and (osm or m)) or (osm and m):
             lv = LV_HIGH
-        elif osm or strong or m:
+        elif osm or strong or m or mid:
             lv = LV_MED
         else:
             lv = LV_LOW                         # 只有可能含閃光／地理編碼推得的政府清單
-        b = lv | (B_OSM if osm else 0) | (B_GOV if (strong or weak) else 0) | (B_MLY if m else 0) | (B_USER if user else 0)
+        b = lv | (B_OSM if osm else 0) | (B_GOV if (strong or weak or 'npa_accident' in src) else 0) | (B_MLY if m else 0) | (B_USER if user else 0)
         q[i] = b
         levels[{1: 'low', 2: 'medium', 3: 'high'}[lv]] += 1
-        tag = '+'.join(n for n, ok in (('osm', osm), ('gov', strong), ('gov_weak', weak and not strong), ('mly', m), ('user', user)) if ok) or 'none'
+        tag = '+'.join(n for n, ok in (('osm', osm), ('gov', strong), ('gov_weak', weak and not strong), ('mly', m), ('user', user), ('mid', mid and not (osm or strong or m))) if ok) or 'none'
         combo[tag] = combo.get(tag, 0) + 1
 
     # 疑似未收錄號誌路口：平面路口、40 m 內沒有號誌點、且有任一線索
