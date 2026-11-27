@@ -38,10 +38,23 @@ jobs:
           sleep 40
           curl -fsSL --retry 5 --retry-delay 60 --retry-all-errors -A "touror-data-builder" -o taiwan-latest.osm.pbf.md5 https://download.geofabrik.de/asia/taiwan/taiwan-latest.osm.pbf.md5
           md5sum -c taiwan-latest.osm.pbf.md5
+      # raw/signals 不進版控，也不在 Pages／release 資產裡：用 cache 保存上一次成功下載的原始檔，
+      # 單一來源下載失敗時 fetch.py 沿用這份舊檔（status＝kept）；連舊檔都沒有才略過該來源（過半失敗仍停止）
+      - name: 還原上一次的政府號誌原始檔（舊檔備援）
+        uses: actions/cache/restore@v4
+        with:
+          path: raw/signals/*_signals_*.csv
+          key: gov-signals-raw-${{ github.run_id }}
+          restore-keys: gov-signals-raw-
       - name: 下載政府號誌位置（資料集 API；請求間隔 40 秒以上）
         run: python -u -I scripts/fetch.py signals
         env:
           PYTHONUNBUFFERED: "1"
+      - name: 保存本次政府號誌原始檔（下次的舊檔備援）
+        uses: actions/cache/save@v4
+        with:
+          path: raw/signals/*_signals_*.csv
+          key: gov-signals-raw-${{ github.run_id }}
       - name: 下載各縣市與移動式測速原始檔（每週一次）
         run: python -u -I scripts/fetch.py speedcams-counties
         timeout-minutes: 60
