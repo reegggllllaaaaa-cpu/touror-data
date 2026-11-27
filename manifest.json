@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated": "2026-11-26T01:53:06Z",
+ "generated": "2026-11-27T20:37:10Z",
  "files": [
   {
    "name": "mobile-hotspots",
@@ -374,11 +374,11 @@
   {
    "name": "taiwan-reststops",
    "path": "data/reststops/taiwan-reststops.bin",
-   "version": "20261125.1",
-   "date": "2026-11-25",
-   "count": 27908,
-   "sha256": "5a8cdca658a15510eb0c22c9334eaaa2daef13bc9636758e9386e095ec55d140",
-   "bytes": 746238,
+   "version": "20261128.1",
+   "date": "2026-11-28",
+   "count": 27916,
+   "sha256": "bec18aa56a0f748d728138ddb001277281bbb0bd9b4c10b47120d75067452d57",
+   "bytes": 746553,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors",
@@ -393,11 +393,11 @@
   {
    "name": "taiwan-signals",
    "path": "data/signals/taiwan-signals.bin",
-   "version": "20261126.2",
-   "date": "2026-11-26",
-   "count": 83018,
-   "sha256": "b336731da1e3eab9edb9c889f46b5a451653bc9571908424e0abb2e70bfe1f16",
-   "bytes": 747194,
+   "version": "20261128.1",
+   "date": "2026-11-28",
+   "count": 84484,
+   "sha256": "99b0b2167c062c9ffd8e9a6992f39a9e2c6c6fddd55736c969d0709b79e64671",
+   "bytes": 760388,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors；政府號誌位置補點：臺北市、彰化縣、澎湖縣、臺南市、臺中市、高雄市、新竹市政府（政府資料開放授權條款第1版）；使用者實地確認補點",
@@ -461,17 +461,27 @@
      "title": "Mapillary 地圖物件：號誌燈頭偵測（object--traffic-light--*）",
      "url": "https://www.mapillary.com/",
      "dataset": ""
+    },
+    {
+     "title": "警政署交通事故資料（A1／A2）號誌化交岔路口事故 ≥3 件",
+     "url": "https://data.gov.tw/dataset/13139",
+     "dataset": "13139"
+    },
+    {
+     "title": "疑似未收錄號誌路口：兩類以上獨立線索升級",
+     "url": "",
+     "dataset": ""
     }
    ]
   },
   {
    "name": "taiwan-signals-quality",
    "path": "data/signals/taiwan-signals-quality.bin",
-   "version": "20261126.2",
-   "date": "2026-11-26",
-   "count": 83018,
-   "sha256": "0aa86c3198b0219dfdf8774762ca276754ae86c9e1efa505103ef42924a55ad6",
-   "bytes": 104101,
+   "version": "20261128.1",
+   "date": "2026-11-28",
+   "count": 84484,
+   "sha256": "66689d577ce2fd10ec0f8b3a69e6c00a239ec37e3f25cbf53935b4ea92788267",
+   "bytes": 100113,
    "minAppVersion": "0.0.1",
    "license": "Open Database License（ODbL）1.0",
    "attribution": "© OpenStreetMap contributors；政府號誌位置（政府資料開放授權條款第1版）；Mapillary 地圖物件偵測（CC BY-SA 4.0）",
